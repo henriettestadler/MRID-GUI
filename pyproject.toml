@@ -1,0 +1,5 @@
+[project]
+name = "PySide Widgets Project"
+
+[tool.pyside6-project]
+files = ["core/cursor.py", "core/interactor_style.py", "core/load_MRI_file.py", "core/measurement.py", "form.ui", "main_window.py", "utils/contrast.py", "utils/minimap_handler.py", "utils/scale_bar.py", "utils/zoom.py"]
