@@ -56,7 +56,7 @@ class Measurement:
 
         # reuse line renderer if exists
         if view_name not in self.load_mri.measurement_renderer: # not in renderer_window:
-            vtk_widget = self.load_mri.vtk_widgets[view_name]
+            vtk_widget = self.load_mri.vtk_widgets[0][view_name]
             self.load_mri.measurement_renderer[view_name] = vtk.vtkRenderer()
             vtk_widget.GetRenderWindow().SetNumberOfLayers(3)
             vtk_widget.GetRenderWindow().AddRenderer(self.load_mri.measurement_renderer[view_name])
@@ -116,7 +116,7 @@ class Measurement:
             self.end_voxel = None
 
         # Store references for later
-        self.load_mri.vtk_widgets[view_name].GetRenderWindow().Render()
+        self.load_mri.vtk_widgets[0][view_name].GetRenderWindow().Render()
 
 
     def create_text_actor(self, midpoint: np.ndarray, distance: float, color: tuple[float, float, float] =(1,0,0)) -> vtk.vtkBillboardTextActor3D:

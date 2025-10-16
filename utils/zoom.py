@@ -24,12 +24,16 @@ class Zoom:
     - Uses Qt signals (`ZoomNotifier`) for UI updates.
     """
     global_zoom_factor: float = 1
-    bounds: dict[str, list[float]] = {'axial': [], 'sagittal': [], 'coronal': []}
+    bounds: dict[int, dict[str, list[float]]] = {
+        idx: {view: [] for view in ("axial", "sagittal", "coronal")}
+        for idx in range(3)
+    }
 
     @staticmethod
     def fit_to_window(vtk_widget, vtk_widgets:list, scale_bar:dict, vtk_widgets_dict:dict):
         """
         Reset and centers all views so the selected image fits the window (uniform zoom).
+        Emits a signal with the updated zoom factor.
         """
         renderer = vtk_widget.GetRenderWindow().GetRenderers().GetFirstRenderer()
         camera = renderer.GetActiveCamera()
@@ -40,9 +44,7 @@ class Zoom:
 
         # Compute bounds and center
         xmin, xmax, ymin, ymax, zmin, zmax = renderer.ComputeVisiblePropBounds()
-        cx = (xmin + xmax) / 2.0
-        cy = (ymin + ymax) / 2.0
-        cz = (zmin + zmax) / 2.0
+        Zoom.cx, Zoom.cy, Zoom.cz = ((xmin + xmax)/2, (ymin + ymax)/2, (zmin + zmax)/2)
 
         width = xmax - xmin
         height = ymax - ymin
@@ -56,50 +58,55 @@ class Zoom:
             factor = height / 2.0
 
         # Apply fit-to-window to selected widget and re-center it
-        camera.SetFocalPoint(cx, cy, cz)
+        camera.SetFocalPoint(Zoom.cx, Zoom.cy, Zoom.cz)
         camera.SetParallelScale(factor)
         pos = camera.GetPosition()
-        camera.SetPosition(cx, cy, pos[2])
+        camera.SetPosition(Zoom.cx, Zoom.cy, pos[2])
         renderer.ResetCameraClippingRange()
-        vtk_widget.GetRenderWindow().Render()
-
-        view_name = Zoom.get_view_name(vtk_widget, vtk_widgets_dict)
-        scale_bar[view_name].update_bar(renderer, length_cm=1.0)
-
-        # Update bounds
-        Zoom.update_bounds(view_name, camera, renderer)
 
         # Apply relative factor to the other views
-        for widget in vtk_widgets:
-            if widget == vtk_widget:
-                continue
-            renderer_other = widget.GetRenderWindow().GetRenderers().GetFirstRenderer()
-            camera_other = renderer_other.GetActiveCamera()
-            camera_other.ParallelProjectionOn()
+        for image_index,vtk_widget_image in vtk_widgets_dict.items():
+            for vn, widget in vtk_widget_image.items():
+                if widget == vtk_widget:
+                    if image_index==0:
+                        view_name_other = Zoom.get_view_name(widget, vtk_widgets_dict)
+                        scale_bar[view_name_other].update_bar(renderer,view_name_other,length_cm=1.0)
+                        #Update zoom bounds
+                        Zoom.update_bounds(view_name_other, camera, renderer)
+                    # Update bounds
+                    #Zoom.update_bounds(view_name, camera, renderer)
+                    #scale_bar[view_name].update_bar(renderer,view_name, length_cm=1.0)
+                    continue
+                renderer_other = widget.GetRenderWindow().GetRenderers().GetFirstRenderer()
+                camera_other = renderer_other.GetActiveCamera()
+                camera_other.ParallelProjectionOn()
 
-            # Maintain relative zoom
-            rel_factor = camera_other.GetParallelScale() / prev_scale
-            camera_other.SetParallelScale(factor * rel_factor)
+                # Maintain relative zoom
+                rel_factor = camera_other.GetParallelScale() / prev_scale
+                camera_other.SetParallelScale(factor * rel_factor)
 
-            # Center view on image
-            xmin, xmax, ymin, ymax, zmin, zmax = renderer_other.ComputeVisiblePropBounds()
-            target_center = ((xmin + xmax)/2.0, (ymin + ymax)/2.0, (zmin + zmax)/2.0)
-            Zoom.recenter_camera_to_world_point(camera_other, target_center)
+                # Center view on image
+                xmin, xmax, ymin, ymax, zmin, zmax = renderer_other.ComputeVisiblePropBounds()
+                target_center = ((xmin + xmax)/2.0, (ymin + ymax)/2.0, (zmin + zmax)/2.0)
+                Zoom.recenter_camera_to_world_point(camera_other, target_center)
 
-            renderer_other.ResetCameraClippingRange()
-            widget.GetRenderWindow().Render()
+                renderer_other.ResetCameraClippingRange()
 
-            view_name_other = Zoom.get_view_name(widget, vtk_widgets_dict)
-            scale_bar[view_name_other].update_bar(renderer_other, length_cm=1.0)
-
-            #Update zoom bounds
-            Zoom.update_bounds(view_name_other, camera_other, renderer_other)
+                if image_index==0:
+                    view_name_other = Zoom.get_view_name(widget, vtk_widgets_dict)
+                    scale_bar[view_name_other].update_bar(renderer_other,view_name_other,length_cm=1.0)
+                    #Update zoom bounds
+                    Zoom.update_bounds(view_name_other, camera_other, renderer_other)
 
         # Update Zoom.global_zoom_factor
         Zoom.global_zoom_factor = factor
 
         # Emit factor for UI updates
         zoom_notifier.factorChanged.emit(factor)
+
+        for _,vtk_widget_image in vtk_widgets_dict.items():
+            for _, widget in vtk_widget_image.items():
+                widget.GetRenderWindow().Render()
 
 
     @staticmethod
@@ -108,38 +115,45 @@ class Zoom:
         Apply relative zoom while maintaining sync between views.
         """
         Zoom.global_zoom_factor *= factor
-        for _,widget in vtk_widgets_dict.items():
-            renderer = widget.GetRenderWindow().GetRenderers().GetFirstRenderer()
-            camera = renderer.GetActiveCamera()
-            camera.ParallelProjectionOn()
 
-            camera.SetParallelScale(camera.GetParallelScale() / factor)
-            widget.GetRenderWindow().Render()
-            view_name = Zoom.get_view_name(widget,vtk_widgets_dict)
-            scale_bar[view_name].update_bar(renderer,length_cm=1.0)
+        for image_index,vtk_widget_image in vtk_widgets_dict.items():
+            for vn, widget in vtk_widget_image.items():
+                widget = vtk_widgets_dict[image_index][vn]
+                renderer = widget.GetRenderWindow().GetRenderers().GetFirstRenderer()
+                camera = renderer.GetActiveCamera()
+                camera.ParallelProjectionOn()
 
-            cx, cy, cz = camera.GetFocalPoint()
-            pos = camera.GetPosition()
-            camera.SetPosition(cx, cy, pos[2])
+                camera.SetParallelScale(camera.GetParallelScale() / factor)
+                cx, cy, cz = camera.GetFocalPoint()
+                pos = camera.GetPosition()
+                camera.SetPosition(cx, cy, pos[2])
 
-            half_height = camera.GetParallelScale()
-            width_px, height_px = renderer.GetSize()
-            half_width = half_height * width_px / height_px
-            Zoom.bounds[view_name] = [
-                cx - half_width, cx + half_width, cy - half_height, cy + half_height
-            ]
+                if image_index==0:
+                    view_name = Zoom.get_view_name(widget,vtk_widgets_dict)
+                    scale_bar[view_name].update_bar(renderer,view_name,length_cm=1.0)
+                    half_height = camera.GetParallelScale()
+                    width_px, height_px = renderer.GetSize()
+                    half_width = half_height * width_px / height_px
+                    Zoom.bounds[view_name] = [
+                        cx - half_width, cx + half_width, cy - half_height, cy + half_height
+                    ]
+
+
+        for _,vtk_widget_image in vtk_widgets_dict.items():
+            for _, widget in vtk_widget_image.items():
+                widget.GetRenderWindow().Render()
 
         zoom_notifier.factorChanged.emit(factor)
-
 
     @staticmethod
     def get_view_name(widget, vtk_widgets_dict: dict) -> str | None:
         """
         Return view name ('axial', 'sagittal', 'coronal') for a given widget.
         """
-        for name, w in vtk_widgets_dict.items():
-            if w == widget:
-                return name
+        for _,vtk_widget_image in vtk_widgets_dict.items():
+           for name, w in vtk_widget_image.items():
+                if w == widget:
+                    return name
         return None
 
     @staticmethod

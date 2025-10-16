@@ -1,12 +1,10 @@
 # This Python file uses the following encoding: utf-8
 
-from PySide6.QtWidgets import QFileDialog
 from PySide6.QtCore import QObject, Signal
 import SimpleITK as sITK
 import vtk
 from vtk.util import numpy_support
 import numpy as np
-from utils.contrast import Contrast
 from utils.zoom import Zoom
 from core.cursor import Cursor
 from utils.scale_bar import Scale
@@ -22,76 +20,86 @@ class LoadMRI(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         # Core volume data
-        self.volume = None
-        self.timestamp4D = 0
+        self.volume = {}
+        self.timestamp4D = {}
+        self.timestamp4D[0] = 0
+        self.timestamp4D[1] = 4
+        self.timestamp4D[2] = 8
         self.slice_indices = [0, 0, 0]  # z y x (for cursor +1)
 
         # GUI-related
         self.contrast_ui_elements = {}
         self.zoom_tf ={}
         self.img_vtks = {}
+        self.img_vtks[0] = {}
         self.scale_bar = {}
         self.measurement_lines = []
         self.threshold_on = False
         self.measurement_renderer = {}
 
         # Rendering
-        self.actors = {}  # store vtkImageActor for each view
-        self.renderers = {}  # store vtkRenderer for each view
+        self.actors = {}
+        self.renderers = {}
+        self.actors[0] = {}
+        self.renderers[0] = {}
+
         self.is_first_slice = True
+
+
 
 
     def load_file(self,vol_dim:int):
         """
-        Open a file dialog, load a NIfTI file, and initialize data structures.
+        Initialize data structures after data is loaded.
         Emits `fileLoaded` signal once data is loaded.
         """
-        self.vol_dim = vol_dim #3D or 4D volume
-        file_name, _ = QFileDialog.getOpenFileName(
-            None,
-            "Open NIfTI File",
-            "",
-            "NIfTI files (*.nii.gz)"
-        )
 
-        #user cancelled
-        if not file_name:
-            return
-
-        # Load volume
-        self.image = sITK.ReadImage(file_name)
-        self.volume = sITK.GetArrayFromImage(self.image)
-        self.spacing = self.image.GetSpacing()[::-1]
-
-        # handle 4D volume
-        if self.volume.ndim == 4:
-            self.volume4D = self.volume.copy()
-            self.volume = self.volume[self.timestamp4D, :, :, :] #echo 0
+        self.num_images = 1
+        # handle 4D volume and load it
+        if self.volume[0].ndim == 4:
+            self.num_images = 3
+            self.volume4D = self.volume[0].copy()
+            self.volume = {}
+            for i in 1,2: #,3:
+                self.volume[i] = sITK.GetArrayFromImage(self.image)
+                self.renderers[i] = {}  # store vtkRenderer for each view
+                self.actors[i] = {}
+                self.img_vtks[i] = {}
+            self.volume[0] = self.volume4D[self.timestamp4D[0], :, :, :] #echo 0
+            self.volume[1] = self.volume4D[self.timestamp4D[1], :, :, :] #echo 4
+            self.volume[2] = self.volume4D[self.timestamp4D[2], :, :, :] #echo 8
             self.spacing = [self.spacing[1],self.spacing[2],self.spacing[3]]
 
-        # emit signal for MainWindow to update UI
-        self.fileLoaded.emit(file_name, vol_dim)
 
-        # initialize Contrast class
-        self.contrastClass = Contrast(self)
+        # emit signal for MainWindow to update UI
+        self.fileLoaded.emit(self.file_name, vol_dim)
 
         # Set-up first slide
         z, y, x = self.slice_indices
-        if self.vol_dim == 4:
-            self.setup_vtkdata(self.volume[z, ::-1, ::-1], self.vtk_widgets["axial"], "axial")
-        else:
-            self.setup_vtkdata(self.volume[z, :, :], self.vtk_widgets["axial"], "axial")
-        self.setup_vtkdata(self.volume[:, y, :], self.vtk_widgets["coronal"], "coronal")
-        self.setup_vtkdata(np.fliplr(self.volume[:, :, x].T), self.vtk_widgets["sagittal"], "sagittal")
+        for image_index,vtk_widget_image in self.vtk_widgets.items():
+            if vol_dim ==3:
+                self.setup_vtkdata(self.volume[0][z, :, :], vtk_widget_image["axial"], "axial",image_index)
+            else:
+                self.setup_vtkdata(self.volume[image_index][z, ::-1, ::-1], self.vtk_widgets[image_index]["axial"], "axial",image_index)
+            self.setup_vtkdata(self.volume[0][:, y, :], vtk_widget_image["coronal"], "coronal",image_index)
+            self.setup_vtkdata(np.fliplr(self.volume[0][:, :, x].T), vtk_widget_image["sagittal"], "sagittal",image_index)
+
+
+        # Add scale_bar and minimap
+        for view_name in 'axial','coronal','sagittal':
+            renderer = self.renderers[0][view_name]
+            if view_name not in self.scale_bar:
+                self.scale_bar[view_name] = Scale(self,self.vol_dim)
+            self.scale_bar[view_name].create_bar(renderer,view_name,length_cm=1.0)
 
         # initiate Cursor class
         self.cursor = Cursor(self, self.cursor_ui)
         self.cursor.start_cursor(True) #index = 0 at start
 
 
-    def setup_vtkdata(self,slice_img:np.array,vtk_widget, view_name:str):
+    def setup_vtkdata(self,slice_img:np.array,vtk_widget, view_name:str,image_index:int):
         """
-        Create or update the VTK pipeline for a given view (axial, coronal, sagittal).
+        Create or update the VTK pipeline for a given view (axial, coronal  , sagittal).
         Handles reslice, actor creation, and LUT setup.
         """
         vtk_data = numpy_support.numpy_to_vtk(slice_img.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
@@ -111,9 +119,9 @@ class LoadMRI(QObject):
         img_vtk.GetPointData().SetScalars(vtk_data)
 
         # reuse renderer if exists, otherwise create one
-        if view_name in self.actors:
-            renderer = self.renderers[view_name]
-            renderer.RemoveActor(self.actors[view_name])
+        if view_name in self.actors[image_index]:
+            renderer = self.renderers[image_index][view_name]
+            renderer.RemoveActor(self.actors[image_index][view_name])
         else:
             renderer = vtk.vtkRenderer()
             vtk_widget.GetRenderWindow().AddRenderer(renderer)
@@ -122,22 +130,31 @@ class LoadMRI(QObject):
             renderer.SetUseDepthPeeling(1)
             renderer.SetMaximumNumberOfPeels(200)
             renderer.SetOcclusionRatio(0.05)
-            self.renderers[view_name] = renderer
+            self.renderers[image_index][view_name] = renderer
+
+            camera = renderer.GetActiveCamera()
+            cx, cy, cz = camera.GetFocalPoint()
+            pos = camera.GetPosition()
+            camera.SetPosition(cx, cy, pos[2])
+            half_height = camera.GetParallelScale()
+            width_px, height_px = renderer.GetSize()
+            half_width = half_height * width_px / height_px
+            Zoom.bounds[view_name] = [cx - half_width, cx + half_width, cy - half_height, cy + half_height]
 
         # High-quality smoothing for better visual clarity
         reslice = vtk.vtkImageReslice()
         reslice.SetInputData(img_vtk)
-        reslice.SetInterpolationModeToCubic()  # Options: Nearest, Linear, Cubic
+        reslice.SetInterpolationModeToNearestNeighbor() #Cubic()  # Options: Nearest, Linear, Cubic
         reslice.Update()
 
         # Add image to actor to then be added to renderer
         actor = vtk.vtkImageActor()
         actor.SetInputData(reslice.GetOutput())
-        actor.GetProperty().SetInterpolationTypeToLinear()
+        actor.GetProperty().SetInterpolationTypeToNearest() #Linear()
 
         # Attach LUT for contrast and brightness
         prop = actor.GetProperty()
-        prop.SetLookupTable(self.lut_vtk)
+        prop.SetLookupTable(self.lut_vtk[image_index])
         prop.UseLookupTableScalarRangeOn()  # force LUT range
 
         renderer.AddActor(actor)
@@ -146,25 +163,115 @@ class LoadMRI(QObject):
         if self.is_first_slice :
             renderer.ResetCamera()
             self.zoom_tf[view_name]=False
-            if view_name == 'sagittal':
+            if self.vol_dim ==3 and view_name == 'sagittal':
+                self.is_first_slice = False
+            elif self.vol_dim ==4 and view_name == 'sagittal' and image_index==3:
                 self.is_first_slice = False
 
         #Update renderer
         vtk_widget.GetRenderWindow().Render()
 
         # Save actor, renderer, img_vtks to later be used again
-        self.actors[view_name] = actor
-        self.renderers[view_name] = renderer
-        self.img_vtks[view_name] = img_vtk
+        self.actors[image_index][view_name] = actor
+        self.renderers[image_index][view_name] = renderer
+        self.img_vtks[image_index][view_name] = img_vtk
 
         #Add axes to each widget
         self.add_axes(renderer, img_vtk, view_name)
 
-        # Add scale_bar and minimap
-        if view_name not in self.scale_bar:
-            self.scale_bar[view_name] = Scale()
-            self.scale_bar[view_name].create_bar(renderer, length_cm=1.0)
-        self.minimap.add_minimap(view_name,img_vtk)
+
+        if image_index not in self.minimap.minimap_renderers:
+            self.minimap.minimap_renderers[image_index] = {}
+            self.minimap.minimap_actors[image_index] = {}
+            self.minimap.minimap_borders[image_index] = {}
+            self.minimap.zoom_rects[image_index] = {}
+
+        self.minimap.add_minimap(view_name,img_vtk,image_index,vtk_widget)
+
+    def only_display_slide(self, slice_img:np.array, view_name:str,image_index:int):
+        """
+        Update an existing vtkImageData with new scalar data for a given slice.
+        """
+        img_vtk = self.img_vtks[image_index][view_name]
+        vtk_data = numpy_support.numpy_to_vtk(slice_img.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
+        img_vtk.GetPointData().SetScalars(vtk_data)
+        img_vtk.Modified()
+        self.actors[image_index][view_name].GetMapper().SetInputData(img_vtk)
+
+
+    def update_slices(self,image_index:int):
+        """
+        Refresh all slice views (axial, coronal, sagittal) based on current slice indices.
+        Handles threshold overlays and distance measurement visibility.
+        """
+        z, y, x = self.slice_indices.copy() if hasattr(self, 'slice_indices') else [0, 0, 0]
+
+        #threshold ON or OFF
+        if self.threshold_on == True:
+            ThresholdSegmentation.only_update_displayed_image(self.ThresholdClass)
+        else:
+            if hasattr(self, "volume4D"):
+                self.only_display_slide(self.volume[image_index][z, ::-1, ::-1], "axial",image_index) #image_index
+            else:
+                self.only_display_slide(self.volume[0][z, :, :], "axial",image_index)
+            self.only_display_slide(self.volume[0][:, y, :], "coronal",image_index)
+            self.only_display_slide(np.fliplr(self.volume[0][:, :, x].T), "sagittal",image_index)
+        self.update_measurement_visibility()
+
+        for _,vtk_widget_image in self.vtk_widgets.items():
+            for view_name, widget in vtk_widget_image.items():
+                widget.GetRenderWindow().Render()
+
+
+    def update_measurement_visibility(self):
+        """
+        Show or hide measurement lines and text depending on whether they
+        belong to the currently visible slice.
+        """
+        for view_name, line_actor,line_slice_index,text_actor in self.measurement_lines:
+            renderer = self.measurement_renderer[view_name]
+            if view_name == 'axial' and line_slice_index[0]==self.slice_indices[0]:
+                renderer.AddActor(line_actor)
+                text_actor.SetVisibility(1)
+            elif view_name == 'coronal' and line_slice_index[1]==self.slice_indices[1]:
+                renderer.AddActor(line_actor)
+                text_actor.SetVisibility(1)
+            elif view_name == 'sagittal' and line_slice_index[2]==self.slice_indices[2]:
+                renderer.AddActor(line_actor)
+                text_actor.SetVisibility(1)
+            else:
+                renderer.RemoveActor(line_actor)
+                text_actor.SetVisibility(0)
+
+
+    def on_threshold_changed(self, checked:bool,image_index:int):
+        """Toggle threshold segmentation display."""
+        if checked:
+            self.threshold_on = True
+        else:
+            self.threshold_on = False
+            self.update_slices(image_index)
+
+
+    def timestamp4D_changed(self,index: int,image_index):
+        """
+        Update the current timestamp (4D volume selection).
+        Called from MainWindow when combobox index changes.
+        """
+        self.timestamp4D[image_index] = int(index)
+        self.volume[image_index] = None
+        self.volume[image_index] = self.volume4D[self.timestamp4D[image_index], :, :, :]
+        #self.contrastClass = Contrast(self)
+
+        self.contrastClass.recompute_luttable(self.volume[image_index],image_index)
+
+        #Refresh views
+        z, y, x = self.slice_indices
+        self.setup_vtkdata(self.volume[image_index][z, ::-1, ::-1], self.vtk_widgets[image_index]["axial"], "axial",image_index)
+        self.setup_vtkdata(self.volume[image_index][:, y, :], self.vtk_widgets[image_index]["coronal"], "coronal",image_index)
+        self.setup_vtkdata(np.fliplr(self.volume[image_index][:, :, x].T), self.vtk_widgets[image_index]["sagittal"], "sagittal",image_index)
+
+        self.update_slices(image_index)
 
 
     def add_axes(self, renderer: vtk.vtkRenderer, img_vtk: vtk.vtkImageData, view_name:str):
@@ -195,92 +302,13 @@ class LoadMRI(QObject):
             actor = vtk.vtkTextActor()
             actor.SetInput(text)
             prop = actor.GetTextProperty()
-            prop.SetFontSize(16)
+            if self.vol_dim == 4 and view_name != 'axial':
+                prop.SetFontSize(10)
+            else:
+                prop.SetFontSize(16)
             prop.SetColor(1, 1, 0)  # red text
             prop.BoldOn()
             actor.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
             actor.SetPosition(x, y)
 
             renderer.AddActor2D(actor)
-
-
-    def only_display_slide(self, slice_img:np.array, view_name:str):
-        """
-        Update an existing vtkImageData with new scalar data for a given slice.
-        """
-        img_vtk = self.img_vtks[view_name]
-        vtk_data = numpy_support.numpy_to_vtk(slice_img.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
-        img_vtk.GetPointData().SetScalars(vtk_data)
-        img_vtk.Modified()
-        self.actors[view_name].GetMapper().SetInputData(img_vtk)
-
-
-    def update_slices(self):
-        """
-        Refresh all slice views (axial, coronal, sagittal) based on current slice indices.
-        Handles threshold overlays and distance measurement visibility.
-        """
-        z, y, x = self.slice_indices.copy() if hasattr(self, 'slice_indices') else [0, 0, 0]
-
-        #threshold ON or OFF
-        if self.threshold_on == True:
-            ThresholdSegmentation.only_update_displayed_image(self.ThresholdClass)
-        else:
-            if hasattr(self, "volume4D"):
-                self.only_display_slide(self.volume[z, ::-1, ::-1], "axial")
-            else:
-                self.only_display_slide(self.volume[z, :, :], "axial")
-            self.only_display_slide(self.volume[:, y, :], "coronal")
-            self.only_display_slide(np.fliplr(self.volume[:, :, x].T), "sagittal")
-        self.update_measurement_visibility()
-
-        for widget in self.vtk_widgets.values():
-            widget.GetRenderWindow().Render()
-
-
-    def update_measurement_visibility(self):
-        """
-        Show or hide measurement lines and text depending on whether they
-        belong to the currently visible slice.
-        """
-        for view_name, line_actor,line_slice_index,text_actor in self.measurement_lines:
-            renderer = self.measurement_renderer[view_name]
-            if view_name == 'axial' and line_slice_index[0]==self.slice_indices[0]:
-                renderer.AddActor(line_actor)
-                text_actor.SetVisibility(1)
-            elif view_name == 'coronal' and line_slice_index[1]==self.slice_indices[1]:
-                renderer.AddActor(line_actor)
-                text_actor.SetVisibility(1)
-            elif view_name == 'sagittal' and line_slice_index[2]==self.slice_indices[2]:
-                renderer.AddActor(line_actor)
-                text_actor.SetVisibility(1)
-            else:
-                renderer.RemoveActor(line_actor)
-                text_actor.SetVisibility(0)
-
-
-    def on_threshold_changed(self, checked:bool):
-        """Toggle threshold segmentation display."""
-        if checked:
-            self.threshold_on = True
-        else:
-            self.threshold_on = False
-            self.update_slices()
-
-
-    def timestamp4D_changed(self,index: int):
-        """
-        Update the current timestamp (4D volume selection).
-        Called from MainWindow when combobox index changes.
-        """
-        self.timestamp4D = int(index)
-        self.volume = None
-        self.volume = self.volume4D[self.timestamp4D, :, :, :]
-        self.contrastClass = Contrast(self)
-        #Refresh views
-        z, y, x = self.slice_indices
-        self.setup_vtkdata(self.volume[z, ::-1, ::-1], self.vtk_widgets["axial"], "axial")
-        self.setup_vtkdata(self.volume[:, y, :], self.vtk_widgets["coronal"], "coronal")
-        self.setup_vtkdata(np.fliplr(self.volume[:, :, x].T), self.vtk_widgets["sagittal"], "sagittal")
-
-        self.update_slices()

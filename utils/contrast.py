@@ -7,16 +7,6 @@ class Contrast:
     """
     Handles contrast/brightness adjustment for MRI volumes using a VTK lookup table (LUT).
 
-    Parameters
-    ----------
-    Load_MRI : object
-        Must provide:
-        - volume : np.ndarray
-        - actors : dict[str, vtk.vtkActor]
-        - renderers : dict[str, vtk.vtkRenderer]
-        - minimap_renderers : dict[str, vtk.vtkRenderer]
-        - contrast_ui_elements : dict with Qt widgets
-
     Notes
     -----
     - Contrast = window width, controls range of intensities displayed.
@@ -25,162 +15,190 @@ class Contrast:
     - Updates all registered VTK actors and renderers immediately.
     - Designed to be initialized once per loaded volume.
     """
-    def __init__(self, Load_MRI):
-        self.Load_MRI = Load_MRI
-        #Set window and level
-        self.initial_window = (self.Load_MRI.volume.max() - self.Load_MRI.volume.min())
-        self.initial_level = (self.Load_MRI.volume.max() + self.Load_MRI.volume.min()) / 2
-        self.window = self.initial_window
-        self.level = self.initial_level
+    def __init__(self, LoadMRI):
+        """Initialize contrast management for all available image indices."""
+        # Store LUT parameters per image index
+        self.LoadMRI = LoadMRI
+        self.initial_window = {}
+        self.initial_level = {}
+        self.window = {}
+        self.level = {}
+        self.window_auto = {}
+        self.level_auto = {}
+        self.LoadMRI.lut_vtk = {}
+        #Set window and level and get the UI connected
+        ui = self.LoadMRI.contrast_ui_elements
+        self.display_level_sliders = {}
+        self.display_window_sliders = {}
+        self.level_sliders = {}
+        self.window_sliders = {}
+        self.auto_buttons = {}
+        self.reset_buttons = {}
+        # Percentile thresholds (0–100 range)
+        self.vminmax_perc = [0, 1] #reset
+        self.vminmax_auto = [0.0001, 0.9999] #auto
 
-        # get the UI connected
-        ui = self.Load_MRI.contrast_ui_elements
-        self.window_slider = ui["contrast"]
-        self.level_slider = ui["brightness"]
-        self.display_level_slider = ui["display_level"]
-        self.display_window_slider = ui["display_window"]
-        self.auto_button = ui["auto"]
-        self.reset_button = ui["reset"]
-        self.window_slider.setMinimum(1)
-        self.window_slider.setMaximum(int(self.Load_MRI.volume.max()))
-        self.window_slider.setValue(int(self.window))
-        self.window_slider.valueChanged.connect(self.changed_sliders)
-        self.level_slider.setMinimum(1)
-        self.level_slider.setMaximum(int(self.Load_MRI.volume.max()))
-        self.level_slider.setValue(int(self.level))
-        self.level_slider.valueChanged.connect(self.changed_sliders)
-        self.display_level_slider.display(int(self.level))
-        self.display_window_slider.display(int(self.window))
+        for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
+            # Level and window for auto and reset
+            vmin, vmax = np.percentile(self.LoadMRI.volume[image_index], [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100]) #in percentage
+            vmin_auto, vmax_auto = np.percentile(self.LoadMRI.volume[image_index], [self.vminmax_auto[0]*100, self.vminmax_auto[1]*100]) #in percentage
+            self.initial_window[image_index] = vmax - vmin
+            self.initial_level[image_index] = (vmax + vmin)/2
+            self.window_auto[image_index] = vmax_auto - vmin_auto
+            self.level_auto[image_index] = (vmax_auto + vmin_auto)/2
 
-        self.auto_button.clicked.connect(self.auto)
-        self.reset_button.clicked.connect(self.reset)
+            self.window[image_index] = self.initial_window[image_index]
+            self.level[image_index] = self.initial_level[image_index]
+            #apply initial lut
+            self.compute_lut(image_index)
+            self.update_lut_window_level(image_index)
 
-        #apply initial lut
-        self.compute_histogram(self.Load_MRI.volume)
-        self.compute_lut()
-        self.update_lut_window_level()
+            #attach ui widgets
+            self.display_level_sliders[image_index] =  ui[f"display_level{image_index}"]
+            self.display_window_sliders[image_index] =  ui[f"display_window{image_index}"]
+            self.window_sliders[image_index] =  ui[f"contrast{image_index}"]
+            self.level_sliders[image_index] =  ui[f"brightness{image_index}"]
+            self.auto_buttons[image_index] = ui[f"auto{image_index}"]
+            self.reset_buttons[image_index] = ui[f"reset{image_index}"]
 
-    def compute_lut(self):
+            #initialiye slider limits and values
+            self.window_sliders[image_index].setMinimum(1)
+            self.window_sliders[image_index].setMaximum(int(self.LoadMRI.volume[image_index].max()))
+            self.window_sliders[image_index].setValue(int(self.window[image_index]))
+            self.level_sliders[image_index].setMinimum(1)
+            self.level_sliders[image_index].setMaximum(int(self.LoadMRI.volume[image_index].max()))
+            self.level_sliders[image_index].setValue(int(self.level[image_index]))
+            self.display_level_sliders[image_index].display(int(self.level[image_index]))
+            self.display_window_sliders[image_index].display(int(self.window[image_index]))
+
+
+
+    def compute_lut(self,image_index:int):
         """
         Creates a grayscale VTK lookup table based on the volume’s min and max intensities
         """
-        self.Load_MRI.scalar_min = self.Load_MRI.volume.min()
-        self.Load_MRI.scalar_max = self.Load_MRI.volume.max()
+        vmin, vmax = np.percentile(self.LoadMRI.volume[image_index], [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100])
+        self.LoadMRI.lut_vtk[image_index] = vtk.vtkLookupTable()
+        self.LoadMRI.lut_vtk[image_index].SetTableRange(vmin, vmax)
+        self.LoadMRI.lut_vtk[image_index].SetValueRange(0.0, 1.0)
+        self.LoadMRI.lut_vtk[image_index].SetSaturationRange(0.0, 0.0)
+        self.LoadMRI.lut_vtk[image_index].Build()
 
-        self.Load_MRI.lut_vtk = vtk.vtkLookupTable()
-        self.Load_MRI.lut_vtk.SetTableRange(self.Load_MRI.scalar_min, self.Load_MRI.scalar_max)
-        self.Load_MRI.lut_vtk.SetValueRange(0.0, 1.0)
-        self.Load_MRI.lut_vtk.SetSaturationRange(0.0, 0.0)
-        self.Load_MRI.lut_vtk.Build()
-
-    def update_lut_window_level(self):
+    def update_lut_window_level(self,image_index:int):
         """
         Updates the LUT and re-renders all VTK actors using the current selected window (contrast) and level (brightness).
         """
-        vmin = self.level - self.window / 2
-        vmax = self.level + self.window / 2
+        vmin = self.level[image_index] - self.window[image_index] / 2
+        vmax = self.level[image_index] + self.window[image_index] / 2
 
         # Update the VTK LUT if table range has changed
         if not hasattr(self, "last_range") or self.last_range != (vmin, vmax):
-            self.Load_MRI.lut_vtk.SetTableRange(vmin, vmax)
-            self.Load_MRI.lut_vtk.Build()
+            self.LoadMRI.lut_vtk[image_index].SetTableRange(vmin, vmax)
+            self.LoadMRI.lut_vtk[image_index].Build()
             self.last_range = (vmin, vmax)
 
         # Force all actors to use updated LUT
-        for actor in self.Load_MRI.actors.values():
-            prop = actor.GetProperty()
-            prop.UseLookupTableScalarRangeOn()
+        for actors_dict in self.LoadMRI.actors.values(): #if view_name in self.actors[image_index]:
+            for _,actor in actors_dict.items():
+                prop = actor.GetProperty()
+                prop.UseLookupTableScalarRangeOn()
 
         # change in original and minimap image
-        for renderer in self.Load_MRI.renderers.values():
-            renderer.GetRenderWindow().Render()
-        for renderer in self.Load_MRI.minimap.minimap_renderers.values():
-            renderer.GetRenderWindow().Render()
+        for vn in 'axial','coronal','sagittal':
+            renderer = self.LoadMRI.renderers[image_index].get(vn, None)
+            if  renderer is not None:
+                renderer.GetRenderWindow().Render()
+            if hasattr(self.LoadMRI.minimap,"minimap_renderers"):
+                minimap_renderer = self.LoadMRI.minimap.minimap_renderers[image_index].get(vn, None)
+                if  minimap_renderer is not None:
+                    if self.LoadMRI.minimap.minimap_actors[image_index][vn].GetVisibility():
+                        minimap_renderer.GetRenderWindow().Render()
 
 
-    def compute_histogram(self,volume: np.ndarray):
-        """
-        Computes a cumulative histogram of the volume to determine automatic window and level values while ignoring outliers.
-        """
-        hist, bin_edges = np.histogram(volume, bins=4096, range=(volume.min(), volume.max()))
-        # Cumulative histogram
-        cum_hist = np.cumsum(hist)
-        total = cum_hist[-1]
-
-        # Choose low/high percentiles to ignore outliers (e.g., 1%–99%)
-        low_idx = np.searchsorted(cum_hist, 0.005 * total)
-        high_idx = np.searchsorted(cum_hist, 0.995 * total)
-
-        # Map back to intensity values
-        vmin = bin_edges[low_idx]
-        vmax = bin_edges[high_idx]
-
-        # Level and window
-        self.level_auto = (vmax + vmin) / 2
-        self.window_auto = vmax - vmin
-
-    def auto(self):
+    def auto(self,image_index:int):
         """
         Sets window and level to automatically computed values and updates the LUT and sliders.
         """
-        self.window = self.window_auto
-        self.level = self.level_auto
-
+        self.window[image_index] = self.window_auto[image_index].copy()
+        self.level[image_index] = self.level_auto[image_index].copy()
         # Block signals while updating sliders
-        self.level_slider.blockSignals(True)
-        self.window_slider.blockSignals(True)
-        self.display_level_slider.blockSignals(True)
-        self.display_window_slider.blockSignals(True)
+        self.block_signals(image_index,True)
 
-        self.display_level_slider.display(int(self.level_auto))
-        self.display_window_slider.display(int(self.window_auto))
-        self.level_slider.setValue(int(self.level_auto))
-        self.window_slider.setValue(int(self.window_auto))
-
+        self.display_level_sliders[image_index].display(int(self.level_auto[image_index]))
+        self.display_window_sliders[image_index].display(int(self.window_auto[image_index]))
+        self.level_sliders[image_index].setValue(int(self.level_auto[image_index]))
+        self.window_sliders[image_index].setValue(int(self.window_auto[image_index]))
         # Re-enable signals
-        self.level_slider.blockSignals(False)
-        self.window_slider.blockSignals(False)
-        self.display_level_slider.blockSignals(False)
-        self.display_window_slider.blockSignals(False)
+        self.block_signals(image_index,False)
 
-        self.update_lut_window_level()
+        self.update_lut_window_level(image_index)
 
 
-    def reset(self):
+    def reset(self,image_index:int):
         """
         Resets window and level to their initial values and updates the LUT and sliders.
         """
-        self.window = self.initial_window
-        self.level = self.initial_level
-
+        self.window[image_index] = self.initial_window[image_index].copy()
+        self.level[image_index] = self.initial_level[image_index].copy()
         # Block signals while updating sliders
-        self.level_slider.blockSignals(True)
-        self.window_slider.blockSignals(True)
-        self.display_level_slider.blockSignals(True)
-        self.display_window_slider.blockSignals(True)
+        self.block_signals(image_index,True)
 
-        self.display_level_slider.display(int(self.level))
-        self.display_window_slider.display(int(self.window))
-        self.level_slider.setValue(int(self.level))
-        self.window_slider.setValue(int(self.window))
-
+        self.display_level_sliders[image_index].display(int(self.initial_level[image_index]))
+        self.display_window_sliders[image_index].display(int(self.initial_window[image_index]))
+        self.level_sliders[image_index].setValue(int(self.initial_level[image_index]))
+        self.window_sliders[image_index].setValue(int(self.initial_window[image_index]))
         # Re-enable signals
-        self.level_slider.blockSignals(False)
-        self.window_slider.blockSignals(False)
-        self.display_level_slider.blockSignals(False)
-        self.display_window_slider.blockSignals(False)
+        self.block_signals(image_index,False)
 
-        self.update_lut_window_level()
+        self.update_lut_window_level(image_index)
 
-    def changed_sliders(self):
+    def changed_sliders(self,value:int,image_index:int):
         """
         Updates the window and level from slider positions and refreshes the LUT accordingly.
         """
-        self.window = self.window_slider.value()
-        self.level = self.level_slider.value()
+        self.window[image_index] = self.window_sliders[image_index].value()
+        self.level[image_index] = self.level_sliders[image_index].value()
 
-        self.display_level_slider.display(int(self.level))
-        self.display_window_slider.display(int(self.window))
+        self.display_level_sliders[image_index].display(int(self.level[image_index]))
+        self.display_window_sliders[image_index].display(int(self.window[image_index]))
 
-        self.update_lut_window_level()
+        self.update_lut_window_level(image_index)
+
+
+    def recompute_luttable(self, volume: np.ndarray,image_index:int):
+        """Recompute LUT and window/level ranges when timestamp is changed """
+        vmin, vmax = np.percentile(volume, [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100]) #in percentage
+        # Level and window for auto and reset
+        self.initial_window[image_index] = vmax - vmin
+        self.initial_level[image_index] = (vmax + vmin)/2
+        vmin_auto, vmax_auto = np.percentile(self.LoadMRI.volume[image_index], [self.vminmax_auto[0]*100, self.vminmax_auto[1]*100]) #in percentage
+        self.window_auto[image_index] = vmax_auto - vmin_auto
+        self.level_auto[image_index] = (vmax_auto + vmin_auto)/2
+
+        self.window[image_index] = self.initial_window[image_index]
+        self.level[image_index] = self.initial_level[image_index]
+        #apply initial lut
+        self.compute_lut(image_index)
+        self.update_lut_window_level(image_index)
+
+        # Block signals while updating sliders
+        self.block_signals(image_index,True)
+
+        self.window_sliders[image_index].setMaximum(int(volume.max()))
+        self.window_sliders[image_index].setValue(int(self.window[image_index]))
+        self.level_sliders[image_index].setMaximum(int(volume.max()))
+        self.level_sliders[image_index].setValue(int(self.level[image_index]))
+        self.display_level_sliders[image_index].display(int(self.level[image_index]))
+        self.display_window_sliders[image_index].display(int(self.window[image_index]))
+
+        # Re-enable signals
+        self.block_signals(image_index,False)
+
+
+    def block_signals(self,image_index:int,block_bool:bool):
+        """Temporarily block or unblock all connected Qt signals for a given image index."""
+        self.level_sliders[image_index].blockSignals(block_bool)
+        self.window_sliders[image_index].blockSignals(block_bool)
+        self.display_level_sliders[image_index].blockSignals(block_bool)
+        self.display_window_sliders[image_index].blockSignals(block_bool)
 

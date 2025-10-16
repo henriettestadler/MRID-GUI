@@ -1,0 +1,26 @@
+###########################
+# Label Description File 
+# File Format: 
+# IDX -R- -G- -B- -A-- VIS MSH LABEL 
+# Fields: 
+# IDX: Zero-based index 
+# -R-: Red color component (0..255) 
+# -G-: Green color component (0..255) 
+# -B-: Blue color component (0..255) 
+# -A--: Label transparency (0..1) 
+# VIS: Label visibility (0 or 1) 
+# MSH: Label mesh visibility (0 or 1) 
+# LABEL: Label description 
+###########################
+0	0	0	0	0	0	0	"Clear Labels"
+1	255	0	0	1	1	1	"wfvb1"
+2	0	128	0	1	1	1	"wfvb2"
+3	0	0	255	1	1	1	"wfvb"
+4	255	255	0	1	1	1	"wfvb"
+5	64	224	208	1	1	1	"wfvb"
+6	255	0	255	1	1	1	"wfvb"
+7	255	239	213	1	1	1	"wfvb"
+8	0	0	205	1	1	1	"wfvb"
+9	205	133	63	1	1	1	"wfvb"
+10	210	180	140	1	1	1	"wfvb"
+11	102	205	170	1	1	1	"svfdc"
