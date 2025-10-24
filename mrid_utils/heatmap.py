@@ -4,7 +4,7 @@ import handlers
 import scipy
 import roi
 
-def get_relaxation(filename_data, mrid_name, sessionpath, basestructs, te, slice_orientation, r=1, unsupervised=False, savepath=""):
+def get_relaxation(filename_data, mrid_name, sessionpath, basestructs, slice_orientation, te=[4.0, 4.09], r=1, unsupervised=False, savepath=""):
     """
     Calculates the MRID contrast heatmap.
     filename_data: str, the filename of 4D t2*MGE image (without .nii.gz extension)
