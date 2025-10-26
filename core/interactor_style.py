@@ -2,7 +2,6 @@
 import vtk
 from utils.zoom import Zoom
 from utils.zoom import zoom_notifier
-from utils.scale_bar import Scale
 
 class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
     """
@@ -45,6 +44,7 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
         picker = vtk.vtkPropPicker()
         renderer = interactor.GetRenderWindow().GetRenderers().GetFirstRenderer()
 
+        picker.Pick(x, y, 0, renderer)
         if self.is_in_minimap_rect(x, y):
             # Start dragging rectangle to pan
             self.dragging_minimap = True
@@ -58,9 +58,9 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                 if picker.Pick(x, y, 0, renderer):
                     pos = picker.GetPickPosition()
                     voxel = [
-                        int(round(pos[2] / self.LoadMRI.spacing[0])),
-                        int(round(pos[1] / self.LoadMRI.spacing[1])),
-                        int(round(pos[0] / self.LoadMRI.spacing[2]))
+                        int(round(pos[2] / self.LoadMRI.spacing[0][0])),
+                        int(round(pos[1] / self.LoadMRI.spacing[0][1])),
+                        int(round(pos[0] / self.LoadMRI.spacing[0][2]))
                     ]
                     self.measurement.add_point(voxel, self.view_name)
             else:
@@ -111,20 +111,20 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                 pos = picker.GetPickPosition()  # VTK world coordinates
                 # Update slice_indices depending on view
                 if view_name == "axial":
-                    xi = pos[0]/self.LoadMRI.spacing[2]
-                    yi = pos[1]/self.LoadMRI.spacing[1]
+                    xi = pos[0]/self.LoadMRI.spacing[0][2]
+                    yi = pos[1]/self.LoadMRI.spacing[0][1]
                     zi = old_indices[0]
                 elif view_name == "sagittal":
                     xi = old_indices[2]
-                    yi = pos[1]/self.LoadMRI.spacing[1]
-                    zi = self.LoadMRI.volume[0].shape[0]-1-pos[0]/self.LoadMRI.spacing[0]
+                    yi = pos[1]/self.LoadMRI.spacing[0][1]
+                    zi = self.LoadMRI.volume[0][0].shape[0]-1-pos[0]/self.LoadMRI.spacing[0][0]
                 elif view_name == "coronal":
-                    xi = pos[0]/self.LoadMRI.spacing[2]
+                    xi = pos[0]/self.LoadMRI.spacing[0][2]
                     yi = old_indices[1]
-                    zi = pos[1]/self.LoadMRI.spacing[0]
-                zi = max(0, min(zi, self.LoadMRI.volume[0].shape[0]-1))
-                yi = max(0, min(yi, self.LoadMRI.volume[0].shape[1]-1))
-                xi = max(0, min(xi, self.LoadMRI.volume[0].shape[2]-1))
+                    zi = pos[1]/self.LoadMRI.spacing[0][0]
+                zi = max(0, min(zi, self.LoadMRI.volume[0][0].shape[0]-1))
+                yi = max(0, min(yi, self.LoadMRI.volume[0][0].shape[1]-1))
+                xi = max(0, min(xi, self.LoadMRI.volume[0][0].shape[2]-1))
 
                 self.paintbrush_pos = [int(round(zi)),int(round(yi)),int(round(xi))]
 
@@ -174,9 +174,9 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                     lm = self.LoadMRI
 
                     voxel = [
-                        int(round(pos[2]/lm.spacing[0])),
-                        int(round(pos[1]/lm.spacing[1])),
-                        int(round(pos[0]/lm.spacing[2]))
+                        int(round(pos[2]/lm.spacing[0][0])),
+                        int(round(pos[1]/lm.spacing[0][1])),
+                        int(round(pos[0]/lm.spacing[0][2]))
                     ]
                     self.measurement.end_voxel_temp = voxel
                     self.measurement.draw_line(self.view_name, temporary=True)

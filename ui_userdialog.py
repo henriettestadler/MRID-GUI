@@ -15,19 +15,19 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractButton, QApplication, QComboBox, QDialog,
-    QDialogButtonBox, QGroupBox, QPlainTextEdit, QSizePolicy,
-    QTabWidget, QToolButton, QWidget)
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QCheckBox, QComboBox,
+    QDialog, QDialogButtonBox, QGroupBox, QPlainTextEdit,
+    QSizePolicy, QTabWidget, QToolButton, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(387, 364)
+        Dialog.resize(385, 432)
         self.buttonBox_OK = QDialogButtonBox(Dialog)
         self.buttonBox_OK.setObjectName(u"buttonBox_OK")
         self.buttonBox_OK.setEnabled(False)
-        self.buttonBox_OK.setGeometry(QRect(30, 310, 341, 32))
+        self.buttonBox_OK.setGeometry(QRect(30, 370, 341, 32))
         self.buttonBox_OK.setOrientation(Qt.Orientation.Horizontal)
         self.buttonBox_OK.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
         self.toolButton_LoadFile = QToolButton(Dialog)
@@ -40,7 +40,7 @@ class Ui_Dialog(object):
         self.tabWidget = QTabWidget(Dialog)
         self.tabWidget.setObjectName(u"tabWidget")
         self.tabWidget.setEnabled(False)
-        self.tabWidget.setGeometry(QRect(20, 90, 351, 201))
+        self.tabWidget.setGeometry(QRect(20, 90, 351, 251))
         self.tab_3d = QWidget()
         self.tab_3d.setObjectName(u"tab_3d")
         self.plainTextEdit_2 = QPlainTextEdit(self.tab_3d)
@@ -65,13 +65,20 @@ class Ui_Dialog(object):
         self.infotext_4D.setObjectName(u"infotext_4D")
         self.infotext_4D.setEnabled(False)
         self.infotext_4D.setGeometry(QRect(30, 80, 281, 91))
+        self.checkBox_4Dto3D = QCheckBox(self.tab_4d)
+        self.checkBox_4Dto3D.setObjectName(u"checkBox_4Dto3D")
+        self.checkBox_4Dto3D.setGeometry(QRect(20, 180, 301, 31))
+        self.checkBox_4Dto3D.setMaximumSize(QSize(500, 16777215))
+        self.checkBox_4Dto3D.setAcceptDrops(False)
+        self.checkBox_4Dto3D.setAutoExclusive(False)
+        self.checkBox_4Dto3D.setTristate(False)
         self.tabWidget.addTab(self.tab_4d, "")
         self.plainTextEdit_file = QPlainTextEdit(Dialog)
         self.plainTextEdit_file.setObjectName(u"plainTextEdit_file")
         self.plainTextEdit_file.setGeometry(QRect(20, 20, 281, 61))
         self.plainTextEdit_4 = QPlainTextEdit(Dialog)
         self.plainTextEdit_4.setObjectName(u"plainTextEdit_4")
-        self.plainTextEdit_4.setGeometry(QRect(20, 310, 181, 31))
+        self.plainTextEdit_4.setGeometry(QRect(20, 370, 181, 31))
 
         self.retranslateUi(Dialog)
         self.buttonBox_OK.accepted.connect(Dialog.accept)
@@ -102,8 +109,9 @@ class Ui_Dialog(object):
         self.infotext_4D.setPlainText(QCoreApplication.translate("Dialog", u"4D file loaded\n"
 "\n"
 "After clicking OK below, please click \"Start with MRI tags\" to enter your anatomic regions and MRID islands.", None))
+        self.checkBox_4Dto3D.setText(QCoreApplication.translate("Dialog", u"I want to open the 4D volume as 3D volume", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4d), QCoreApplication.translate("Dialog", u"4D", None))
-        self.plainTextEdit_file.setPlainText(QCoreApplication.translate("Dialog", u"Please open a File.", None))
+        self.plainTextEdit_file.setPlainText(QCoreApplication.translate("Dialog", u"Please open the MAIN IMAGE.", None))
         self.plainTextEdit_4.setPlainText(QCoreApplication.translate("Dialog", u"Click OK if everything is okay", None))
     # retranslateUi
 

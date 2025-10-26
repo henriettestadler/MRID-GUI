@@ -36,11 +36,11 @@ class Paintbrush:
         self.overlay_actors = {}
         self.vtk_label_images = {}
         self.color_mappers = {}
+        self.label_volume = np.zeros_like(self.LoadMRI.volume[0][0], dtype=np.uint8)
 
 
     def start_paintbrush(self):
         """ Initialize label volume and setup overlay tables for each view."""
-        self.label_volume = np.zeros_like(self.LoadMRI.volume[0], dtype=np.uint8)
         z,y,x = self.LoadMRI.slice_indices
         self.setup_table(self.label_volume[z, :, :], 'axial')
         self.setup_table(self.label_volume[:, y, :], 'coronal')
@@ -75,11 +75,14 @@ class Paintbrush:
             self.get_paint_settings(filled,view_name,paintbrush_pos)
             return
 
-        label_value = self.LoadMRI.paintbrush.color_combobox.index(self.brush_color)
-        paintover_value = self.LoadMRI.paintbrush.color_paintover.index(self.paintover_color)
+        label_value = self.color_combobox.index(self.brush_color)
+        paintover_value = self.color_paintover.index(self.paintover_color)
 
         # Determine voxel radius according to view spacing
-        z, y, x = map(int, paintbrush_pos)
+        if map(int, paintbrush_pos) is not None:
+            z, y, x = map(int, paintbrush_pos)
+        else:
+            return
         nz, ny, nx = self.label_volume.shape
         half = int(self.size // 2)
 
@@ -113,44 +116,86 @@ class Paintbrush:
                     self.label_volume[z0:z1, y0:y1, x] = int(label_value)
         elif self.brush_type == 'round':
             radius = int(self.size/2)
-            points_vector = []
-            points_vector.append([0,0])
-            # apply mask
-            slice_region = self.label_volume[z, :, :]
+            radius_vector = []
+            radius_vector.append([0,0])
+            if view_name == 'axial':
+                # apply mask
+                slice_region = self.label_volume[z, :, :]
+            elif view_name == 'coronal':
+                # apply mask
+                slice_region = self.label_volume[:, y, :]
+            elif view_name == 'sagittal':
+                # apply mask
+                slice_region = self.label_volume[:, :, x]
 
             if self.size%2==0:
-                x_new = x+0.5
-                y_new = y+0.5
+                if view_name == 'axial':
+                    x_new = x+0.5
+                    y_new = y+0.5
+                    vol_shape_x = self.label_volume.shape[2]
+                    vol_shape_y = self.label_volume.shape[1]
+                elif view_name == 'coronal':
+                    x_new = x+0.5
+                    y_new = z+0.5
+                    vol_shape_x = self.label_volume.shape[2]
+                    vol_shape_y = self.label_volume.shape[0]
+                elif view_name == 'sagittal':
+                    x_new = self.LoadMRI.volume[0][0].shape[0]-z-0.5
+                    y_new = y+0.5
+                    vol_shape_x = self.label_volume.shape[0]
+                    vol_shape_y = self.label_volume.shape[1]
                 for xx in range(int(radius+1)):
                     for yy in range(int(radius+1)):
                         if np.sqrt((xx-0.5)**2+(yy-0.5)**2) < self.size/2*0.98:
-                            points_vector.append([xx-0.5,yy-0.5])
+                            radius_vector.append([xx-0.5,yy-0.5])
             else:
-                x_new = x
-                y_new = y
+                if view_name == 'axial':
+                    x_new = x
+                    y_new = y
+                    vol_shape_x = self.label_volume.shape[2]
+                    vol_shape_y = self.label_volume.shape[1]
+                elif view_name == 'coronal':
+                    x_new = x
+                    y_new = z
+                    vol_shape_x = self.label_volume.shape[2]
+                    vol_shape_y = self.label_volume.shape[0]
+                elif view_name == 'sagittal':
+                    x_new = self.LoadMRI.volume[0][0].shape[0]-z
+                    y_new = y
+                    vol_shape_x = self.label_volume.shape[0]
+                    vol_shape_y = self.label_volume.shape[1]
                 for xx in range(int(radius+1)):
                     for yy in range(int(radius+1)):
                         if np.sqrt(xx**2+yy**2) < self.size/2*0.93:
-                            points_vector.append([xx,yy])
+                            radius_vector.append([xx,yy])
+
+
 
             for sign_x in +1,+1,-1,-1:
                 for sign_y in +1,-1,+1,-1:
-                    for dx,dy in points_vector:
+                    for dx,dy in radius_vector:
                         xi = int(round(x_new + dx*sign_x))
                         yi = int(round(y_new + dy*sign_y))
 
                         # check bounds
-                        if 0 <= xi < self.label_volume.shape[2] and 0 <= yi < self.label_volume.shape[1]:
-                            if paintover_value != 0:
-                                if slice_region[yi, xi] == paintover_value - 1:
-                                    slice_region[yi, xi] = label_value
-                            else:
-                                slice_region[yi, xi] = label_value
-
-            self.label_volume[z, :, :] = slice_region
+                        if 0 <= xi < vol_shape_x and 0 <= yi < vol_shape_y:
+                            if view_name == 'axial':
+                                if self.label_volume[z, yi, xi] == paintover_value - 1 or paintover_value == 0:
+                                   self.label_volume[z, yi, xi] = label_value
+                            elif view_name == 'coronal':
+                                if self.label_volume[yi, y, xi] == paintover_value - 1 or paintover_value == 0:
+                                   self.label_volume[yi, y, xi] = label_value
+                                # apply mask
+                                self.label_volume[:, y, :]
+                            elif view_name == 'sagittal':
+                                # apply mask
+                                self.label_volume[:, :, x]
+                                if 0 <= self.LoadMRI.volume[0][0].shape[0]-xi < vol_shape_x:
+                                    if self.label_volume[self.LoadMRI.volume[0][0].shape[0]-xi, yi, x] == paintover_value - 1 or paintover_value == 0:
+                                       self.label_volume[self.LoadMRI.volume[0][0].shape[0]-xi, yi, x] = label_value
 
         # Update the overlay
-        self.update_overlay(z, y, x)
+        self.update_overlay() #z, y, x)
         self.histogram()
 
 
@@ -167,30 +212,27 @@ class Paintbrush:
             self.source.SetZLength(0.1)  # flat in slice plane
             ##Coronal
             if view_name == 'axial':
-                self.source.SetXLength(self.size*LM.spacing[2])
-                self.source.SetYLength(self.size*LM.spacing[1])
+                self.source.SetXLength(self.size*LM.spacing[0][2])
+                self.source.SetYLength(self.size*LM.spacing[0][1])
                 if self.size % 2 == 0:
-                    self.source.SetCenter((x - 0.5) * LM.spacing[2],(y - 0.5) * LM.spacing[1],1 )#self.mouse_pos[2]*LM.spacing[2], self.mouse_pos[1]*LM.spacing[1], 1) #xy
+                    self.source.SetCenter((x - 0.5) * LM.spacing[0][2],(y - 0.5) * LM.spacing[0][1],1 )
                 else:
-                    self.source.SetCenter(x * LM.spacing[2],y * LM.spacing[1],1 )
+                    self.source.SetCenter(x * LM.spacing[0][2],y * LM.spacing[0][1],1 )
             elif view_name == 'coronal':
-                self.source.SetXLength(self.size*LM.spacing[2]*2)
-                self.source.SetYLength(self.size*LM.spacing[0]*2)
+                self.source.SetXLength(self.size*LM.spacing[0][2])
+                self.source.SetYLength(self.size*LM.spacing[0][0])
                 if self.size % 2 == 0:
-                    self.source.SetCenter((x - 0.5) * LM.spacing[2],(z - 0.5) * LM.spacing[0],1 )
+                    self.source.SetCenter((x - 0.5) * LM.spacing[0][2],(z - 0.5) * LM.spacing[0][0],1 )
                 else:
-                    self.source.SetCenter(x * LM.spacing[2],z * LM.spacing[0],1 )
-
-                #self.source.SetCenter(self.mouse_pos[2]*LM.spacing[2], self.mouse_pos[0]*LM.spacing[0], 1) #xz
+                    self.source.SetCenter(x * LM.spacing[0][2],z * LM.spacing[0][0],1 )
             elif view_name == 'sagittal':
-                self.source.SetXLength(self.size*LM.spacing[0])
-                self.source.SetYLength(self.size*LM.spacing[1])
+                self.source.SetXLength(self.size*LM.spacing[0][0])
+                self.source.SetYLength(self.size*LM.spacing[0][1])
                 if self.size % 2 == 0:
-                    self.source.SetCenter((self.LoadMRI.volume[0].shape[0]-z - 0.5) * LM.spacing[0],(y - 0.5) * LM.spacing[1],1 )
+                    self.source.SetCenter((self.LoadMRI.volume[0][0].shape[0]-z - 0.5) * LM.spacing[0][0],(y - 0.5) * LM.spacing[0][1],1 )
                 else:
-                    self.source.SetCenter((self.LoadMRI.volume[0].shape[0]-z) * LM.spacing[0],y * LM.spacing[1],1 )
+                    self.source.SetCenter((self.LoadMRI.volume[0][0].shape[0]-z-1) * LM.spacing[0][0],y * LM.spacing[0][1],1)
 
-                #self.source.SetCenter((self.LoadMRI.volume[0].shape[0]-self.mouse_pos[0])*LM.spacing[0], self.mouse_pos[1]*LM.spacing[1], 1) #zy
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputConnection(self.source.GetOutputPort())
             actor = vtk.vtkActor()
@@ -215,61 +257,88 @@ class Paintbrush:
         elif self.brush_type == 'round':
             #z, y, x: slides
             radius = int(self.size/2)
-            points_vector = []
+            radius_vector = []
 
             if self.size%2==0:
-                x_new = x+0.5
-                y_new = y+ 0.5
+                if view_name == 'axial':
+                    x_new = x+0.5
+                    y_new = y+ 0.5
+                    spacing_x = LM.spacing[0][2]
+                    spacing_y = LM.spacing[0][1]
+                elif view_name == 'coronal':
+                    x_new = x+0.5
+                    y_new = z+ 0.5
+                    spacing_x = LM.spacing[0][2]
+                    spacing_y = LM.spacing[0][0]
+                elif view_name == 'sagittal':
+                    x_new = self.LoadMRI.volume[0][0].shape[0]-z-1.5
+                    y_new = y+ 0.5
+                    spacing_x = LM.spacing[0][0]
+                    spacing_y = LM.spacing[0][1]
+
                 for xx in range(int(radius)):
                     xx +=1
                     for yy in range(int(radius)):
                         yy +=1
                         if np.sqrt((xx-0.5)**2+(yy-0.5)**2) > self.size/2*0.98:
-                            points_vector.append([xx-0.5,yy-0.5])
+                            radius_vector.append([xx-0.5,yy-0.5])
                             break
             else:
-                x_new = x
-                y_new = y
+                if view_name == 'axial':
+                    x_new = x
+                    y_new = y
+                    spacing_x = LM.spacing[0][2]
+                    spacing_y = LM.spacing[0][1]
+                elif view_name == 'coronal':
+                    x_new = x
+                    y_new = z
+                    spacing_x = LM.spacing[0][2]
+                    spacing_y = LM.spacing[0][0]
+                elif view_name == 'sagittal':
+                    x_new = self.LoadMRI.volume[0][0].shape[0]-z-1
+                    y_new = y
+                    spacing_x = LM.spacing[0][0]
+                    spacing_y = LM.spacing[0][1]
                 for xx in range(int(radius)):
                     xx += 1
                     for yy in range(int(radius)):
                         yy += 1
                         if np.sqrt(xx**2+yy**2) > self.size/2*0.93:
-                            points_vector.append([xx,yy])
+                            radius_vector.append([xx,yy])
                             break
 
-            length = len(points_vector)
+            length = len(radius_vector)
             points = vtkPoints()
             num = 0
             if length > 0:
                 #rechts oben
                 for ii in range(length):
-                    points.InsertNextPoint((x_new + points_vector[ii][0] - 0.5)* LM.spacing[2], (y_new + points_vector[ii][1] + 0.5)* LM.spacing[1],1.1)
-                    points.InsertNextPoint((x_new + points_vector[ii][0] - 0.5)* LM.spacing[2], (y_new + points_vector[ii][1] - 0.5)* LM.spacing[1],1.1)
-                    points.InsertNextPoint((x_new + points_vector[ii][0] + 0.5)* LM.spacing[2], (y_new + points_vector[ii][1] - 0.5)* LM.spacing[1],1.1)
+                    points.InsertNextPoint((x_new + radius_vector[ii][0] - 0.5)* spacing_x, (y_new + radius_vector[ii][1] + 0.5)* spacing_y,1.1)
+                    points.InsertNextPoint((x_new + radius_vector[ii][0] - 0.5)* spacing_x, (y_new + radius_vector[ii][1] - 0.5)* spacing_y,1.1)
+                    points.InsertNextPoint((x_new + radius_vector[ii][0] + 0.5)* spacing_x, (y_new + radius_vector[ii][1] - 0.5)* spacing_y,1.1)
                     num += 3
 
                 #rechts unten
                 for ii in range(length):
                     ii = length-ii-1
-                    points.InsertNextPoint((x_new + points_vector[ii][0] + 0.5)* LM.spacing[2], (y_new - points_vector[ii][1] + 0.5)* LM.spacing[1],1.1)
-                    points.InsertNextPoint((x_new + points_vector[ii][0] - 0.5)* LM.spacing[2], (y_new - points_vector[ii][1] + 0.5)* LM.spacing[1],1.1)
-                    points.InsertNextPoint((x_new + points_vector[ii][0] - 0.5)* LM.spacing[2], (y_new - points_vector[ii][1] - 0.5)* LM.spacing[1],1.1)
+                    points.InsertNextPoint((x_new + radius_vector[ii][0] + 0.5)* spacing_x, (y_new - radius_vector[ii][1] + 0.5)* spacing_y,1.1)
+                    points.InsertNextPoint((x_new + radius_vector[ii][0] - 0.5)* spacing_x, (y_new - radius_vector[ii][1] + 0.5)* spacing_y,1.1)
+                    points.InsertNextPoint((x_new + radius_vector[ii][0] - 0.5)* spacing_x, (y_new - radius_vector[ii][1] - 0.5)* spacing_y,1.1)
                     num += 3
 
                 #links unten
                 for ii in range(length):
-                    points.InsertNextPoint((x_new - points_vector[ii][0] + 0.5)* LM.spacing[2], (y_new - points_vector[ii][1] - 0.5)* LM.spacing[1],1.1)
-                    points.InsertNextPoint((x_new - points_vector[ii][0] + 0.5)* LM.spacing[2], (y_new - points_vector[ii][1] + 0.5)* LM.spacing[1],1.1)
-                    points.InsertNextPoint((x_new - points_vector[ii][0] - 0.5)* LM.spacing[2], (y_new - points_vector[ii][1] + 0.5)* LM.spacing[1],1.1)
+                    points.InsertNextPoint((x_new - radius_vector[ii][0] + 0.5)* spacing_x, (y_new - radius_vector[ii][1] - 0.5)* spacing_y,1.1)
+                    points.InsertNextPoint((x_new - radius_vector[ii][0] + 0.5)* spacing_x, (y_new - radius_vector[ii][1] + 0.5)* spacing_y,1.1)
+                    points.InsertNextPoint((x_new - radius_vector[ii][0] - 0.5)* spacing_x, (y_new - radius_vector[ii][1] + 0.5)* spacing_y,1.1)
                     num += 3
 
                 #links oben
                 for ii in range(length):
                     ii = length-ii-1
-                    points.InsertNextPoint((x_new - points_vector[ii][0] - 0.5)* LM.spacing[2], (y_new + points_vector[ii][1] - 0.5)* LM.spacing[1],1.1)
-                    points.InsertNextPoint((x_new - points_vector[ii][0] + 0.5)* LM.spacing[2], (y_new + points_vector[ii][1] - 0.5)* LM.spacing[1],1.1)
-                    points.InsertNextPoint((x_new - points_vector[ii][0] + 0.5)* LM.spacing[2], (y_new + points_vector[ii][1] + 0.5)* LM.spacing[1],1.1)
+                    points.InsertNextPoint((x_new - radius_vector[ii][0] - 0.5)* spacing_x, (y_new + radius_vector[ii][1] - 0.5)* spacing_y,1.1)
+                    points.InsertNextPoint((x_new - radius_vector[ii][0] + 0.5)* spacing_x, (y_new + radius_vector[ii][1] - 0.5)* spacing_y,1.1)
+                    points.InsertNextPoint((x_new - radius_vector[ii][0] + 0.5)* spacing_x, (y_new + radius_vector[ii][1] + 0.5)* spacing_y,1.1)
                     num += 3
 
                 #remove duplicated points
@@ -307,10 +376,10 @@ class Paintbrush:
                     points.InsertNextPoint(*p)
                     num += 1
             else: #radius 1 or 2_new
-                points.InsertNextPoint((x_new + 0.5*self.size)* LM.spacing[2], (y_new + 0.5*self.size)* LM.spacing[1],1.1)
-                points.InsertNextPoint((x_new + 0.5*self.size)* LM.spacing[2], (y_new - 0.5*self.size)* LM.spacing[1],1.1)
-                points.InsertNextPoint((x_new - 0.5*self.size)* LM.spacing[2], (y_new - 0.5*self.size)* LM.spacing[1],1.1)
-                points.InsertNextPoint((x_new - 0.5*self.size)* LM.spacing[2], (y_new + 0.5*self.size)* LM.spacing[1],1.1)
+                points.InsertNextPoint((x_new + 0.5*self.size)* spacing_x, (y_new + 0.5*self.size)* spacing_y,1.1)
+                points.InsertNextPoint((x_new + 0.5*self.size)* spacing_x, (y_new - 0.5*self.size)* spacing_y,1.1)
+                points.InsertNextPoint((x_new - 0.5*self.size)* spacing_x, (y_new - 0.5*self.size)* spacing_y,1.1)
+                points.InsertNextPoint((x_new - 0.5*self.size)* spacing_x, (y_new + 0.5*self.size)* spacing_y,1.1)
                 num = 4
 
             self.source = vtk.vtkPolygon()
@@ -343,18 +412,19 @@ class Paintbrush:
             actor.GetProperty().SetRepresentationToWireframe()
             actor.GetProperty().SetOpacity(1.0)
             for i in range(self.LoadMRI.num_images):
-                renderer = self.LoadMRI.renderers[i][view_name] ## FOR ALL IMAGES
+                renderer = self.LoadMRI.renderers[i][view_name] # FOR ALL IMAGES
                 if self.paint_actors.get(view_name) is not None:
                     renderer.RemoveActor(self.paint_actors[view_name])
                 renderer.AddActor(actor)
-                self.LoadMRI.vtk_widgets[i][view_name].GetRenderWindow().Render() ## FOR ALL IMAGES
+                self.LoadMRI.vtk_widgets[i][view_name].GetRenderWindow().Render() # FOR ALL IMAGES
             self.paint_actors[view_name] = None
             self.paint_actors[view_name] = actor
             return actor
 
 
-    def update_overlay(self,z:int, y:int, x:int):
+    def update_overlay(self): #,z:int, y:int, x:int):
         """Update the VTK overlay actors for all views based on the label volume."""
+        z, y, x = self.LoadMRI.slice_indices
 
         for view_name, img_vtk in self.vtk_label_images.items():
             # Axial view (XY plane at z)
@@ -375,12 +445,13 @@ class Paintbrush:
             img_vtk.Modified()
             self.color_mappers[view_name].Update()
             self.overlay_actors[view_name].GetMapper().Update()
-            self.lookup.SetRange(0, len(self.LoadMRI.paintbrush.color_combobox)-1)
+            self.lookup.SetRange(0, len(self.color_combobox)-1)
             actor = self.overlay_actors.get(view_name)
             self.overlay_actors[view_name] = actor
-            for i in range(self.LoadMRI.num_images):
-                self.LoadMRI.vtk_widgets[i][view_name].GetRenderWindow().Render()
 
+        for _,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
+            for view_name, widget in vtk_widget_image.items():
+                widget.GetRenderWindow().Render()
 
     def setup_table(self,slice_img:np.ndarray, view_name:str):
         """ Create the VTK lookup table (LUT) and image actor for a slice in a view."""
@@ -402,11 +473,11 @@ class Paintbrush:
 
         # Correct spacing per view
         if view_name == "axial":      #x,y
-            spacing = (self.LoadMRI.spacing[2], self.LoadMRI.spacing[1], 1)
+            spacing = (self.LoadMRI.spacing[0][2], self.LoadMRI.spacing[0][1], 1)
         elif view_name == "coronal":  #
-            spacing = (self.LoadMRI.spacing[2], self.LoadMRI.spacing[0], 1)
+            spacing = (self.LoadMRI.spacing[0][2], self.LoadMRI.spacing[0][0], 1)
         elif view_name == "sagittal": #y,z
-            spacing = (self.LoadMRI.spacing[0], self.LoadMRI.spacing[1], 1)
+            spacing = (self.LoadMRI.spacing[0][0], self.LoadMRI.spacing[0][1], 1)
 
         # Prepare your VTK image
         vtk_data = numpy_support.numpy_to_vtk(slice_img.ravel(), deep=True, array_type=vtk.VTK_UNSIGNED_CHAR)
@@ -421,14 +492,14 @@ class Paintbrush:
         color_mapper.SetLookupTable(self.lookup)
         color_mapper.SetOutputFormatToRGBA()
         color_mapper.SetInputData(img_vtk)
-        color_mapper.GetLookupTable().SetRange(0, len(self.LoadMRI.paintbrush.color_combobox) - 1)
+        color_mapper.GetLookupTable().SetRange(0, len(self.color_combobox) - 1)
         color_mapper.Update()
 
         # Create the actor
         actor = vtk.vtkImageActor()
         actor.GetMapper().SetInputConnection(color_mapper.GetOutputPort())
-        actor.GetProperty().SetColorWindow(len(self.LoadMRI.paintbrush.color_combobox) - 1)
-        actor.GetProperty().SetColorLevel((len(self.LoadMRI.paintbrush.color_combobox) - 1)/2)
+        actor.GetProperty().SetColorWindow(len(self.color_combobox) - 1)
+        actor.GetProperty().SetColorLevel((len(self.color_combobox) - 1)/2)
         actor.GetProperty().SetOpacity(self.label_occ)  #0.3
 
         # Add to renderer
@@ -448,9 +519,9 @@ class Paintbrush:
         Update the histogram for the current label selection in the GUI.
         """
         # assume `image_data` is your MRI slice and `labels` is label array
-        histog_label = self.LoadMRI.paintbrush.color_combobox.index(self.histogram_color)
+        histog_label = self.color_combobox.index(self.histogram_color)
         mask = self.label_volume == histog_label
-        intensities = self.LoadMRI.volume[0][mask] ## FOR ALL IMAGES
+        intensities = self.LoadMRI.volume[0][0][mask] ## FOR ALL IMAGES
 
         # Clear previous plot
         self.widget_histogram.clear()
@@ -480,7 +551,7 @@ class Paintbrush:
         for actor in self.overlay_actors.values():
             if actor is not None:
                 actor.GetProperty().SetOpacity(self.label_occ)
-        # optionally re-render
+        # re-render
         for i in range(self.LoadMRI.num_images):
             for view_name in self.overlay_actors.keys():
                 self.LoadMRI.vtk_widgets[i][view_name].GetRenderWindow().Render()

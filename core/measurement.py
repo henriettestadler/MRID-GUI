@@ -72,14 +72,14 @@ class Measurement:
 
         # Convert voxel to physical coordinates
         start_point = np.array([
-            self.start_voxel[2] * self.load_mri.spacing[2],
-            self.start_voxel[1] * self.load_mri.spacing[1],
-            self.start_voxel[0] * self.load_mri.spacing[0]
+            self.start_voxel[2] * self.load_mri.spacing[0][2],
+            self.start_voxel[1] * self.load_mri.spacing[0][1],
+            self.start_voxel[0] * self.load_mri.spacing[0][0]
         ])
         end_point = np.array([
-            end_voxel[2] * self.load_mri.spacing[2],
-            end_voxel[1] * self.load_mri.spacing[1],
-            end_voxel[0] * self.load_mri.spacing[0]
+            end_voxel[2] * self.load_mri.spacing[0][2],
+            end_voxel[1] * self.load_mri.spacing[0][1],
+            end_voxel[0] * self.load_mri.spacing[0][0]
         ])
 
         #Create Line
@@ -106,7 +106,6 @@ class Measurement:
             self.temp_text_actor = text_actor
             measurement_renderer.AddActor(text_actor)
         else:
-
             measurement_renderer.AddActor(text_actor)
             line_slice_index = [self.load_mri.slice_indices[0], self.load_mri.slice_indices[1], self.load_mri.slice_indices[2]]
             self.load_mri.measurement_lines.append((view_name, actor, line_slice_index, text_actor))
@@ -142,5 +141,5 @@ class Measurement:
             return 0.0
         start = np.array(self.start_voxel)
         end = np.array(self.end_voxel)
-        spacing = np.array(self.load_mri.spacing)
+        spacing = np.array(self.load_mri.spacing[0])
         return np.linalg.norm((end - start) * spacing)
