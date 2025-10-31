@@ -3,16 +3,43 @@ import nibabel as nib
 import pandas as pd
 import numpy as np
 
-def get_data(sessionpath, filename_data):
+def get_anat_data(sessionpath, filename_data):
     """
-    Gets the raw data together with MRID segmentation and anatomical segmentation
+    Gets the raw data together with MRID anatomical segmentation
+    filename_data: filename of the raw T2*Map MGE data
+    img_slice: image slice of interest
+
+    returns;
+    data: 4D T2*MGE data np.array
+    anat: np.array for anatomical segmentation
+    labelsdf: pandas.df, metadata for segmentation
+
+    """
+    anatpath = os.path.join(sessionpath, "anat")
+    filename_data_full = ".".join((filename_data, "nii", "gz"))
+    filename_anat = ".".join((filename_data + "-anat", "nii", "gz"))
+
+    nii_data, data = read_data(os.path.join(anatpath, filename_data_full))
+    _, anat = read_data(os.path.join(anatpath, filename_anat))
+
+    labelsdf = read_labels(os.path.join(sessionpath, "anat", "labels.txt"))
+    print(labelsdf)
+
+    print("Data shape of anatomy segmentation" + str(np.shape(anat)))
+    print("Data shape of MRI data" + str(np.shape(data)))
+
+    #print("Voxel dimensions: " + str(nii_data.header['pixdim']))
+    return nii_data, data, anat, labelsdf
+
+def get_segmentation_data(sessionpath, filename_data):
+    """
+    Gets the raw data together with MRID segmentation segmentation
     filename_data: filename of the raw T2*Map MGE data
     img_slice: image slice of interest
 
     returns;
     data: 4D T2*MGE data np.array
     segmentation: np.array for IONP island segmentation
-    anat: np.array for anatomical segmentation
     labelsdf: pandas.df, metadata for segmentation
 
     """
@@ -28,13 +55,11 @@ def get_data(sessionpath, filename_data):
     labelsdf = read_labels(os.path.join(sessionpath, "anat", "labels.txt"))
     print(labelsdf)
 
-    print("Data shape of anatomy segmentation" + str(np.shape(anat)))
     print("Data shape of MRI data" + str(np.shape(data)))
     print("Data shape of MRID segmentation" + str(np.shape(segmentation)))
 
-    # print("Voxel dimensions: " + str(nii_data.header['pixdim']))
+    #print("Voxel dimensions: " + str(nii_data.header['pixdim']))
     return nii_data, data, segmentation, anat, labelsdf
-
 
 def read_data(path):
     """
