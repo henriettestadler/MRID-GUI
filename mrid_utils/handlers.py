@@ -23,12 +23,10 @@ def get_anat_data(sessionpath, filename_data):
     _, anat = read_data(os.path.join(anatpath, filename_anat))
 
     labelsdf = read_labels(os.path.join(sessionpath, "anat", "labels.txt"))
-    print(labelsdf)
 
     print("Data shape of anatomy segmentation" + str(np.shape(anat)))
     print("Data shape of MRI data" + str(np.shape(data)))
 
-    #print("Voxel dimensions: " + str(nii_data.header['pixdim']))
     return nii_data, data, anat, labelsdf
 
 def get_segmentation_data(sessionpath, filename_data):
@@ -53,7 +51,6 @@ def get_segmentation_data(sessionpath, filename_data):
     _, anat = read_data(os.path.join(anatpath, filename_anat))
 
     labelsdf = read_labels(os.path.join(sessionpath, "anat", "labels.txt"))
-    print(labelsdf)
 
     print("Data shape of MRI data" + str(np.shape(data)))
     print("Data shape of MRID segmentation" + str(np.shape(segmentation)))
