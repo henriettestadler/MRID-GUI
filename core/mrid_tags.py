@@ -141,7 +141,7 @@ class MRID_tags(QObject):
         label_image = sITK.GetImageFromArray(self.load_mri.paintbrush.label_volume)
         size = list(self.load_mri.paintbrush.label_volume.shape[::-1]) + [0]  # Extract 1 time frame
         reference_image = sITK.Extract(
-            self.load_mri.image,
+            self.load_mri.image[0],
             size=size,
             index=[0, 0, 0, 0]  # take time=0 frame
         )
@@ -149,11 +149,11 @@ class MRID_tags(QObject):
 
         # Suggest a default name (for example, based on the original file name)
         if self.load_mri.tag_file:
-            file_name = self.load_mri.file_name[:-7]
+            file_name = self.load_mri.file_name[0][:-7]
             default_name = f"{file_name}-anat.nii.gz" #"label_volume.nii.gz"
             self.load_mri.tag_file = False
         else:
-            file_name = self.load_mri.file_name[:-7]
+            file_name = self.load_mri.file_name[0][:-7]
             default_name = f"{file_name}-segmentation.nii.gz"
 
 

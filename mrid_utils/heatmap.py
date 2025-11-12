@@ -1,10 +1,50 @@
 import numpy as np
 import os
-import handlers
+from mrid_utils import handlers,roi
 import scipy
-import roi
+import matplotlib.pyplot as plt
+import matplotlib.tri as tri
+import numpy as np
 
-def get_relaxation(filename_data, mrid_name, sessionpath, basestructs, slice_orientation, te=[4.0, 4.09], r=1, unsupervised=False, savepath=""):
+def get_relaxation_unsupervised(filename_data, sessionpath, basestructs, slice_orientation, te=[4.0, 4.09], r=1, savepath=""):
+    """
+    Calculates the MRID contrast heatmap unsupervised, using only the anat regions data.
+    filename_data: str, the filename of 4D t2*MGE image (without .nii.gz extension)
+    sessionpath: mri session path str where the data is stored.
+    basestructs: list of str, to define the baseline anatomical structure names
+    te: [te_0, te_spacing]
+    r: integer, radius of sliding window
+    savepath: directory to save plots.
+
+    Returns and saves;
+    heatmaps: np.array with size (num_of_ionp_islands x data.shape[0] x data.shape[1]), that contains MRID contrast heatmap
+    heatmap_nii: np.array with same size as segmentation to be saved as nii.gz file.
+    img_slice: img_slice along 3rd dimension of data where MRID of interest is visible.
+    """
+    nii_data, data, anat, labelsdf = handlers.get_anat_data(sessionpath, filename_data)
+    heatmap_nii = np.zeros_like(anat)
+    nonzero_mask = anat != 0
+    nonzero_slices = np.unique(np.where(nonzero_mask)[-1])
+
+    #baseline_std = np.zeros((len(basestructs),))
+    heatmaps = np.zeros((len(basestructs), 1, anat.shape[0], anat.shape[1]))
+    roi_index = 0 #anatomical regions start at 1
+    for j, roi_baseline in enumerate(basestructs):
+        roi_index += 1 #labelsdf["Labels"][labelsdf["Anatomical Regions"].str.contains(roi_baseline)]
+        img_slice = [s for s in nonzero_slices if np.any(anat[:, :, s] == roi_index)][0]
+        heatmaps[0] = segment_relaxation(data[:, :, img_slice, :], anat[:, :, img_slice], anat[:, :, img_slice], basestructs, labelsdf, roi_index, te, r=r,unsupervised=True)
+        heatmap_nii[:, :, img_slice] = heatmap_nii[:, :, img_slice] + heatmaps[0]
+
+    #filename = mrid_name + "-" + slice_orientation + "-heatmap.npy"
+    #np.save(os.path.join(savepath, filename), heatmaps)
+    # Saving MRID contrast heatmaps as nii.gz files.
+    #new_heatmap_filename = filename_data + "-" + mrid_name + "-heatmap.nii.gz"
+    #handlers.save_nii(heatmap_nii, nii_data.affine, os.path.join(savepath, new_heatmap_filename))
+    return heatmaps, heatmap_nii, img_slice
+
+
+
+def get_relaxation(filename_data, mrid_names, sessionpath, basestructs, slice_orientation, te=[4.0, 4.09], r=1, savepath=""):
     """
     Calculates the MRID contrast heatmap.
     filename_data: str, the filename of 4D t2*MGE image (without .nii.gz extension)
@@ -13,7 +53,6 @@ def get_relaxation(filename_data, mrid_name, sessionpath, basestructs, slice_ori
     mrid_name: str, that defines the MRID
     te: [te_0, te_spacing]
     r: integer, radius of sliding window
-    unsupervised: boolean flag for unsupervised MRID heatmap analysis
     savepath: directory to save plots.
 
     Returns and saves;
@@ -22,65 +61,86 @@ def get_relaxation(filename_data, mrid_name, sessionpath, basestructs, slice_ori
     img_slice: img_slice along 3rd dimension of data where MRID of interest is visible.
     """
 
-    nii_data, data, segmentation, anat, labelsdf = handlers.get_data(sessionpath, filename_data)
+    nii_data, data, segmentation, anat, labelsdf = handlers.get_segmentation_data(sessionpath, filename_data)
+    segmentation = np.maximum(segmentation, anat)
+    heatmap_nii = np.zeros_like(anat)
 
-    heatmap_nii = np.zeros_like(segmentation)
-
-    if unsupervised:
-        baseline_std = np.zeros((len(basestructs),))
-        heatmaps = np.zeros((len(basestructs), 1, segmentation.shape[0], segmentation.shape[1]))
-        for j, roi_baseline in enumerate(basestructs):
-            roi_areas = labelsdf["Labels"][labelsdf["Anatomical Regions"].str.contains(roi_baseline)]
-            roi = roi_baseline
-            for i, roi in enumerate(roi_areas):
-                heatmaps[j, i, :, :] = segment_relaxation(data, anat, anat, basestructs, labelsdf, roi, te, r=r)
-
-    else:
+    for mrid_name in mrid_names:
         ionp_islands = labelsdf["Labels"][labelsdf["Anatomical Regions"].str.contains(mrid_name)]
         heatmaps = np.zeros((len(ionp_islands), segmentation.shape[0], segmentation.shape[1]))
 
-        for i, roi in enumerate(ionp_islands):
-            img_slice = np.unique(np.where(segmentation == roi)[-1])[0]
+        for i, roi_index in enumerate(ionp_islands):
+            img_slice = np.unique(np.where(segmentation == roi_index)[-1])[0]
             heatmaps[i] = segment_relaxation(data[:, :, img_slice, :],
                                              segmentation[:, :, img_slice],
                                              anat[:, :, img_slice],
-                                             basestructs, labelsdf, roi, te, r=r, savepath=savepath)
+                                             basestructs, labelsdf, roi_index, te, r=r, savepath=savepath)
             heatmap_nii[:, :, img_slice] = heatmap_nii[:, :, img_slice] + heatmaps[i]
 
 
-    filename = mrid_name + "-" + slice_orientation + "-heatmap.npy"
-    np.save(os.path.join(savepath, filename), heatmaps)
-
-    new_heatmap_filename = filename_data + "-" + mrid_name + "-heatmap.nii.gz"
-
     # Saving MRID contrast heatmaps as nii.gz files.
+    new_heatmap_filename = filename_data + "-" + mrid_name + "-heatmap.nii.gz"
     handlers.save_nii(heatmap_nii, nii_data.affine, os.path.join(savepath, new_heatmap_filename))
+
+    filename = filename_data + "-" + mrid_name + "-" + slice_orientation + "-heatmap.npy"
+    np.save(os.path.join(savepath, filename), heatmaps)
 
     return heatmaps, heatmap_nii, img_slice
 
+def get_relaxation_simultaneously(filename_data, roi_index, sessionpath, basestructs, slice_orientation, segmentation, te=[4.0, 4.09], r=1, savepath=""):
+    """
+    Calculates the MRID contrast heatmap directly while still painting the MRID tags.
+    filename_data: str, the filename of 4D t2*MGE image (without .nii.gz extension)
+    sessionpath: mri session path str where the data is stored.
+    basestructs: list of str, to define the baseline anatomical structure names
+    roi_index: index of roi which was just painted
+    te: [te_0, te_spacing]
+    r: integer, radius of sliding window
+    savepath: directory to save plots.
 
-def segment_relaxation(data, segmentation, anat, basestructs, labelsdf, roi, te, r=2, savepath=""):
+    Returns and saves;
+    heatmaps: np.array with size (num_of_ionp_islands x data.shape[0] x data.shape[1]), that contains MRID contrast heatmap
+    heatmap_nii: np.array with same size as segmentation to be saved as nii.gz file.
+    img_slice: img_slice along 3rd dimension of data where MRID of interest is visible.
+    """
+
+    nii_data, data, anat, labelsdf = handlers.get_anat_data(sessionpath, filename_data)
+    heatmap_nii = np.zeros_like(anat)
+
+    heatmap = np.zeros((anat.shape[0], anat.shape[1]))
+
+    #if no voxel is painted in roi_index
+    if np.unique(np.where(segmentation == roi_index)).size == 0:
+        return heatmap, heatmap_nii, 0
+
+    img_slice = np.unique(np.where(segmentation == roi_index))[0]
+    heatmap = segment_relaxation(data[:, :, img_slice, :],
+                                 segmentation[img_slice,:, :].T,
+                                 anat[:, :, img_slice],
+                                 basestructs, labelsdf, roi_index, te, r=r, savepath=savepath)
+    heatmap_nii[:, :, img_slice] = heatmap_nii[:, :, img_slice] + heatmap
+
+    return heatmap, heatmap_nii, img_slice
+
+
+def segment_relaxation(data, segmentation, anat, basestructs, labelsdf, roi_index, te, r=2, savepath="", unsupervised=False):
     num_echos = data.shape[-1]
     heatmap = np.zeros_like(segmentation)
 
-    for index in np.array(list(zip(*np.where(segmentation == roi)))):
-        # meanVals = np.zeros((num_echos,))
-        # stdVals = np.zeros((num_echos,))
+    te0, te_spacing = te
+    echos = np.arange(te0, np.ceil(te0 + (num_echos - 1) * te_spacing), te_spacing)
+    indices = np.array(list(zip(*np.where(segmentation == roi_index))))
 
+    for index in indices:
         if r > 1:
             mask = roi.disk_roi(segmentation, index, r=r)
         else:
             mask = roi.sq_roi(segmentation, index)
-
         base_seg, struct = roi.argmax_roi_basestruct(mask, basestructs, labelsdf, anat)
         baseline = get_baseline_vals(base_seg, segmentation, data)
         if np.sum(mask * (anat == base_seg)) > 2:
             mask = mask * (anat == base_seg)
-
         _, meanVals, stdVals = roi.get_echo_vals(data, mask)
-
-        te0, te_spacing = te
-        echos = np.arange(te0, np.ceil(te0 + (num_echos - 1) * te_spacing), te_spacing)
 
         try:
             paramsBase, paramsData, _, _ = fit_relaxation(meanVals, stdVals, baseline, echos)
@@ -90,10 +150,11 @@ def segment_relaxation(data, segmentation, anat, basestructs, labelsdf, roi, te,
             diff = relaxivity_roi - relaxivity_base
         except:
             diff = 0.1
-
         if diff < 0:
             diff = 0
+
         heatmap[index[0], index[1]] = abs(diff)
+
 
         # if savepath:
         #     if not os.path.exists(os.path.join(savepath, "Relaxation Curves")):
@@ -189,9 +250,3 @@ def get_baseline_vals(seg, segmentationArr, data):
         baseline = data[segmentationArr == seg]
 
     return baseline
-
-
-
-
-
-

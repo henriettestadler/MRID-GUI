@@ -27,6 +27,7 @@ class Minimap:
         self.half_height = {}
         self.LoadMRI.rect_old_x = 0.5
         self.LoadMRI.rect_old_y = 0.5
+        self.LoadMRI.rect_old_z = 0.5
 
 
     def add_minimap(self,view_name:str,img_vtk:vtk.vtkImageData,image_index:int,vtk_widget):
@@ -111,8 +112,26 @@ class Minimap:
         Also triggers camera panning in main renderers.
         """
         if new_x!=0:
-            self.LoadMRI.rect_old_x = new_x
-            self.LoadMRI.rect_old_y = new_y
+            if vn == 'axial':
+                self.LoadMRI.rect_old_x = new_x
+            elif vn == 'coronal':
+                self.LoadMRI.rect_old_x = new_x
+            elif vn == 'sagittal':
+                self.LoadMRI.rect_old_z = new_x
+                new_x = 1-new_x
+        if new_y!=0:
+            if vn == 'axial':
+                self.LoadMRI.rect_old_y = new_y
+            elif vn == 'coronal':
+                self.LoadMRI.rect_old_z = new_y
+            elif vn == 'sagittal':
+                self.LoadMRI.rect_old_y = new_y
+
+
+        if new_x==0 and new_y==0:
+            self.LoadMRI.rect_old_x = 0.5
+            self.LoadMRI.rect_old_z = 0.5
+            self.LoadMRI.rect_old_y = 0.5
 
         display_min = {}
         display_max = {}
