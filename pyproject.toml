@@ -2,4 +2,4 @@
 name = "PySide Widgets Project"
 
 [tool.pyside6-project]
-files = ["core/cursor.py", "core/interactor_style.py", "core/load_MRI_file.py", "core/load_other_file.py", "core/measurement.py", "core/paintbrush.py", "core/registration.py", "core/segmentation/evolution.py", "core/segmentation/initialization.py", "core/segmentation/threshold.py", "form.ui", "main_window.py", "userdialog.ui", "userdialog_window.py", "utils/contrast.py", "utils/minimap_handler.py", "utils/scale_bar.py", "utils/zoom.py"]
+files = ["core/cursor.py", "core/electrode_localization.py", "core/interactor_style.py", "core/load_MRI_file.py", "core/measurement.py", "core/paintbrush.py", "core/registration.py", "core/segmentation/evolution.py", "core/segmentation/initialization.py", "core/segmentation/threshold.py", "file_handling/loadimage_into3D.py", "file_handling/loadimage_into4D.py", "form.ui", "gui_utils/buttons_gui4D.py", "gui_utils/intensity_table.py", "gui_utils/paintbrush_gui.py", "gui_utils/segmentation_gui.py", "main_window.py", "utils/contrast.py", "utils/minimap_handler.py", "utils/scale_bar.py", "utils/zoom.py"]

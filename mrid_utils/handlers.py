@@ -2,7 +2,8 @@ import os
 import nibabel as nib
 import pandas as pd
 import numpy as np
-import com
+from mrid_utils import com
+
 
 def get_anat_data(sessionpath, filename_data):
     """
@@ -53,10 +54,9 @@ def get_segmentation_data(sessionpath, filename_data):
 
     labelsdf = read_labels(os.path.join(sessionpath, "anat", "labels.txt"))
 
-    print("Data shape of MRI data" + str(np.shape(data)))
-    print("Data shape of MRID segmentation" + str(np.shape(segmentation)))
+    #print("Data shape of MRI data" + str(np.shape(data)))
+    #print("Data shape of MRID segmentation" + str(np.shape(segmentation)))
 
-    #print("Voxel dimensions: " + str(nii_data.header['pixdim']))
     return nii_data, data, segmentation, anat, labelsdf
 
 def read_data(path):
@@ -106,8 +106,13 @@ def find_resampled_img(ind, path):
     Finds the 25um isovoxel resampled whole-volume image
     """
     filename = find_ind_data(ind, path)
+    #print(ind, path, filename)
     filename = ".".join(((filename[0].split(".")[0]+"_resampled", "nii", "gz")))
-    print("Fixed image for the warping: "+filename)
+    #print("Fixed image for the warping: "+filename)
+    return filename
+
+def find_ind_data(ind,path):
+    filename=[f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and ind+".nii.gz" in f]
     return filename
 
 def get_gaussian_centers(sessionpath, mrid):
@@ -122,16 +127,19 @@ def get_gaussian_centers(sessionpath, mrid):
             gaussian_centers_coronal = np.load(os.path.join(orientpath, "gaussian_centers.npy"))
             gaussian_sigmas_coronal = np.load(os.path.join(orientpath, "gaussian_sigmas.npy"))
 
-            print("Coronal sliced gaussian centers exist: ")
-            print(gaussian_centers_coronal)
+            #print("Coronal sliced gaussian centers exist: ")
+            #print(gaussian_centers_coronal)
             try:
                 contrast_intensities_coronal = np.load(
                     os.path.join(orientpath, "contrast_intensities_fixedROI.npy"))
-                print("Coronal contrast intensities: ")
-                print(contrast_intensities_coronal)
+                #print("Coronal contrast intensities: ")
+                #print(contrast_intensities_coronal)
             except:
-                print("No fixed ROI contrast intensity available for Coronal slice: ")
+                #print("No fixed ROI contrast intensity available for Coronal slice: ")
                 contrast_intensities_coronal = np.array([])
+        else:
+            gaussian_centers_coronal = []
+            gaussian_sigmas_coronal = []
 
         # Sagittal gaussian centers
         orient = "sagittal"
@@ -140,29 +148,37 @@ def get_gaussian_centers(sessionpath, mrid):
             gaussian_centers_sagittal = np.load(os.path.join(orientpath, "gaussian_centers.npy"))
             gaussian_sigmas_sagittal = np.load(os.path.join(orientpath, "gaussian_sigmas.npy"))
 
-            print("Sagittal sliced gaussian centers exist: ")
-            print(gaussian_centers_sagittal)
+            #print("Sagittal sliced gaussian centers exist: ")
+            #print(gaussian_centers_sagittal)
             try:
                 contrast_intensities_sagittal = np.load(
                     os.path.join(orientpath, "contrast_intensities_fixedROI.npy"))
-                print("Sagittal contrast intensities: ")
-                print(contrast_intensities_sagittal)
+                #print("Sagittal contrast intensities: ")
+                #print(contrast_intensities_sagittal)
             except:
-                print("No fixed ROI contrast intensity available for Coronal slice: ")
+                #print("No fixed ROI contrast intensity available for Coronal slice: ")
                 contrast_intensities_sagittal = np.array([])
+        else: #MAYBE DELETE
+            gaussian_centers_sagittal = np.array([])
+            gaussian_sigmas_sagittal = np.array([])
+            contrast_intensities_sagittal = np.array([])
 
         # Axial gaussian centers
         orient = "axial"
         orientpath = os.path.join(mridpath, orient)
         if os.path.exists(orientpath):
             gaussian_centers_axial = np.load(os.path.join(orientpath, "gaussian_centers.npy"))
-            print("Axially sliced gaussian centers exist: ")
-            print(gaussian_centers_axial)
+            #print("Axially sliced gaussian centers exist: ")
+            #print(gaussian_centers_axial)
             try:
                 contrast_intensities_axial = np.load(
                     os.path.join(orientpath, "contrast_intensities_fixedROI.npy"))
             except:
                 contrast_intensities_axial = np.array([])
+        else:
+            gaussian_centers_axial = np.array([])
+            gaussian_sigmas_axial = np.array([])
+            contrast_intensities_axial = np.array([])
 
     return gaussian_centers_coronal, contrast_intensities_coronal, \
         gaussian_centers_sagittal, contrast_intensities_sagittal, \

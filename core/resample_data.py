@@ -2,6 +2,7 @@
 import SimpleITK as sITK
 from PySide6.QtWidgets import QFileDialog
 import os
+from core.load_MRI_file import LoadMRI
 
 class ResampleData:
     """
@@ -15,17 +16,16 @@ class ResampleData:
 
 
 
-    def resampling100um(self):
+    def resampling100um(self,index):
         """
             Resample the main MRI image to a z-spacing of 100um).
             Applies padding at the end to avoid black slices after resampling.
         """
-
-        img = self.LoadMRI.image[0]
+        file_name = self.LoadMRI.file_name[index]
+        img = sITK.ReadImage(file_name)
         old_size = img.GetSize()
 
-
-        old_spacing = self.LoadMRI.spacing[0][::-1] #x,y,z
+        old_spacing = self.LoadMRI.spacing[index][::-1] #x,y,z
         new_spacing = [old_spacing[0],old_spacing[1],0.1] #x,y,z
 
         new_size = [
@@ -73,18 +73,18 @@ class ResampleData:
             image_padded.GetPixelID()
         )
         filename_end = 'resampled100um.nii.gz'
-        file_name = self.save_as_niigz(resampled,filename_end)
-        self.open_as_new_file(resampled,file_name)
+        file_name = self.save_as_niigz(resampled,filename_end,index)
+        self.file_name100um = file_name
 
 
-    def resampling25um(self):
+    def resampling25um(self,index):
         """
             Resample the main MRI image sequentially in z, y, and x directions
             to achieve a final voxel size of 25 µm isotropic.
         """
-
-        img = self.LoadMRI.image[0]
-        old_spacing = self.LoadMRI.spacing[0][::-1] #x,y,z
+        file_name = self.LoadMRI.file_name[index]
+        img = sITK.ReadImage(file_name)
+        old_spacing = self.LoadMRI.spacing[index][::-1] #x,y,z
 
         old_size = img.GetSize()
         # first resample in z
@@ -135,7 +135,6 @@ class ResampleData:
             image_padded.GetPixelID()
         )
 
-
         # resample in y
         old_spacing = resampled_z.GetSpacing()
         old_size = resampled_z.GetSize()
@@ -177,7 +176,7 @@ class ResampleData:
         image_padded = img_padded
         for i in range(pad_slices):
             image_padded = sITK.Paste(
-                destinationImage=image_padded,
+                destinationImage=img_padded,
                 sourceImage=last_slice,
                 sourceSize=last_slice.GetSize(),
                 destinationIndex=[0, img.GetSize()[1]+i, 0]
@@ -233,87 +232,65 @@ class ResampleData:
             index=[img.GetSize()[0]-1, 0, 0]
         )
 
-        image_padded = img_padded
+        image_padded_x = img_padded
         for i in range(pad_slices):
-            image_padded = sITK.Paste(
-                destinationImage=image_padded,
+            image_padded_x = sITK.Paste(
+                destinationImage=image_padded_x,
                 sourceImage=last_slice,
                 sourceSize=last_slice.GetSize(),
                 destinationIndex=[img.GetSize()[0]+i,0, 0]
             )
 
         resampled = sITK.Resample(
-            image_padded,
+            image_padded_x,
             new_size,
             sITK.Transform(),
             sITK.sitkLinear,
-            img_padded.GetOrigin(),
+            image_padded_x.GetOrigin(),
             new_newspacing,
-            image_padded.GetDirection(),
+            image_padded_x.GetDirection(),
             edge_value,
-            image_padded.GetPixelID()
+            image_padded_x.GetPixelID()
         )
 
         filename_end = 'resampled.nii.gz'
-        self.save_as_niigz(resampled,filename_end)
+        self.save_as_niigz(resampled,filename_end,index)
 
 
 
-    def save_as_niigz(self,image,filename_end:str):
+    def save_as_niigz(self,image,filename_end:str,index:int):
         """
         Save the current label volume as a NIfTI (.nii.gz) file.
-        Prompts the user for location and name. Copies image metadata from the original MRI.
-        Emits:
-            fileSaved(str): The path to the saved file.
         """
 
-        file_name = self.LoadMRI.file_name[0][:-7]
-        default_name = f"{file_name}-{filename_end}" #"label_volume.nii.gz"
-
-        if hasattr(self, "file_name"):
-            base = os.path.splitext(os.path.basename(self.file_name))[0]
-            default_name = f"{base}_label.nii.gz"
-
-        # Ask user where to save, showing the default name
-        save_path, _ = QFileDialog.getSaveFileName(
-            None,
-            "Save Label Volume",
-            default_name,
-            "NIfTI files (*.nii.gz)"
-        )
-
-        if not save_path:
-            return
-
-        # Ensure the filename ends with .nii.gz
-        if not save_path.lower().endswith(".nii.gz"):
-            save_path += ".nii.gz"
-
+        file_name = self.LoadMRI.file_name[index][:-7]
+        default_name = f"{file_name}_{filename_end}" #"label_volume.nii.gz"
+        save_path = os.path.join(self.LoadMRI.session_path, default_name)
         sITK.WriteImage(image, save_path)
         return default_name
 
 
-    def open_as_new_file(self,new_file,file_name:str):
+    def open_as_new_file(self,buttons_gui3d,MW):
         """
             Replace the currently loaded MRI file with the new resampled one.
             Clears old renderers, actors, and measurement lines from the GUI.
         """
-
-        #reset main image
-        self.LoadMRI.data_index = 0
-        self.LoadMRI.file_name[0] = file_name
-        self.LoadMRI.image[0] = []
-        self.LoadMRI.spacing[0] = []
-        self.LoadMRI.vol_dim[0] = []
-        self.LoadMRI.image[self.LoadMRI.data_index] = new_file
-
-        img = self.LoadMRI.image[self.LoadMRI.data_index]
-        self.LoadMRI.volume[self.LoadMRI.data_index] = {}
-        self.LoadMRI.volume[self.LoadMRI.data_index][0] = sITK.GetArrayFromImage(img)
-        self.LoadMRI.spacing[self.LoadMRI.data_index] = self.LoadMRI.image[self.LoadMRI.data_index].GetSpacing()[::-1]
+        data_index = 0
+        self.LoadMRI.file_name[data_index] = self.file_name100um
+        img = sITK.ReadImage(self.file_name100um)
+        #new volume and spacing
+        self.LoadMRI.volume[data_index] = {}
+        self.LoadMRI.volume[data_index][0] = sITK.GetArrayFromImage(img)
+        self.LoadMRI.volume[data_index][1] = sITK.GetArrayFromImage(img)
+        self.LoadMRI.volume[data_index][2] = sITK.GetArrayFromImage(img)
+        self.LoadMRI.ref_image = img
+        self.LoadMRI.spacing = {}
+        self.LoadMRI.spacing[data_index] = []
+        self.LoadMRI.spacing[data_index] = img.GetSpacing()[::-1]
+        self.LoadMRI.vol_dim = self.LoadMRI.volume[data_index][0].ndim
 
         self.LoadMRI.is_first_slice = False
-        self.LoadMRI.vol_dim[self.LoadMRI.data_index] = self.LoadMRI.volume[self.LoadMRI.data_index][0].ndim
+
 
         #delete measurement actors
         for view_name, line_actor,line_slice_index,text_actor in self.LoadMRI.measurement_lines:
@@ -347,6 +324,12 @@ class ResampleData:
                     ren_win.RemoveRenderer(old_renderer)
 
         #load file again, update cursor
-        self.LoadMRI.is_first_slice = True
-        self.LoadMRI.load_file(self.LoadMRI.vol_dim[self.LoadMRI.data_index],True)
-        self.LoadMRI.cursor.init_widgets()
+        self.LoadMRI = LoadMRI()
+        self.LoadMRI.file_name = {}
+        self.LoadMRI.file_name[0]= self.file_name100um
+
+        MW.ui.comboBox_resamplefiles.addItem(os.path.basename(self.file_name100um)) #add to combobox for resampling
+        data_view = "coronal" #for 3d data
+        buttons_gui3d.popup.close()
+        MW.restart_gui(self.file_name100um, data_view)
+
