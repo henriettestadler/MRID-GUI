@@ -82,10 +82,11 @@ class Scale:
         text.GetTextProperty().SetFontSize(14)
         text.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
 
-        for image_index in range(self.LoadMRI.num_images):
-            renderer = self.LoadMRI.renderers[image_index][view_name]
-            renderer.AddActor2D(actor)
-            renderer.AddActor(text)
+        for image_index in range(len(self.LoadMRI.renderers)):
+            if view_name in self.LoadMRI.renderers[image_index]:
+                renderer = self.LoadMRI.renderers[image_index][view_name]
+                renderer.AddActor2D(actor)
+                renderer.AddActor(text)
 
         self.lines[view_name]=line
         self.actors[view_name]=actor
@@ -128,53 +129,54 @@ class Scale:
             offset=(0.95-length_x,0.05)
         line.Modified()
 
-        for image_index in range(self.LoadMRI.num_images):
-            renderer = self.LoadMRI.renderers[image_index][view_name]
+        for image_index in range(len(self.LoadMRI.renderers)):
+            if view_name in self.LoadMRI.renderers[image_index]:
+                renderer = self.LoadMRI.renderers[image_index][view_name]
 
-            # Switch between cm and mm when threshold crossed
-            if (self.use_mm==True and length_x < 0.45) or (self.use_mm==False and length_x >0.45):
-                renderer.RemoveActor2D(text)
-                renderer.RemoveActor2D(actor)
-                self.unit_changed = True
-            else:
-                self.unit_changed = False
+                # Switch between cm and mm when threshold crossed
+                if (self.use_mm==True and length_x < 0.45) or (self.use_mm==False and length_x >0.45):
+                    renderer.RemoveActor2D(text)
+                    renderer.RemoveActor2D(actor)
+                    self.unit_changed = True
+                else:
+                    self.unit_changed = False
 
-            if self.unit_changed:
-                text = vtk.vtkTextActor()
-                actor = vtk.vtkActor2D()
+                if self.unit_changed:
+                    text = vtk.vtkTextActor()
+                    actor = vtk.vtkActor2D()
 
-            # Update actor position
-            actor.SetPositionCoordinate(vtk.vtkCoordinate())
-            actor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
-            actor.GetPositionCoordinate().SetValue(*offset)
-
-            #Update text
-            if self.use_mm:
-                text.SetInput(f"{length_cm} mm")
-                text.GetPositionCoordinate().SetValue(0.83, offset[1] + 0.03)
-            else:
-                text.SetInput(f"{length_cm} cm")
-                text.GetPositionCoordinate().SetValue(0.83, offset[1] + 0.03)
-
-            #Re-create actor and text
-            if self.unit_changed:
-                #add text
-                text.GetTextProperty().SetColor(*color)
-                text.GetTextProperty().SetFontSize(14)
-                text.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
-
-                #add actor
-                mapper = vtk.vtkPolyDataMapper2D()
-                mapper.SetInputConnection(line.GetOutputPort())
-
-                actor.SetMapper(mapper)
-                actor.GetProperty().SetColor(*color)
-                actor.GetProperty().SetLineWidth(3)
-
-                # Position in normalized display coordinates
+                # Update actor position
                 actor.SetPositionCoordinate(vtk.vtkCoordinate())
                 actor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
                 actor.GetPositionCoordinate().SetValue(*offset)
+
+                #Update text
+                if self.use_mm:
+                    text.SetInput(f"{length_cm} mm")
+                    text.GetPositionCoordinate().SetValue(0.83, offset[1] + 0.03)
+                else:
+                    text.SetInput(f"{length_cm} cm")
+                    text.GetPositionCoordinate().SetValue(0.83, offset[1] + 0.03)
+
+                #Re-create actor and text
+                if self.unit_changed:
+                    #add text
+                    text.GetTextProperty().SetColor(*color)
+                    text.GetTextProperty().SetFontSize(14)
+                    text.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
+
+                    #add actor
+                    mapper = vtk.vtkPolyDataMapper2D()
+                    mapper.SetInputConnection(line.GetOutputPort())
+
+                    actor.SetMapper(mapper)
+                    actor.GetProperty().SetColor(*color)
+                    actor.GetProperty().SetLineWidth(3)
+
+                    # Position in normalized display coordinates
+                    actor.SetPositionCoordinate(vtk.vtkCoordinate())
+                    actor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
+                    actor.GetPositionCoordinate().SetValue(*offset)
 
         self.lines[view_name] = line
         self.actors[view_name] = actor
