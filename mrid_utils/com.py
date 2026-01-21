@@ -1,4 +1,18 @@
 import numpy as np
+from scipy import spatial
+
+def get_dist(centers, px_size):
+    num_patterns = centers.shape[0]
+    distIdx = []
+    for i in range(num_patterns - 1):
+        m = num_patterns
+        j = i + 1
+        distIdx.append(m * i + j - ((i + 2) * (i + 1)) // 2)
+    # dist(X[i,:], X[j,:]) = dists[m * i + j - ((i + 2) * (i + 1)) // 2], X: m-by-n
+
+    dists = spatial.distance.pdist(centers, metric="euclidean")
+    return dists[distIdx] * px_size
+
 
 def get_cy_trapezoid(b, a, h):
     # Trapezoid centroid calculation
