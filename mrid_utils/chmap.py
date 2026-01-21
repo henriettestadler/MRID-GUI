@@ -8,9 +8,11 @@ import math
 import plotly.graph_objects as go
 from scipy.optimize import minimize
 import channel_mapper
+import barcode
+import com
 
 # TODO: Henriette, you can incorporate this main function into your pipeline as you wish. I am only putting it here to show you the flow
-def main(mrid, savepath, sessionpath, root, weighted_loss_f="density", bundle_start=0, map_channels_boolean=True):
+def main(mrid, savepath, sessionpath, root, weighted_loss_f="density", bundle_start=0, map_channels_boolean=True, px_size=25):
     """
     Localizes the electrode channels. Takes input;
     filename:
@@ -57,6 +59,28 @@ def main(mrid, savepath, sessionpath, root, weighted_loss_f="density", bundle_st
         # Mapping the channel coordinates to the Atlas space
         dwi1Dsignal = channel_mapper.map_channels_to_atlas(ch_coords, moving_coordinates, fixed_coordinates, savepath=mridpath)
         np.save(os.path.join(sessionpath, "dwi_1D_cross_section_pixel_values.npy"), dwi1Dsignal)
+
+    # TODO HENRIETTE: BELOW IS BARCODE RELATED
+    if gaussian_sigmas_sagittal.any():
+        max_sigmas = np.maximum(gaussian_sigmas_coronal, gaussian_sigmas_sagittal)
+    else:
+        max_sigmas = gaussian_sigmas_coronal
+
+    ref_barcodes = ["duo", "trio", "quad", "penta"]
+    barcode_reconstructed, ticks, tickLabels = barcode.gen_barcode_mrid(max_sigmas * 2 * px_size, com.get_dist(gaussian_centers_3d, px_size))
+    probs, similarities, sigma = barcode.barcode_probability(ref_barcodes, test_array=barcode_reconstructed[0, :], mrid_dict=mrid_dict)
+
+    # --- SAVING BARCODE MATCHING RESULTS
+    df = pd.DataFrame({
+        "mrid": ref_barcodes,
+        "probabilities": probs,
+        "similarities": similarities
+    })
+    # Save to Excel
+    df.to_excel(os.path.join(savepath, "barcode-results.xlsx"), index=False)
+
+    # Detecting the type of MRID
+    mrid_detected = ref_barcodes[np.argmax(probs)]
 
     return
 
