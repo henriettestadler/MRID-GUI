@@ -103,6 +103,10 @@ def interpolate_channels(bottom_coord, top_coord, nchannels, offset, channel_sep
     return (ch_coords).astype('int'), unitvec
 
 
+def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savepath):
+    """
+    Maps channels to anatomical regions given ch_coord in MRI-space, moving_coordinates in MRI-space and fixed_coordinates in atlas space
+    """
 def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi):
     # Coronal slice to be plotted selector
     # temp_y = 0
@@ -192,5 +196,61 @@ def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savep
     #     plt.savefig(os.path.join(savepath, "dwi_1D_cross_section.pdf"), dpi=2000)
     #     plt.show()
 
+    return dwi1Dsignal
+
+
+def get_mapped_ch(chmap_path, anat_list, num_channels=64, filename="channel_atlas_coordinates.txt"):
+    """
+    Gets channels in the given list of anatomical regions (anat_list).
+    Reads the localization results channel_atlas_coordinates.txt file in chmap_path.
+    num_channels per shank (default 64)
+
+    This function can be used together with plot_channels_on_atlas() function below
+    """
+    ch_coord = np.zeros((num_channels, 3))
+    fullpath = os.path.join(chmap_path, filename)
+    detected = 0
+    with open(fullpath) as f:
+        lines = f.readlines()
+        for i, line in enumerate(lines):
+            anat_region = line.split(":")[1].split("in")[-1][1:].split(" Segment")[0]
+            for roi in anat_list:
+                if anat_region == roi:
+                    ch = int(line.split()[0].split(":")[1])
+                    # if ch in ch_selected:
+                    x, y, z = line.split("[")[1].split("]")[0].split()
+                    ch_coord[detected, :] = np.array([x, y, z])
+                    detected = detected + 1
+
+    ch_coord = ch_coord[:detected, :]
+    ch_coord = ch_coord.astype(int)
+
+    return ch_coord
+
+
+
+def plot_channels_on_atlas(savefigname, path, ch_selected):
+    """
+    Plots given set of channels on atlas images
+    """
+    # Plotting colormap settings
+    my_cmap_gray = cm.get_cmap("gray").copy()
+    my_cmap_gray.set_under('black', alpha=0)
+    cmap_args_gray = dict(cmap=my_cmap_gray, vmin=1)
+
+    y = np.median(ch_selected[:, 1]).astype(int)
+
+    if "t2s" in savefigname:
+        plt.imshow(t2s[:, y, :] * mask[:, y, :], **cmap_args_gray)
+    elif "dwi" in savefigname:
+        plt.imshow(dwi[:, y, :] * mask[:, y, :], **cmap_args_gray)
+
+    for idx, coord in enumerate(ch_selected):
+        x, _, z = coord
+        plt.scatter(z, x, s=0.1, c='r')
+    #     plt.text(z, x, str(ch_selected[idx]))
+
+    plt.savefig(os.path.join(path, savefigname), dpi=1000)
+    plt.show()
     regionNumbers = list(dict.fromkeys(regionNumbers))
     return dwi1Dsignal, regionNumbers
