@@ -5,8 +5,6 @@ from utils.zoom import Zoom
 class Minimap:
     """
     Handles creation and updating of minimaps used for zooming in and camera panning.
-
-    TODO: this function is not very readable at the moment, I am sorry
     """
     def __init__(self,LoadMRI):
         """
@@ -18,19 +16,26 @@ class Minimap:
         self.zoom_rects = {}
         self.last_center_x_norm = {}
         self.last_center_y_norm = {}
+        self.minimap_renderers = {}
         for image_index in range(3):
             self.size_rectangle[image_index]: dict[str, list[float]] = {view: [] for view in ("axial", "sagittal", "coronal")}
+            self.minimap_renderers[image_index] = {}
+            self.minimap_actors[image_index] = {}
+            self.zoom_rects[image_index] = {}
+
         self.last_center_x_norm: dict[str, list[float]] = {view: 0.0 for view in ("axial", "sagittal", "coronal")}
         self.last_center_y_norm: dict[str, list[float]] = {view: 0.0 for view in ("axial", "sagittal", "coronal")}
-        self.minimap_borders = {}
         self.half_width = {}
         self.half_height = {}
         self.LoadMRI.rect_old_x = 0.5
         self.LoadMRI.rect_old_y = 0.5
         self.LoadMRI.rect_old_z = 0.5
+        self.new_x=0.5
+        self.new_y=0.5
 
 
-    def add_minimap(self,view_name:str,img_vtk:vtk.vtkImageData,image_index:int,vtk_widget):
+
+    def add_minimap(self,view_name:str,img_vtk:vtk.vtkImageData,image_index:int,vtk_widget,data_index):
         """
         Adds or updates three minimaps (axial, coronal, sagittal) to the given vtk widgets.
         """
@@ -38,75 +43,38 @@ class Minimap:
         if view_name not in self.minimap_renderers[image_index]:
             mm_renderer = vtk.vtkRenderer()
             rw, rh = self.LoadMRI.renderers[image_index][view_name].GetSize()
-            w =  min(0.3,rh/rw*0.3)
-            h =  min(0.3,rw/rh*0.3)
+            w = min(0.3,rh/rw*0.3)
+            h = min(0.3,rw/rh*0.3)
             self.size_rectangle[image_index][view_name] = [w,h]
             mm_renderer.SetViewport(0.0, 0.0,w,h)  # bottom-left corner
-            mm_renderer.SetLayer(1)
+            mm_renderer.SetLayer(0)
+            mm_renderer.SetBackground(1, 1, 1)
             vtk_widget.GetRenderWindow().SetNumberOfLayers(3)
             vtk_widget.GetRenderWindow().AddRenderer(mm_renderer)
             self.minimap_renderers[image_index][view_name] = mm_renderer
+            (xmin, xmax, ymin, ymax, _, _) = self.LoadMRI.renderers[image_index][view_name].ComputeVisiblePropBounds()
 
         mm_renderer = self.minimap_renderers[image_index][view_name]
 
         # Create or reuse the mini-map image actor
-        if view_name not in self.minimap_actors:
+        if view_name not in self.minimap_actors[image_index]:
             actor = vtk.vtkImageActor()
             actor.GetMapper().SetInputData(img_vtk)
-            actor.GetProperty().SetLookupTable(self.LoadMRI.lut_vtk[image_index])
+            contrast_class = getattr(self.LoadMRI, f"contrastClass_{data_index}")
+            if image_index not in contrast_class.lut_vtk:
+                contrast_class.compute_lut(image_index,data_index)
+            actor.GetProperty().SetLookupTable(contrast_class.lut_vtk[image_index])
             actor.GetProperty().UseLookupTableScalarRangeOn()
             actor.SetPickable(False)
             mm_renderer.AddActor(actor)
             self.minimap_actors[image_index][view_name] = actor
         mm_renderer.ResetCamera()
 
-        # Remove old border if it exists
-        if hasattr(self, "minimap_borders") and view_name in self.minimap_borders:
-            mm_renderer.RemoveActor(self.minimap_borders[image_index][view_name])
-
-        # Compute display bounds
-        (xmin, xmax, ymin, ymax, _, _) = mm_renderer.ComputeVisiblePropBounds()
-        mm_renderer.SetWorldPoint(xmin, ymin, 0, 1.0)
-        mm_renderer.WorldToDisplay()
-        display_min = mm_renderer.GetDisplayPoint()
-        mm_renderer.SetWorldPoint(xmax, ymax, 0, 1.0)
-        mm_renderer.WorldToDisplay()
-        display_max = mm_renderer.GetDisplayPoint()
-        window_width, window_height = mm_renderer.GetRenderWindow().GetSize()
-        vxmin, vymin, vxmax, vymax = mm_renderer.GetViewport()
-
-        points = vtk.vtkPoints()
-        points.InsertNextPoint(display_min[0], display_min[1], 0)
-        points.InsertNextPoint(display_max[0], display_min[1], 0)
-        points.InsertNextPoint(display_max[0], display_max[1], 0)
-        points.InsertNextPoint(display_min[0], display_max[1], 0)
-        points.InsertNextPoint(display_min[0], display_min[1], 0)  # close rectangle
-
-        lines = vtk.vtkCellArray()
-        lines.InsertNextCell(5)
-        for i in range(5):
-            lines.InsertCellPoint(i)
-        poly_data = vtk.vtkPolyData()
-        poly_data.SetPoints(points)
-        poly_data.SetLines(lines)
-        mapper = vtk.vtkPolyDataMapper2D()
-        mapper.SetInputData(poly_data)
-
-        border_actor = vtk.vtkActor2D()
-        border_actor.SetMapper(mapper)
-        border_actor.GetProperty().SetColor(1, 1, 1)
-        border_actor.GetProperty().SetLineWidth(1)
-        border_actor.GetPositionCoordinate().SetCoordinateSystemToDisplay()
-        border_actor.SetPosition(0, 0)
-        mm_renderer.AddActor(border_actor)
-
-        self.minimap_borders[image_index][view_name] = border_actor
-
         if not self.LoadMRI.zoom_tf[view_name]: # Hide at the beginning
-            self.minimap_borders[image_index][view_name].SetVisibility(False)
             self.minimap_actors[image_index][view_name].SetVisibility(False)
+            mm_renderer.SetDraw(False)
 
-    def create_small_rectangle(self,vn: str=None,new_x: float=0,new_y: float=0):
+    def create_small_rectangle(self,zoom_factor,vn: str=None,new_x: float=0,new_y: float=0,pan_arrow: bool=False):
         """
         Draws or updates the zoom rectangle on the minimap.
         Also triggers camera panning in main renderers.
@@ -118,7 +86,8 @@ class Minimap:
                 self.LoadMRI.rect_old_x = new_x
             elif vn == 'sagittal':
                 self.LoadMRI.rect_old_z = new_x
-                new_x = 1-new_x
+            self.new_x = new_x
+
         if new_y!=0:
             if vn == 'axial':
                 self.LoadMRI.rect_old_y = new_y
@@ -126,6 +95,7 @@ class Minimap:
                 self.LoadMRI.rect_old_z = new_y
             elif vn == 'sagittal':
                 self.LoadMRI.rect_old_y = new_y
+            self.new_y = new_y
 
 
         if new_x==0 and new_y==0:
@@ -138,16 +108,13 @@ class Minimap:
         half_width = {}
         half_height = {}
         # Create rectangle polyline
-        points_a = vtk.vtkPoints()
-        points_c = vtk.vtkPoints()
-        points_s = vtk.vtkPoints()
+        points_rect = vtk.vtkPoints()
         points = {}
 
         #Zoom is the same over all images -> image_index= 0
         image_index = 0
         for view_name in self.LoadMRI.minimap.minimap_renderers[image_index]:
             #only renderer of image 0
-            mm_renderer = self.LoadMRI.minimap.minimap_renderers[image_index][view_name]
             points[view_name] = vtk.vtkPoints()
             camera = self.LoadMRI.renderers[image_index][view_name].GetActiveCamera()
             half_height[view_name] = camera.GetParallelScale()
@@ -157,36 +124,40 @@ class Minimap:
             xminR, xmaxR, yminR, ymaxR,_,_ = self.LoadMRI.renderers[image_index][view_name].ComputeVisiblePropBounds()
             tolerance = 1e-3
             if (xmin <= xminR + tolerance and xmax >= xmaxR - tolerance and ymin <= yminR + tolerance and ymax >= ymaxR - tolerance):
-                for image_index in range(self.LoadMRI.num_images):
+                for idx in range(len(self.LoadMRI.renderers)):
+                    if idx==3:
+                        continue
+                    mm_renderer = self.LoadMRI.minimap.minimap_renderers[idx][view_name]
                     self.LoadMRI.zoom_tf[view_name]=False
-                    self.minimap_borders[image_index][view_name].SetVisibility(False)
-                    self.minimap_actors[image_index][view_name].SetVisibility(False)
-                    if view_name in self.zoom_rects[image_index]:
-                        self.zoom_rects[image_index][view_name].SetVisibility(False)
+                    mm_renderer.SetDraw(False)
+                    self.minimap_actors[idx][view_name].SetVisibility(False)
+                    if view_name in self.zoom_rects[idx]:
+                        self.zoom_rects[idx][view_name].SetVisibility(False)
             else:
-                for image_index in range(self.LoadMRI.num_images):
+                for idx in range(len(self.LoadMRI.renderers)):
+                    if idx==3:
+                        continue
                     self.LoadMRI.zoom_tf[view_name]=True
-                    #self.minimap_borders[image_index][view_name].SetVisibility(True)
-                    self.minimap_actors[image_index][view_name].SetVisibility(True)
-                    if view_name in self.zoom_rects[image_index]:
-                        self.zoom_rects[image_index][view_name].SetVisibility(True)
+                    mm_renderer = self.LoadMRI.minimap.minimap_renderers[idx][view_name]
+                    mm_renderer.SetDraw(True)
+                    self.minimap_actors[idx][view_name].SetVisibility(True)
+                    if view_name in self.zoom_rects[idx]:
+                        self.zoom_rects[idx][view_name].SetVisibility(True)
 
-            if view_name == 'axial':
-                display_min = {}
-                display_max = {}
             mm_renderer.SetWorldPoint(xmin, ymin, 0, 1.0)
             mm_renderer.WorldToDisplay()
             display_min[view_name] = mm_renderer.GetDisplayPoint()
             mm_renderer.SetWorldPoint(xmax, ymax, 0, 1.0)
             mm_renderer.WorldToDisplay()
             display_max[view_name] = mm_renderer.GetDisplayPoint()
-            #mm_renderer.GetRenderWindow().Render()
 
         if not self.LoadMRI.zoom_tf['axial'] and not self.LoadMRI.zoom_tf['coronal'] and not self.LoadMRI.zoom_tf['sagittal']:
             for image_index,views in enumerate(self.LoadMRI.minimap.minimap_renderers.values()):
                 for view_name, mm_renderer in views.items():
                     mm_renderer = self.LoadMRI.minimap.minimap_renderers[image_index][view_name]
                     mm_renderer.GetRenderWindow().Render()
+                    if image_index==3:
+                        break
             return
 
         if (new_x!=0 or new_y!=0):
@@ -197,108 +168,42 @@ class Minimap:
             new_x *= window_width
             new_y *= window_height
 
-            half_width['axial'] = (display_max['axial'][0] - display_min['axial'][0])/2
-            half_height['axial'] = (display_max['axial'][1] - display_min['axial'][1])/2
-            half_width['sagittal'] = (display_max['sagittal'][0] - display_min['sagittal'][0])/2
-            half_height['sagittal'] = (display_max['sagittal'][1] - display_min['sagittal'][1])/2
-            half_width['coronal'] = (display_max['coronal'][0] - display_min['coronal'][0])/2
-            half_height['coronal'] = (display_max['coronal'][1] - display_min['coronal'][1])/2
+            if self.LoadMRI.vol_dim==3:
+                half_width['axial'] = (display_max['axial'][0] - display_min['axial'][0])/2
+                half_height['axial'] = (display_max['axial'][1] - display_min['axial'][1])/2
+                half_width['sagittal'] = (display_max['sagittal'][0] - display_min['sagittal'][0])/2
+                half_height['sagittal'] = (display_max['sagittal'][1] - display_min['sagittal'][1])/2
+                half_width['coronal'] = (display_max['coronal'][0] - display_min['coronal'][0])/2
+                half_height['coronal'] = (display_max['coronal'][1] - display_min['coronal'][1])/2
+            else:
+                half_width[view_name] = (display_max[view_name][0] - display_min[view_name][0])/2
+                half_height[view_name] = (display_max[view_name][1] - display_min[view_name][1])/2
+
             if vn == 'axial':
-                ax = new_x
-                ay = new_y
-                ax_min = new_x - half_width['axial']
-                ax_max = new_x + half_width['axial']
-                ay_min = new_y - half_height['axial']
-                ay_max = new_y + half_height['axial']
-                sx = (display_min['sagittal'][0] + display_max['sagittal'][0])/2
-                sy = new_y
-                sx_min = display_min['sagittal'][0] #display_min[0]
-                sx_max = display_max['sagittal'][0] #display_max[0]
-                sy_min = new_y - half_height['sagittal']
-                sy_max = new_y + half_height['sagittal']
-                cx = new_x
-                cy = (display_min['coronal'][1] + display_max['coronal'][1])/2
-                cx_min = new_x - half_width['coronal']
-                cx_max = new_x + half_width['coronal']
-                cy_min = display_min['coronal'][1]
-                cy_max = display_max['coronal'][1]
+                x_min = new_x - half_width['axial']
+                x_max = new_x + half_width['axial']
+                y_min = new_y - half_height['axial']
+                y_max = new_y + half_height['axial']
             elif vn == 'sagittal':
-                mm_s = self.minimap_renderers[image_index]['sagittal']
-                (xmin_global, xmax_global, ymin_global, ymax_global, _, _) = mm_s.ComputeVisiblePropBounds()
-                mm_s.SetWorldPoint(xmax_global, ymax_global, 0, 1.0)
-                mm_s.WorldToDisplay()
-                display_max_global = mm_s.GetDisplayPoint()
-                #'axial'
-                ax = (display_min['axial'][0] + display_max['axial'][0])/2
-                ay = new_y
-                ax_min = display_min['axial'][0]
-                ax_max = display_max['axial'][0]
-                ay_min = new_y - half_height['axial']
-                ay_max = new_y + half_height['axial']
-                #'sagittal'
-                sx = new_x
-                sy = new_y
-                sx_min = new_x - half_width['sagittal']
-                sx_max = new_x + half_width['sagittal']
-                sy_min = new_y - half_height['sagittal']
-                sy_max = new_y + half_height['sagittal']
-                #'coronal'
-                cx = (display_max['coronal'][0] + display_min['coronal'][0])/2
-                cy = display_max_global[0] - new_x
-                cx_min = display_min['coronal'][0]
-                cx_max = display_max['coronal'][0]
-                cy_min = display_max['sagittal'][0] - new_x - half_width['coronal']
-                cy_max = display_max['sagittal'][0] - new_x + half_width['coronal']
+                x_min = new_x - half_width['sagittal']
+                x_max = new_x + half_width['sagittal']
+                y_min = new_y - half_height['sagittal']
+                y_max = new_y + half_height['sagittal']
             elif vn == 'coronal':
-                mm_c = self.minimap_renderers[image_index]['sagittal']
-                (xmin_global, xmax_global, ymin_global, ymax_global, _, _) = mm_c.ComputeVisiblePropBounds()
-                mm_c.SetWorldPoint(xmax_global, ymax_global, 0, 1.0)
-                mm_c.WorldToDisplay()
-                display_max_global = mm_c.GetDisplayPoint()
-                #'axial'
-                ax = new_x
-                ay = (display_max['axial'][1] + display_min['axial'][1])/2
-                ax_min = new_x - half_width['axial']
-                ax_max = new_x + half_width['axial']
-                ay_min = display_min['axial'][1]
-                ay_max = display_max['axial'][1]
-                #'sagittal'
-                sx = display_max['sagittal'][0] -new_y
-                sy = (display_max['sagittal'][1] + display_min['sagittal'][1])/2
-                sx_min = display_max['sagittal'][0] -new_y - half_width['sagittal']
-                sx_max = display_max['sagittal'][0] -new_y + half_width['sagittal']
-                sy_min = display_min['sagittal'][1]
-                sy_max = display_max['sagittal'][1]
-                #'coronal'
-                cx = new_x
-                cy = new_y
-                cx_min = new_x - half_width['coronal']
-                cx_max = new_x + half_width['coronal']
-                cy_min = new_y - half_height['coronal']
-                cy_max = new_y + half_height['coronal']
-            if self.LoadMRI.zoom_tf['axial']: #axial
-                points_a.InsertNextPoint(ax_min, ay_min, 0)
-                points_a.InsertNextPoint(ax_max, ay_min, 0)
-                points_a.InsertNextPoint(ax_max, ay_max, 0)
-                points_a.InsertNextPoint(ax_min, ay_max, 0)
-                points_a.InsertNextPoint(ax_min, ay_min, 0)
-            if self.LoadMRI.zoom_tf['sagittal']:#sagittal
-                points_s.InsertNextPoint(sx_min, sy_min, 0)
-                points_s.InsertNextPoint(sx_max, sy_min, 0)
-                points_s.InsertNextPoint(sx_max, sy_max, 0)
-                points_s.InsertNextPoint(sx_min, sy_max, 0)
-                points_s.InsertNextPoint(sx_min, sy_min, 0)
-            if self.LoadMRI.zoom_tf['coronal']: #coronal
-                points_c.InsertNextPoint(cx_min, cy_min, 0)
-                points_c.InsertNextPoint(cx_max, cy_min, 0)
-                points_c.InsertNextPoint(cx_max, cy_max, 0)
-                points_c.InsertNextPoint(cx_min, cy_max, 0)
-                points_c.InsertNextPoint(cx_min, cy_min, 0)
-            for image_index,views in enumerate(self.LoadMRI.minimap.minimap_renderers.values()):
-                for view_name, mm_renderer in views.items():
-                    self.pan_from_minimap('axial', [ax/window_width,ay/window_height],image_index)
-                    self.pan_from_minimap('sagittal', [sx/window_width,sy/window_height],image_index)
-                    self.pan_from_minimap('coronal', [cx/window_width,cy/window_height],image_index)
+                x_min = new_x - half_width['coronal']
+                x_max = new_x + half_width['coronal']
+                y_min = new_y - half_height['coronal']
+                y_max = new_y + half_height['coronal']
+            points_rect.InsertNextPoint(x_min, y_min, 0)
+            points_rect.InsertNextPoint(x_max, y_min, 0)
+            points_rect.InsertNextPoint(x_max, y_max, 0)
+            points_rect.InsertNextPoint(x_min, y_max, 0)
+            points_rect.InsertNextPoint(x_min, y_min, 0)
+
+            if not pan_arrow:
+                for image_index,views in enumerate(self.LoadMRI.minimap.minimap_renderers.values()):
+                    for view_name, mm_renderer in views.items():
+                        self.pan_from_minimap(vn, [new_x/window_width,new_y/window_height],image_index)
         else:
             for image_index,views in enumerate(self.LoadMRI.minimap.minimap_renderers.values()):
                 for view_name, mm_renderer in views.items():
@@ -313,19 +218,25 @@ class Minimap:
                     points[view_name].InsertNextPoint(display_min[view_name][0], display_max[view_name][1], 0.2)
                     points[view_name].InsertNextPoint(display_min[view_name][0], display_min[view_name][1], 0.2)
 
+        self.rectangle_render(new_x,new_y,points_rect,points,vn)
+
+    def rectangle_render(self,new_x,new_y,points_rect,points,vn):
+        """
+        Update rectangle points and lines
+        """
         for image_index,views in enumerate(self.LoadMRI.minimap.minimap_renderers.values()):
             for view_name, mm_renderer in views.items():
-                if not self.LoadMRI.zoom_tf[view_name]:
+                if not self.LoadMRI.zoom_tf[view_name] or (view_name!=vn and vn!=None):
                     continue
                 if view_name not in self.zoom_rects[image_index]:
                     poly_data = vtk.vtkPolyData()
                     if new_x!=0 or new_y!=0:
                         if view_name == 'axial':
-                            poly_data.SetPoints(points_a)
+                            poly_data.SetPoints(points_rect)
                         elif view_name == 'coronal':
-                            poly_data.SetPoints(points_c)
+                            poly_data.SetPoints(points_rect)
                         elif view_name == 'sagittal':
-                            poly_data.SetPoints(points_s)
+                            poly_data.SetPoints(points_rect)
                     else:
                         poly_data.SetPoints(points[view_name])
                     lines = vtk.vtkCellArray()
@@ -348,11 +259,11 @@ class Minimap:
                     poly_data = actor.GetMapper().GetInput()
                     if new_x!=0 or new_y!=0:
                         if view_name == 'axial':
-                            poly_data.SetPoints(points_a)
+                            poly_data.SetPoints(points_rect)
                         elif view_name == 'coronal':
-                            poly_data.SetPoints(points_c)
+                            poly_data.SetPoints(points_rect)
                         elif view_name == 'sagittal':
-                            poly_data.SetPoints(points_s)
+                            poly_data.SetPoints(points_rect)
                     else:
                         poly_data.SetPoints(points[view_name])
                     poly_data.Modified()
@@ -392,3 +303,48 @@ class Minimap:
         self.last_center_y_norm[view_name] = center_y_norm
 
         main_renderer.GetRenderWindow().Render()
+
+    def pan_arrows(self,view_name,diff_x,diff_y,data_index,data_3d=False):
+        """
+        Panning images when GUI arrows are used.
+        """
+        renderer = self.LoadMRI.renderers[0][view_name].GetRenderWindow().GetRenderers().GetFirstRenderer()
+        camera = renderer.GetActiveCamera()
+        scale = camera.GetParallelScale()
+        fp = camera.GetFocalPoint()
+        fp_new = [fp[0]+diff_x, fp[1]+diff_y, fp[2]]
+        pos = camera.GetPosition()
+        pos_new = [pos[0]+diff_x, pos[1]+diff_y, pos[2]]
+
+        if data_3d:
+            camera.ParallelProjectionOn()
+            camera.SetParallelScale(scale)
+            camera.SetFocalPoint(fp_new)
+            camera.SetPosition(pos_new)
+            self.LoadMRI.vtk_widgets[0][view_name].GetRenderWindow().Render()
+            renderer.ResetCameraClippingRange()
+            image_index = 0
+        else:
+            for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
+                for idx, (vn, widget) in enumerate(vtk_widget_image.items()):
+                    if idx==data_index:
+                        renderer = widget.GetRenderWindow().GetRenderers().GetFirstRenderer()
+                        camera = renderer.GetActiveCamera()
+                        camera.ParallelProjectionOn()
+                        camera.SetParallelScale(scale)
+                        camera.SetFocalPoint(fp_new)
+                        camera.SetPosition(pos_new)
+                        widget.GetRenderWindow().Render()
+                        renderer.ResetCameraClippingRange()
+
+        #return
+        main_renderer = self.LoadMRI.renderers[image_index][view_name]
+        (xmin, xmax, ymin, ymax, _,_) = main_renderer.ComputeVisiblePropBounds()
+        world_width = xmax - xmin
+        world_height = ymax - ymin
+
+        new_x = (fp_new[0] - xmin)/world_width
+        new_y = (fp_new[1] - ymin)/world_height
+
+        self.create_small_rectangle(scale, vn=view_name, new_x=new_x,new_y=new_y,pan_arrow=True)
+

@@ -2,9 +2,6 @@ import numpy as np
 import os
 from mrid_utils import handlers,roi
 import scipy
-import matplotlib.pyplot as plt
-import matplotlib.tri as tri
-import numpy as np
 
 def get_relaxation_unsupervised(filename_data, sessionpath, basestructs, slice_orientation, te=[4.0, 4.09], r=1, savepath=""):
     """
@@ -29,17 +26,13 @@ def get_relaxation_unsupervised(filename_data, sessionpath, basestructs, slice_o
     #baseline_std = np.zeros((len(basestructs),))
     heatmaps = np.zeros((len(basestructs), 1, anat.shape[0], anat.shape[1]))
     roi_index = 0 #anatomical regions start at 1
+    print('basestructs',basestructs)
     for j, roi_baseline in enumerate(basestructs):
         roi_index += 1 #labelsdf["Labels"][labelsdf["Anatomical Regions"].str.contains(roi_baseline)]
         img_slice = [s for s in nonzero_slices if np.any(anat[:, :, s] == roi_index)][0]
         heatmaps[0] = segment_relaxation(data[:, :, img_slice, :], anat[:, :, img_slice], anat[:, :, img_slice], basestructs, labelsdf, roi_index, te, r=r,unsupervised=True)
         heatmap_nii[:, :, img_slice] = heatmap_nii[:, :, img_slice] + heatmaps[0]
 
-    #filename = mrid_name + "-" + slice_orientation + "-heatmap.npy"
-    #np.save(os.path.join(savepath, filename), heatmaps)
-    # Saving MRID contrast heatmaps as nii.gz files.
-    #new_heatmap_filename = filename_data + "-" + mrid_name + "-heatmap.nii.gz"
-    #handlers.save_nii(heatmap_nii, nii_data.affine, os.path.join(savepath, new_heatmap_filename))
     return heatmaps, heatmap_nii, img_slice
 
 
@@ -70,20 +63,27 @@ def get_relaxation(filename_data, mrid_names, sessionpath, basestructs, slice_or
         heatmaps = np.zeros((len(ionp_islands), segmentation.shape[0], segmentation.shape[1]))
 
         for i, roi_index in enumerate(ionp_islands):
-            img_slice = np.unique(np.where(segmentation == roi_index)[-1])[0]
+            slices = np.where(segmentation == roi_index)[-1]
+            if slices.size == 0:
+                continue
+            img_slice = np.unique(slices)[0]
             heatmaps[i] = segment_relaxation(data[:, :, img_slice, :],
                                              segmentation[:, :, img_slice],
                                              anat[:, :, img_slice],
                                              basestructs, labelsdf, roi_index, te, r=r, savepath=savepath)
             heatmap_nii[:, :, img_slice] = heatmap_nii[:, :, img_slice] + heatmaps[i]
 
+        if np.all(heatmaps == 0):
+            continue
+        else:
+            # Saving MRID contrast heatmaps as nii.gz files.
+            new_heatmap_filename = filename_data + "-" + mrid_name + "-heatmap.nii.gz"
+            savepath = os.path.join(sessionpath, 'analysed',mrid_name,slice_orientation)
+            print("why am i here so much? i should be here only once!", mrid_name, mrid_names)
+            handlers.save_nii(heatmap_nii, nii_data.affine, os.path.join(savepath, new_heatmap_filename))
 
-    # Saving MRID contrast heatmaps as nii.gz files.
-    new_heatmap_filename = filename_data + "-" + mrid_name + "-heatmap.nii.gz"
-    handlers.save_nii(heatmap_nii, nii_data.affine, os.path.join(savepath, new_heatmap_filename))
-
-    filename = filename_data + "-" + mrid_name + "-" + slice_orientation + "-heatmap.npy"
-    np.save(os.path.join(savepath, filename), heatmaps)
+            filename = filename_data + "-" + mrid_name + "-" + "-heatmap.npy"
+            np.save(os.path.join(savepath, filename), heatmaps)
 
     return heatmaps, heatmap_nii, img_slice
 
@@ -154,39 +154,6 @@ def segment_relaxation(data, segmentation, anat, basestructs, labelsdf, roi_inde
             diff = 0
 
         heatmap[index[0], index[1]] = abs(diff)
-
-
-        # if savepath:
-        #     if not os.path.exists(os.path.join(savepath, "Relaxation Curves")):
-        #         os.mkdir(os.path.join(savepath, "Relaxation Curves"))
-        #
-        #     Cbase, t2Base, Abase = paramsBase
-        #     Celec, t2elec, Aelec = paramsData
-        #     plt.figure()
-        #     # plt.title()
-        #     plt.errorbar(echos, meanVals, yerr=stdVals, fmt='o', color="blue")
-        #     plt.plot(np.linspace(0, 40, 9), monoExp(np.linspace(0, 40, 9), Celec, t2elec, Aelec), color="blue",
-        #              linewidth=3)
-        #     plt.axvline(x=paramsData[1], color='blue', linestyle='--', linewidth=2)
-        #
-        #     plt.errorbar(echos, np.mean(baseline, axis=0), yerr=np.std(baseline, axis=0), fmt='o', color="red")
-        #     plt.plot(np.linspace(0, 40, 9), monoExp(np.linspace(0, 40, 9), Cbase, t2Base, Abase), color="red",
-        #              linewidth=3)
-        #     plt.axvline(x=paramsBase[1], color='red', linestyle='--', linewidth=2)
-        #
-        #     plt.ylabel("Signal a.u.")
-        #     plt.xlabel("Time (ms)")
-        #     plt.legend(["Electrode echo", "Electrode Decay"])
-        #     figname = f"index_{index}_contrast_{diff}-relaxation_curve.pdf"
-        #     plt.savefig(os.path.join(savepath, "Relaxation Curves", figname), dpi=1000)
-        #
-        #     plt.figure()
-        #     plt.imshow(data[:, :, 0], cmap='gray', interpolation='nearest')
-        #     plt.scatter(index[1], index[0], s=1, c="r", edgecolors='none')
-        #     figname = f"index_{index}_contrast_{diff}-image.pdf"
-        #     plt.savefig(os.path.join(savepath, "Relaxation Curves", figname), dpi=1000)
-        #     # plt.show()
-        #     plt.close('all')
 
     return heatmap
 

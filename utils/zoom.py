@@ -30,7 +30,7 @@ class Zoom:
     }
 
     @staticmethod
-    def fit_to_window(vtk_widget, vtk_widgets:list, scale_bar:dict, vtk_widgets_dict:dict):
+    def fit_to_window(vtk_widget, vtk_widgets:list, scale_bar:dict, vtk_widgets_dict:dict, data_index:int,data_3d=False):
         """
         Reset and centers all views so the selected image fits the window (uniform zoom).
         Emits a signal with the updated zoom factor.
@@ -66,16 +66,16 @@ class Zoom:
 
         # Apply relative factor to the other views
         for image_index,vtk_widget_image in vtk_widgets_dict.items():
-            for vn, widget in vtk_widget_image.items():
+            for idx, (vn, widget) in enumerate(vtk_widget_image.items()):
+                if idx!=data_index and not data_3d:
+                    continue
+
                 if widget == vtk_widget:
                     if image_index==0:
                         view_name_other = Zoom.get_view_name(widget, vtk_widgets_dict)
                         scale_bar[view_name_other].update_bar(renderer,view_name_other,length_cm=1.0)
                         #Update zoom bounds
                         Zoom.update_bounds(view_name_other, camera, renderer)
-                    # Update bounds
-                    #Zoom.update_bounds(view_name, camera, renderer)
-                    #scale_bar[view_name].update_bar(renderer,view_name, length_cm=1.0)
                     continue
                 renderer_other = widget.GetRenderWindow().GetRenderers().GetFirstRenderer()
                 camera_other = renderer_other.GetActiveCamera()
@@ -110,14 +110,16 @@ class Zoom:
 
 
     @staticmethod
-    def zoom(factor: float,scale_bar: dict,vtk_widgets_dict: dict):
+    def zoom(factor: float,scale_bar: dict,vtk_widgets_dict: dict, data_index:int,data_3d=False):
         """
         Apply relative zoom while maintaining sync between views.
         """
         Zoom.global_zoom_factor *= factor
 
         for image_index,vtk_widget_image in vtk_widgets_dict.items():
-            for vn, widget in vtk_widget_image.items():
+            for idx, (vn, widget) in enumerate(vtk_widget_image.items()):
+                if idx!=data_index and not data_3d:
+                    continue
                 widget = vtk_widgets_dict[image_index][vn]
                 renderer = widget.GetRenderWindow().GetRenderers().GetFirstRenderer()
                 camera = renderer.GetActiveCamera()

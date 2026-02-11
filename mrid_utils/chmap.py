@@ -1,11 +1,6 @@
-import warper
-import handlers
-import gauss_aux
-import os
-import pickle
+from mrid_utils import handlers
 import numpy as np
 import math
-import plotly.graph_objects as go
 from scipy.optimize import minimize
 import channel_mapper
 import barcode
@@ -13,20 +8,19 @@ import com
 
 # TODO: Henriette, you can incorporate this main function into your pipeline as you wish. I am only putting it here to show you the flow
 def main(mrid, savepath, sessionpath, root, weighted_loss_f="density", bundle_start=0, map_channels_boolean=True, px_size=25):
+from mrid_utils import channel_mapper, gauss_aux
+import os
+
+def main(mrid_dict,mrid, savepath, sessionpath,atlas,atlaslabelsdf,dwi,fixed_coordinates,moving_coordinates, weighted_loss_f="density", bundle_start=0, map_channels_boolean=True):
     """
     Localizes the electrode channels. Takes input;
+    mrid_dict: from pkl file
     filename:
     mrid:
     savepath:
     sessionpath:
     transformation:
-
-
-    """
-    # Pickle file that contains all the design parameters of each MRID tag
-    with open(os.path.join(root, 'mrid_library.pkl'), 'rb') as f:
-        mrid_dict = pickle.load(f)
-
+    """ 
     gaussian_centers_coronal, contrast_intensities_coronal, \
     gaussian_centers_sagittal, contrast_intensities_sagittal, \
     gaussian_centers_axial, contrast_intensities_axial, \
@@ -45,20 +39,14 @@ def main(mrid, savepath, sessionpath, root, weighted_loss_f="density", bundle_st
     if map_channels_boolean:
         # Mapping the channels to physical coordinate indeces (integers) in MRI space
         ch_coords = channel_mapper.map_electrodes_main(fitted_points, mrid_dict[mrid])
-        np.save(os.path.join(sessionpath, "channel_mri_coordinates.npy"), ch_coords[0])
+        np.save(os.path.join(savepath, "channel_mri_coordinates.npy"), ch_coords[0])
 
-        moving_idx_filename = "moving_img_resampled25um-indeces.npy"
-        fixed_idx_filename = "fixed_img-indeces.npy"
-        moving_idx_path = os.path.join(sessionpath, "registration", moving_idx_filename)
-        fixed_idx_path = os.path.join(sessionpath, "registration", fixed_idx_filename)
-        print("Loading the moving coordinates: " + moving_idx_path)
-        print("Loading the fixed coordinates: " + fixed_idx_path)
-        moving_coordinates = np.load(moving_idx_path)
-        fixed_coordinates = np.load(fixed_idx_path)
+        #moving_coordinates = np.load(moving_idx_path)
+        #fixed_coordinates = np.load(fixed_idx_path)
 
         # Mapping the channel coordinates to the Atlas space
-        dwi1Dsignal = channel_mapper.map_channels_to_atlas(ch_coords, moving_coordinates, fixed_coordinates, savepath=mridpath)
-        np.save(os.path.join(sessionpath, "dwi_1D_cross_section_pixel_values.npy"), dwi1Dsignal)
+        dwi1Dsignal,regionNumbers = channel_mapper.map_channels_to_atlas(ch_coords, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi)
+        np.save(os.path.join(savepath, "dwi_1D_cross_section_pixel_values.npy"), dwi1Dsignal)
 
     # TODO HENRIETTE: BELOW IS BARCODE RELATED
     if gaussian_sigmas_sagittal.any():
@@ -83,10 +71,12 @@ def main(mrid, savepath, sessionpath, root, weighted_loss_f="density", bundle_st
     mrid_detected = ref_barcodes[np.argmax(probs)]
 
     return
+    return fitted_points,regionNumbers
 
 
 def register_bundle(gaussian_centers_3d, mrid_dict, bundle_start, weighted_loss_f, visualization=False):
     # gaussian_centers_3d = np.load(os.path.join(analysedpath, mrid_type, "3D-gaussian-centers-mrid.npy"))
+    print('bundlestart ', bundle_start)
     mrid_design_dist, mrid_design_points, pattern_lengths, ionp_amount = handlers.get_mrid_dimensions(mrid_dict, bundle_start)
     loss_f_weights = np.ones_like(pattern_lengths)
 
@@ -101,13 +91,10 @@ def register_bundle(gaussian_centers_3d, mrid_dict, bundle_start, weighted_loss_
 
     res = pointsetreg(gaussian_centers_3d, mrid_design_dist, loss_f_weights)
 
-    reg_results = res.x
-    print("Registration resulsts: ")
-    print(reg_results)
+    #reg_results = res.x
+    #print("Registration resulsts: ")
+    #print(reg_results)
     fitted_mrid_points = get_fitted_points(res, mrid_design_dist)
-
-    if visualization:
-        visualize_pointfit(gaussian_centers_3d, fitted_mrid_points)
 
     # filename = "fitted_mrid_points.npy"
     # np.save(os.path.join(analysedpath, mrid_type, filename), fitted_mrid_points)
@@ -183,47 +170,6 @@ def bundle_fit3d_loss(x, *args):
 
     d = np.array(d)
     return np.sum(d)
-
-
-def visualize_pointfit(gauss3d, fit3d):
-    fig = go.Figure()
-
-    # Scatter for gauss3d (markers only)
-    fig.add_trace(go.Scatter3d(
-        x=gauss3d[:, 0],
-        y=gauss3d[:, 1],
-        z=gauss3d[:, 2],
-        mode='markers',
-        marker=dict(size=5, color='blue'),
-        name='gauss3d'
-    ))
-
-    # Scatter for fit3d (markers + connecting lines)
-    fig.add_trace(go.Scatter3d(
-        x=fit3d[:, 0],
-        y=fit3d[:, 1],
-        z=fit3d[:, 2],
-        mode='markers+lines',
-        marker=dict(size=5, color='red'),
-        line=dict(width=2, color='red'),
-        name='fit3d'
-    ))
-
-    fig.update_layout(
-        scene=dict(
-            # ax.set_xlabel("Medial --> Lateral")
-
-            # ax.set_ylabel("Ventral --> Dorsal")
-            # ax.set_zlabel("Posterior --> Anterior")
-            xaxis_title="Medial --> Lateral",
-            yaxis_title="Ventral --> Dorsal",
-            zaxis_title="Posterior --> Anterior"
-        ),
-        legend=dict(x=0, y=1)
-    )
-
-    fig.show()
-
 
 def get_fitted_points(reg_result, pattern_dist):
     """

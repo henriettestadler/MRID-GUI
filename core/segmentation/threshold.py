@@ -68,11 +68,11 @@ class ThresholdSegmentation:
 
             # Correct spacing per view
             if view_name == "axial":      # z fixed -> (y,x)
-                spacing = (self.LoadMRI.spacing[0][2], self.LoadMRI.spacing[0][1], 1)
+                spacing = (self.LoadMRI.spacing[2], self.LoadMRI.spacing[1], 1)
             elif view_name == "coronal": # y fixed -> (z,x)
-                spacing = (self.LoadMRI.spacing[0][2], self.LoadMRI.spacing[0][0], 1)
+                spacing = (self.LoadMRI.spacing[2], self.LoadMRI.spacing[0], 1)
             elif view_name == "sagittal":# x fixed -> (z,y)
-                spacing = (self.LoadMRI.spacing[0][0], self.LoadMRI.spacing[0][1], 1)
+                spacing = (self.LoadMRI.spacing[0], self.LoadMRI.spacing[1], 1)
 
             mask_vtk.SetSpacing(spacing)
             mask_vtk.GetPointData().SetScalars(vtk_mask_data)

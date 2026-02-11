@@ -15,8 +15,16 @@ class Contrast:
     - Updates all registered VTK actors and renderers immediately.
     - Designed to be initialized once per loaded volume.
     """
-    def __init__(self, LoadMRI):
-        """Initialize contrast management for all available image indices."""
+    def __init__(self, LoadMRI,data_index:int):
+        """
+        Initialize contrast management for all available image indices.
+        """
+        self.initialise_class( LoadMRI,data_index)
+
+    def initialise_class(self,LoadMRI,data_index):
+        """
+        Initialize contrast management for all available image indices.
+        """
         # Store LUT parameters per image index
         self.LoadMRI = LoadMRI
         self.initial_window = {}
@@ -25,9 +33,9 @@ class Contrast:
         self.level = {}
         self.window_auto = {}
         self.level_auto = {}
-        self.LoadMRI.lut_vtk = {}
+        self.lut_vtk = {}
         #Set window and level and get the UI connected
-        ui = self.LoadMRI.contrast_ui_elements
+        ui = self.LoadMRI.contrast_ui_elements[data_index]
         self.display_level_sliders = {}
         self.display_window_sliders = {}
         self.level_sliders = {}
@@ -35,13 +43,13 @@ class Contrast:
         self.auto_buttons = {}
         self.reset_buttons = {}
         # Percentile thresholds (0–100 range)
-        self.vminmax_perc = [0, 1] #reset
-        self.vminmax_auto = [0.0001, 0.9999] #auto
+        self.vminmax_perc = [0, 0.99999] #reset
+        self.vminmax_auto = [0.0001, 0.999] #auto
 
         for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
             # Level and window for auto and reset
-            vmin, vmax = np.percentile(self.LoadMRI.volume[self.LoadMRI.data_index][image_index], [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100]) #in percentage
-            vmin_auto, vmax_auto = np.percentile(self.LoadMRI.volume[self.LoadMRI.data_index][image_index], [self.vminmax_auto[0]*100, self.vminmax_auto[1]*100]) #in percentage
+            vmin, vmax = np.percentile(self.LoadMRI.volume[data_index][image_index], [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100]) #in percentage
+            vmin_auto, vmax_auto = np.percentile(self.LoadMRI.volume[data_index][image_index], [self.vminmax_auto[0]*100, self.vminmax_auto[1]*100]) #in percentage
             self.initial_window[image_index] = vmax - vmin
             self.initial_level[image_index] = (vmax + vmin)/2
             self.window_auto[image_index] = vmax_auto - vmin_auto
@@ -50,7 +58,8 @@ class Contrast:
             self.window[image_index] = self.initial_window[image_index]
             self.level[image_index] = self.initial_level[image_index]
             #apply initial lut
-            self.compute_lut(image_index)
+            self.compute_lut(image_index,data_index)
+
             self.update_lut_window_level(image_index)
 
             #attach ui widgets
@@ -63,26 +72,31 @@ class Contrast:
 
             #initialiye slider limits and values
             self.window_sliders[image_index].setMinimum(1)
-            self.window_sliders[image_index].setMaximum(int(self.LoadMRI.volume[self.LoadMRI.data_index][image_index].max()))
+            self.window_sliders[image_index].setMaximum(int(self.LoadMRI.volume[data_index][image_index].max()))
             self.window_sliders[image_index].setValue(int(self.window[image_index]))
             self.level_sliders[image_index].setMinimum(1)
-            self.level_sliders[image_index].setMaximum(int(self.LoadMRI.volume[self.LoadMRI.data_index][image_index].max()))
+            self.level_sliders[image_index].setMaximum(int(self.LoadMRI.volume[data_index][image_index].max()))
             self.level_sliders[image_index].setValue(int(self.level[image_index]))
             self.display_level_sliders[image_index].display(int(self.level[image_index]))
             self.display_window_sliders[image_index].display(int(self.window[image_index]))
 
 
 
-    def compute_lut(self,image_index:int):
+    def compute_lut(self,image_index:int,data_index):
         """
         Creates a grayscale VTK lookup table based on the volume’s min and max intensities
         """
-        vmin, vmax = np.percentile(self.LoadMRI.volume[self.LoadMRI.data_index][image_index], [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100])
-        self.LoadMRI.lut_vtk[image_index] = vtk.vtkLookupTable()
-        self.LoadMRI.lut_vtk[image_index].SetTableRange(vmin, vmax)
-        self.LoadMRI.lut_vtk[image_index].SetValueRange(0.0, 1.0)
-        self.LoadMRI.lut_vtk[image_index].SetSaturationRange(0.0, 0.0)
-        self.LoadMRI.lut_vtk[image_index].Build()
+        if image_index==3: #take volume of first image
+            vmin, vmax = np.percentile(self.LoadMRI.volume[data_index][0], [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100])
+        else:
+            vmin, vmax = np.percentile(self.LoadMRI.volume[data_index][image_index], [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100])
+        self.lut_vtk[image_index] = vtk.vtkLookupTable()
+        self.lut_vtk[image_index].SetTableRange(vmin, vmax)
+        self.lut_vtk[image_index].SetValueRange(0.0, 1.0)
+        self.lut_vtk[image_index].SetSaturationRange(0.0, 0.0)
+        self.lut_vtk[image_index].Build()
+
+
 
     def update_lut_window_level(self,image_index:int):
         """
@@ -93,8 +107,8 @@ class Contrast:
 
         # Update the VTK LUT if table range has changed
         if not hasattr(self, "last_range") or self.last_range != (vmin, vmax):
-            self.LoadMRI.lut_vtk[image_index].SetTableRange(vmin, vmax)
-            self.LoadMRI.lut_vtk[image_index].Build()
+            self.lut_vtk[image_index].SetTableRange(vmin, vmax)
+            self.lut_vtk[image_index].Build()
             self.last_range = (vmin, vmax)
 
         # Force all actors to use updated LUT
@@ -106,13 +120,14 @@ class Contrast:
         # change in original and minimap image
         for vn in 'axial','coronal','sagittal':
             renderer = self.LoadMRI.renderers[image_index].get(vn, None)
-            if  renderer is not None:
+            if renderer is not None:
                 renderer.GetRenderWindow().Render()
             if hasattr(self.LoadMRI.minimap,"minimap_renderers"):
                 minimap_renderer = self.LoadMRI.minimap.minimap_renderers[image_index].get(vn, None)
                 if  minimap_renderer is not None:
                     if self.LoadMRI.minimap.minimap_actors[image_index][vn].GetVisibility():
                         minimap_renderer.GetRenderWindow().Render()
+
 
 
     def auto(self,image_index:int):
@@ -165,20 +180,22 @@ class Contrast:
         self.update_lut_window_level(image_index)
 
 
-    def recompute_luttable(self, volume: np.ndarray,image_index:int):
-        """Recompute LUT and window/level ranges when timestamp is changed """
+    def recompute_luttable(self, volume: np.ndarray,image_index:int,data_index:int):
+        """
+        Recompute LUT and window/level ranges when timestamp is changed
+        """
         vmin, vmax = np.percentile(volume, [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100]) #in percentage
         # Level and window for auto and reset
         self.initial_window[image_index] = vmax - vmin
         self.initial_level[image_index] = (vmax + vmin)/2
-        vmin_auto, vmax_auto = np.percentile(self.LoadMRI.volume[self.LoadMRI.data_index][image_index], [self.vminmax_auto[0]*100, self.vminmax_auto[1]*100]) #in percentage
+        vmin_auto, vmax_auto = np.percentile(self.LoadMRI.volume[data_index][image_index], [self.vminmax_auto[0]*100, self.vminmax_auto[1]*100]) #in percentage
         self.window_auto[image_index] = vmax_auto - vmin_auto
         self.level_auto[image_index] = (vmax_auto + vmin_auto)/2
 
         self.window[image_index] = self.initial_window[image_index]
         self.level[image_index] = self.initial_level[image_index]
         #apply initial lut
-        self.compute_lut(image_index)
+        self.compute_lut(image_index,data_index)
         self.update_lut_window_level(image_index)
 
         # Block signals while updating sliders
@@ -196,7 +213,9 @@ class Contrast:
 
 
     def block_signals(self,image_index:int,block_bool:bool):
-        """Temporarily block or unblock all connected Qt signals for a given image index."""
+        """
+        Temporarily block or unblock all connected Qt signals for a given image index.
+        """
         self.level_sliders[image_index].blockSignals(block_bool)
         self.window_sliders[image_index].blockSignals(block_bool)
         self.display_level_sliders[image_index].blockSignals(block_bool)

@@ -107,7 +107,7 @@ class Measurement:
             measurement_renderer.AddActor(text_actor)
         else:
             measurement_renderer.AddActor(text_actor)
-            line_slice_index = [self.load_mri.slice_indices[0], self.load_mri.slice_indices[1], self.load_mri.slice_indices[2]]
+            line_slice_index = [self.load_mri.slice_indices[0][0], self.load_mri.slice_indices[0][1], self.load_mri.slice_indices[0][2]]
             self.load_mri.measurement_lines.append((view_name, actor, line_slice_index, text_actor))
             self.temp_line_actor = None
             self.temp_text_actor = None
@@ -141,5 +141,5 @@ class Measurement:
             return 0.0
         start = np.array(self.start_voxel)
         end = np.array(self.end_voxel)
-        spacing = np.array(self.load_mri.spacing[0])
+        spacing = np.array(self.load_mri.spacing[0][0])
         return np.linalg.norm((end - start) * spacing)

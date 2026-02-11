@@ -1,4 +1,4 @@
-import handlers
+from mrid_utils import handlers
 import os
 import numpy as np
 import scipy
@@ -33,6 +33,9 @@ def run_gaussian_analysis(filename, savepath, roi_name, orientation, data_volume
     gaussian_centers, gaussAmp, gaussSig, popt = find_gaussian_centers(heatmaps, fixed_img,
                                                                        px_size, orientation, verbose)
 
+    print("Gaussian centers", gaussian_centers)
+    #make sure the folder exists
+    os.makedirs(savepath,exist_ok=True)
     gausscent_filename = "gaussian_centers.npy"
     np.save(os.path.join(savepath, gausscent_filename), gaussian_centers)
 
@@ -93,18 +96,6 @@ def find_gaussian_centers(heatmaps, img, px_size, orientation="coronal", verbose
     x = np.linspace(0, num_clms - 1, num_clms)
     x, y = np.meshgrid(x, y)
 
-    # UNCOMMENT BELOW TO PLOT
-    # # # create a colormap object
-    # cmap = plt.cm.get_cmap("jet").copy()
-    # cmap.set_under('white', alpha=0)
-    #
-    # # # set colourbar map
-    # cmap_args = dict(cmap=cmap, vmin=1)
-    #
-    # fig, ax = plt.subplots(1, 1)
-    # ax.imshow(img, cmap='gray')
-    # ax.imshow(np.sum(heatmaps, axis=0), **cmap_args, alpha=0.75)
-
     num_ionp_islands, _, _ = np.shape(heatmaps)
     t2strength = np.zeros((num_ionp_islands,))
     gaussAmp = np.zeros((num_ionp_islands,))
@@ -151,9 +142,6 @@ def find_gaussian_centers(heatmaps, img, px_size, orientation="coronal", verbose
             print("Legth_sigma: " + str(gaussSig[k]))
             print("len: " + str(gaussSig[k] * 2 * px_size))
             print("amp: " + str(popt[0]))
-
-        #  UNCOMMENT BELOW TO PLOT
-        # ax.contour(x, y, data_fitted.reshape((num_rows, num_clms)), 4, linewidths=1, colors='black', alpha=0.15)
 
     gaussian_centers = np.array(gaussian_centers)
 
@@ -239,7 +227,7 @@ def combine_gauss_centers_3D(gaussian_centers_coronal, contrast_intensities_coro
     if gaussian_centers[:, 2].any():
         gaussian_centers[:, 2] = gaussian_centers[:, 2] / (sagittal_weights + axial_weights)
 
-
+    print("gaussian centers: ",gaussian_centers)
     if savepath:
         filename = "gaussian_centers_3D.npy"
         np.save(os.path.join(savepath, filename), gaussian_centers)

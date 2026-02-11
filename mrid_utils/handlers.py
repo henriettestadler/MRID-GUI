@@ -2,7 +2,8 @@ import os
 import nibabel as nib
 import pandas as pd
 import numpy as np
-import com
+from mrid_utils import com
+
 
 def get_anat_data(sessionpath, filename_data):
     """
@@ -53,10 +54,9 @@ def get_segmentation_data(sessionpath, filename_data):
 
     labelsdf = read_labels(os.path.join(sessionpath, "anat", "labels.txt"))
 
-    print("Data shape of MRI data" + str(np.shape(data)))
-    print("Data shape of MRID segmentation" + str(np.shape(segmentation)))
+    #print("Data shape of MRI data" + str(np.shape(data)))
+    #print("Data shape of MRID segmentation" + str(np.shape(segmentation)))
 
-    #print("Voxel dimensions: " + str(nii_data.header['pixdim']))
     return nii_data, data, segmentation, anat, labelsdf
 
 def read_data(path):
@@ -75,6 +75,8 @@ def read_data(path):
 
 def save_nii(data, affine, path2save, header=None):
     nii2save=nib.Nifti1Image(data, affine, header=header)
+    if not os.path.exists(os.path.dirname(path2save)):
+        os.makedirs(os.path.dirname(path2save))
     nib.save(nii2save, path2save)
 
 def read_labels(labels_path):
@@ -106,8 +108,13 @@ def find_resampled_img(ind, path):
     Finds the 25um isovoxel resampled whole-volume image
     """
     filename = find_ind_data(ind, path)
+    #print(ind, path, filename)
     filename = ".".join(((filename[0].split(".")[0]+"_resampled", "nii", "gz")))
-    print("Fixed image for the warping: "+filename)
+    #print("Fixed image for the warping: "+filename)
+    return filename
+
+def find_ind_data(ind,path):
+    filename=[f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and ind+".nii.gz" in f]
     return filename
 
 def get_gaussian_centers(sessionpath, mrid):
@@ -127,11 +134,14 @@ def get_gaussian_centers(sessionpath, mrid):
             try:
                 contrast_intensities_coronal = np.load(
                     os.path.join(orientpath, "contrast_intensities_fixedROI.npy"))
-                print("Coronal contrast intensities: ")
-                print(contrast_intensities_coronal)
+                #print("Coronal contrast intensities: ")
+                #print(contrast_intensities_coronal)
             except:
-                print("No fixed ROI contrast intensity available for Coronal slice: ")
+                #print("No fixed ROI contrast intensity available for Coronal slice: ")
                 contrast_intensities_coronal = np.array([])
+        else:
+            gaussian_centers_coronal = []
+            gaussian_sigmas_coronal = []
 
         # Sagittal gaussian centers
         orient = "sagittal"
@@ -145,24 +155,32 @@ def get_gaussian_centers(sessionpath, mrid):
             try:
                 contrast_intensities_sagittal = np.load(
                     os.path.join(orientpath, "contrast_intensities_fixedROI.npy"))
-                print("Sagittal contrast intensities: ")
-                print(contrast_intensities_sagittal)
+                #print("Sagittal contrast intensities: ")
+                #print(contrast_intensities_sagittal)
             except:
-                print("No fixed ROI contrast intensity available for Coronal slice: ")
+                #print("No fixed ROI contrast intensity available for Coronal slice: ")
                 contrast_intensities_sagittal = np.array([])
+        else: #MAYBE DELETE
+            gaussian_centers_sagittal = np.array([])
+            gaussian_sigmas_sagittal = np.array([])
+            contrast_intensities_sagittal = np.array([])
 
         # Axial gaussian centers
         orient = "axial"
         orientpath = os.path.join(mridpath, orient)
         if os.path.exists(orientpath):
             gaussian_centers_axial = np.load(os.path.join(orientpath, "gaussian_centers.npy"))
-            print("Axially sliced gaussian centers exist: ")
-            print(gaussian_centers_axial)
+            #print("Axially sliced gaussian centers exist: ")
+            #print(gaussian_centers_axial)
             try:
                 contrast_intensities_axial = np.load(
                     os.path.join(orientpath, "contrast_intensities_fixedROI.npy"))
             except:
                 contrast_intensities_axial = np.array([])
+        else:
+            gaussian_centers_axial = np.array([])
+            gaussian_sigmas_axial = np.array([])
+            contrast_intensities_axial = np.array([])
 
     return gaussian_centers_coronal, contrast_intensities_coronal, \
         gaussian_centers_sagittal, contrast_intensities_sagittal, \
@@ -171,6 +189,8 @@ def get_gaussian_centers(sessionpath, mrid):
 
 
 def get_mrid_dimensions(mrid_dict, bundle_start):
+    print('dim ',mrid_dict["dimensions"])
+    print('start ', bundle_start)
     pattern_dimensions = mrid_dict["dimensions"][bundle_start:, :]
     pattern_intersegment = mrid_dict["intersegment_distances"][bundle_start:]
     ionp_amount = mrid_dict["ionp_amount"][bundle_start:]
@@ -178,3 +198,39 @@ def get_mrid_dimensions(mrid_dict, bundle_start):
     pattern_dist, pattern_points = com.get_centomass(pattern_dimensions, pattern_intersegment)
 
     return pattern_dist, pattern_points, pattern_lengths, ionp_amount
+
+
+def read_whs_labels(path):
+    """
+    Reads the labels from WHS atlas
+    """
+#     labels_path='./atlas_labels.rtf'
+    labels=[]
+    anats=[]
+    with open(path) as f:
+        lines = f.readlines()
+        for i,line in enumerate(lines):
+            #if i>6 and i%2==1:
+                ##Added because .rtf differs .labels
+                if not line or line.startswith("#"):
+                    print(line)
+                    continue
+                #if i==7:
+                #print(line,line.split('\\cf'))
+                #anat= ' '.join(line.split('\\cf')[1].split()[8:])
+#               #  label=[line.split('\\cf')[1].split()[0], anat]
+                #anats.append(anat.split("\"")[1])
+                #labels.append(int(line.split('\\cf')[1].split()[0]))
+#                 print(label)
+                #else:
+                anat=' '.join(line.split()[7:])
+    #             label=[line.split()[0], anat]
+                anats.append(anat.split("\"")[1])
+                labels.append(int(line.split()[0]))
+    #             print(label)
+
+    df=pd.DataFrame()
+    df["Labels"]=labels
+    df["Anatomical Regions"]=anats
+    print(df)
+    return df
