@@ -248,8 +248,8 @@ class MRID_tags(QObject):
                 table_class = getattr(self.MW.LoadMRI, f"intensity_table{data_index}")
                 table_class.update_table('Heatmap', self.heatmap_nii[data_index].T,data_index,visibility_enabled=False)
             else:
-                heatmaps, self.heatmap_nii[data_index], slice_idx = heatmap.get_relaxation(file_name, self.mrid_names, sessionpath, basestructs, slice_orientation)
-                scale = self.visualize_heatmap(self.heatmap_nii[data_index][:,:,self.LoadMRI.slice_indices[data_index][0]],True,data_view,data_index)
+                heatmaps, self.heatmap_nii[data_index], slice_idx = heatmap.get_relaxation(os.path.basename(file_name), self.mrid_names, sessionpath, basestructs, slice_orientation)
+                #scale = self.visualize_heatmap(self.heatmap_nii[data_index][:,:,self.LoadMRI.slice_indices[data_index][0]],True,data_view,data_index)
                 #change volume in intensity table
                 table_class = getattr(self.MW.LoadMRI, f"intensity_table{data_index}")
                 for i in range(table_class.table.rowCount()):
@@ -358,14 +358,20 @@ class MRID_tags(QObject):
                 self.height[data_index] = (y_max - y_min) * spacing_y
 
             camera_base = self.LoadMRI.renderers[0][view_name].GetActiveCamera()
+            camera = renderer.GetActiveCamera()
             fp = camera_base.GetFocalPoint()
             pos = camera_base.GetPosition()
+            self.center_x[data_index] = fp[0]
+            self.center_y[data_index] = fp[1]
+            sca = camera.GetParallelScale()
+            self.width[data_index] = sca
+            self.height[data_index] = sca
 
-            camera = renderer.GetActiveCamera()
-            camera.SetFocalPoint(self.center_x[data_index], self.center_y[data_index], fp[2])
-            camera.SetPosition(self.center_x[data_index], self.center_y[data_index], pos[2])  # small offset in z
-            camera.ParallelProjectionOn()
-            camera.SetParallelScale(max(self.width[data_index], self.height[data_index])/2)
+
+            #camera.SetFocalPoint(self.center_x[data_index], self.center_y[data_index], fp[2])
+            #camera.SetPosition(self.center_x[data_index], self.center_y[data_index], pos[2])  # small offset in z
+            #camera.ParallelProjectionOn()
+            #camera.SetParallelScale(max(self.width[data_index], self.height[data_index])) #/2)
 
             # Add image to actor to then be added to renderer
             actor = vtk.vtkImageActor()
@@ -447,31 +453,29 @@ class MRID_tags(QObject):
             self.actor_heatmap[data_index].SetInputData(img_vtk)
             self.actor_heatmap[data_index].Modified()
 
-            camera_base = self.LoadMRI.renderers[0][view_name].GetActiveCamera()
-            fp = camera_base.GetFocalPoint()
-            pos = camera_base.GetPosition()
+            #camera_base = self.LoadMRI.renderers[0][view_name].GetActiveCamera()
+            #fp = camera_base.GetFocalPoint()
+            #pos = camera_base.GetPosition()
 
-            camera = renderer.GetActiveCamera()
-            camera.SetFocalPoint(self.center_x[data_index], self.center_y[data_index], fp[2])
-            camera.SetPosition(self.center_x[data_index], self.center_y[data_index], pos[2])  # small offset in z
-            camera.ParallelProjectionOn()
-            camera.SetParallelScale(max(self.width[data_index], self.height[data_index])/2)
+            #camera = renderer.GetActiveCamera()
+            #camera.SetFocalPoint(self.center_x[data_index], self.center_y[data_index], fp[2])
+            #camera.SetPosition(self.center_x[data_index], self.center_y[data_index], pos[2])  # small offset in z
+            #camera.ParallelProjectionOn()
+            #camera.SetParallelScale(max(self.width[data_index], self.height[data_index])/2)
 
         vtk_widget.GetRenderWindow().Render()
         self.add_legend(img_slice,reset_camera,data_index)
 
-
-        for _, renderer_items in self.LoadMRI.renderers.items():
-            for vn, renderer in renderer_items.items():
-                if vn == view_name:
-                    camera = renderer.GetActiveCamera()
-                    pos = camera.GetPosition()
-                    camera.SetFocalPoint(self.center_x[data_index], self.center_y[data_index], 0)
-                    camera.SetPosition(self.center_x[data_index], self.center_y[data_index], pos[2])  # small offset in z
-                    camera.ParallelProjectionOn()
-                    camera.SetParallelScale(max(self.width[data_index], self.height[data_index])/2)
-
         if reset_camera:
+            for _, renderer_items in self.LoadMRI.renderers.items():
+                for vn, renderer in renderer_items.items():
+                    if vn == view_name:
+                        camera = renderer.GetActiveCamera()
+                        pos = camera.GetPosition()
+                        camera.SetFocalPoint(self.center_x[data_index], self.center_y[data_index], 0)
+                        camera.SetPosition(self.center_x[data_index], self.center_y[data_index], pos[2])  # small offset in z
+                        camera.ParallelProjectionOn()
+                        camera.SetParallelScale(max(self.width[data_index], self.height[data_index]))
             scale = camera.GetParallelScale()
             self.LoadMRI.cursor.add_cursor4image(view_name,data_index, scale,img_vtk) #index = 0 at start
             return scale

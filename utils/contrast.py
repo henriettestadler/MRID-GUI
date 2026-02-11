@@ -43,8 +43,8 @@ class Contrast:
         self.auto_buttons = {}
         self.reset_buttons = {}
         # Percentile thresholds (0–100 range)
-        self.vminmax_perc = [0, 1] #reset
-        self.vminmax_auto = [0.0001, 0.9999] #auto
+        self.vminmax_perc = [0, 0.99999] #reset
+        self.vminmax_auto = [0.0001, 0.999] #auto
 
         for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
             # Level and window for auto and reset

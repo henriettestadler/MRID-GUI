@@ -113,7 +113,9 @@ class Cursor:
         If cursor_on=True, crosshair is visible and draggable.
         Otherwise, cursor is static (uses default interactor).
         """
+
         if cursor_on: #Cursor is usable
+            print('Cursor init start cursor')
             self.create_cursor_lines(data_index,data_view)
             self.update_cursor_display(data_index)
             self.add_cursor_interaction(data_index)
@@ -136,6 +138,8 @@ class Cursor:
         lm = self.LoadMRI
         if data_view in self.cursor_lines:
             return
+
+        print('hier in cursor lines',self.cursor_lines, data_view)
 
         if self.LoadMRI.vol_dim==3:
             image_index =0
@@ -203,6 +207,8 @@ class Cursor:
         """
         lm = self.LoadMRI
         for image_index,vtk_widget_image in lm.vtk_widgets.items():
+            if image_index==3:
+                continue
             for idx, (view_name, vtk_widget) in enumerate(vtk_widget_image.items()):
                 if idx == data_index or self.LoadMRI.vol_dim==3: #only change cursor of the corresponding view
                     line_h = self.cursor_lines[view_name][image_index]['horizontal']['source']
@@ -293,6 +299,7 @@ class Cursor:
                 if data_index==idx or self.LoadMRI.vol_dim==3:
                     interactor = vtk_widget.GetRenderWindow().GetInteractor()
                     interactor.SetInteractorStyle(CustomInteractorStyle(self,view_name,image_index,None,data_index))
+
                     if hasattr(self.LoadMRI, 'vtk_widgets_heatmap'):
                         vtk_widget = self.LoadMRI.vtk_widgets_heatmap[view_name]
                         interactor = vtk_widget.GetRenderWindow().GetInteractor()
@@ -454,6 +461,7 @@ class Cursor:
 
         self.update_cursor_display(data_index)
         if view_name not in self.cursor_lines:
+            print('suc 1 2')
             self.create_cursor_lines(data_index,view_name)
         self.update_cursor_lines(data_index)
 
@@ -551,4 +559,6 @@ class Cursor:
         else:
             self.LoadMRI.add_axes(renderer, img_vtk, view_name)
 
-        self.LoadMRI.minimap.add_minimap(view_name,img_vtk,image_index,vtk_widget,data_index)
+
+
+        #self.LoadMRI.minimap.add_minimap(view_name,img_vtk,image_index,vtk_widget,data_index)

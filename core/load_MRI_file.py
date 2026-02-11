@@ -1,7 +1,6 @@
 # This Python file uses the following encoding: utf-8
 
 from PySide6.QtCore import QObject
-import SimpleITK as sITK
 import vtk
 from vtk.util import numpy_support
 import numpy as np
@@ -20,9 +19,6 @@ class LoadMRI(QObject):
         self.actors_non_mainimage = {}
         self.actors_non_mainimage[0] = {}
         self.timestamp4D = {}
-        self.timestamp4D[0] = 0
-        self.timestamp4D[1] = 4
-        self.timestamp4D[2] = 8
         self.slice_indices = {}
         self.slice_indices[0] = [0, 0, 0]  # z y x (for cursor +1)
 
@@ -207,7 +203,7 @@ class LoadMRI(QObject):
         #threshold ON or OFF
 
         if self.threshold_on == True:
-            self.Threshold.only_update_displayed_image()
+            self.Segmentation.only_update_displayed_image()
         else:
             if self.vol_dim==3:
                 self.only_display_slide(self.volume[data_index][image_index][:, y, :], "coronal",0)
@@ -225,10 +221,11 @@ class LoadMRI(QObject):
                 self.LoadImage3D.only_display_slide(self.LoadImage3D.vol[i][:, y, :], "coronal",i)
                 self.LoadImage3D.only_display_slide(np.fliplr(self.LoadImage3D.vol[i][:, :, x].T), "sagittal",i)
 
-        #if hasattr(self,'SegInitialization'):
-            #self.SegInitialization.update_bubbles_visible()
-            #if hasattr(self, "SegEvolution"):
-            #    self.SegEvolution.update_evolution_initializtion(128)
+        if hasattr(self,'SegInitialization'):
+            self.SegInitialization.update_bubbles_visible()
+        if hasattr(self, "SegEvolution"):
+            self.SegEvolution.update_evolution_initializtion(128)
+
 
         if hasattr(self,'paintbrush'): #label_volume
             img_vtk = self.paintbrush.vtk_label_images[data_view]
@@ -338,11 +335,10 @@ class LoadMRI(QObject):
         else:
             self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], self.vtk_widgets[image_index][data_view], data_view,image_index,data_index,cam_reset=False)
 
-
         camera.SetParallelScale(scale[data_view])
         camera.SetFocalPoint(fp[data_view])
         camera.SetPosition(pos[data_view])
-        renderer.ResetCamera()
+        renderer.ResetCameraClippingRange()
 
         self.update_slices(image_index,data_index,data_view)
 

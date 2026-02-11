@@ -16,9 +16,10 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
+from PySide6.QtQuickWidgets import QQuickWidget
 from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QAbstractSpinBox, QApplication,
-    QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout,
-    QFrame, QGridLayout, QGroupBox, QHBoxLayout,
+    QCheckBox, QComboBox, QDoubleSpinBox, QFrame,
+    QGraphicsView, QGridLayout, QGroupBox, QHBoxLayout,
     QHeaderView, QLCDNumber, QLabel, QLayout,
     QMainWindow, QMenu, QMenuBar, QPlainTextEdit,
     QPushButton, QRadioButton, QScrollBar, QSizePolicy,
@@ -70,6 +71,12 @@ class Ui_MainWindow(object):
         self.actionContrast_Adjustments_2.setObjectName(u"actionContrast_Adjustments_2")
         self.actionStart_MRIDlabels = QAction(MainWindow)
         self.actionStart_MRIDlabels.setObjectName(u"actionStart_MRIDlabels")
+        self.actionOpen_ephys_Data = QAction(MainWindow)
+        self.actionOpen_ephys_Data.setObjectName(u"actionOpen_ephys_Data")
+        self.actionSegmentation = QAction(MainWindow)
+        self.actionSegmentation.setObjectName(u"actionSegmentation")
+        self.actionGet_Position_in_HPC = QAction(MainWindow)
+        self.actionGet_Position_in_HPC.setObjectName(u"actionGet_Position_in_HPC")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_34 = QGridLayout(self.centralwidget)
@@ -89,396 +96,6 @@ class Ui_MainWindow(object):
         self.tabWidget.setMouseTracking(False)
         self.tabWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.DefaultContextMenu)
         self.tabWidget.setStyleSheet(u"")
-        self.PreSurgery = QWidget()
-        self.PreSurgery.setObjectName(u"PreSurgery")
-        self.gridLayout_9 = QGridLayout(self.PreSurgery)
-        self.gridLayout_9.setObjectName(u"gridLayout_9")
-        self.toolbar = QTabWidget(self.PreSurgery)
-        self.toolbar.setObjectName(u"toolbar")
-        self.toolbar.setEnabled(True)
-        self.toolbar.setMinimumSize(QSize(235, 0))
-        self.toolbar.setMaximumSize(QSize(235, 16777215))
-        self.toolbar.setIconSize(QSize(19, 23))
-        self.tab_8 = QWidget()
-        self.tab_8.setObjectName(u"tab_8")
-        self.gridLayout_74 = QGridLayout(self.tab_8)
-        self.gridLayout_74.setObjectName(u"gridLayout_74")
-        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentPageSetup))
-        self.toolbar.addTab(self.tab_8, icon, "")
-        self.tab_9 = QWidget()
-        self.tab_9.setObjectName(u"tab_9")
-        self.stackedWidget = QStackedWidget(self.tab_9)
-        self.stackedWidget.setObjectName(u"stackedWidget")
-        self.stackedWidget.setEnabled(True)
-        self.stackedWidget.setGeometry(QRect(20, 10, 197, 471))
-        self.stackedWidget.setMaximumSize(QSize(215, 16777215))
-        self.page = QWidget()
-        self.page.setObjectName(u"page")
-        self.gridLayout_75 = QGridLayout(self.page)
-        self.gridLayout_75.setObjectName(u"gridLayout_75")
-        self.textBrowser = QTextBrowser(self.page)
-        self.textBrowser.setObjectName(u"textBrowser")
-        self.textBrowser.setMaximumSize(QSize(16777215, 50))
-        self.textBrowser.setStyleSheet(u"")
-        self.textBrowser.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.textBrowser.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        self.gridLayout_75.addWidget(self.textBrowser, 0, 0, 1, 2)
-
-        self.checkBox_threshold = QCheckBox(self.page)
-        self.checkBox_threshold.setObjectName(u"checkBox_threshold")
-        self.checkBox_threshold.setEnabled(True)
-        self.checkBox_threshold.setChecked(False)
-
-        self.gridLayout_75.addWidget(self.checkBox_threshold, 1, 0, 1, 2)
-
-        self.frame_6 = QFrame(self.page)
-        self.frame_6.setObjectName(u"frame_6")
-        self.frame_6.setMaximumSize(QSize(16777215, 300))
-        self.frame_6.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_6.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_19 = QGridLayout(self.frame_6)
-        self.gridLayout_19.setObjectName(u"gridLayout_19")
-        self.groupBox_2 = QGroupBox(self.frame_6)
-        self.groupBox_2.setObjectName(u"groupBox_2")
-        self.groupBox_2.setMaximumSize(QSize(16777215, 100))
-        self.gridLayout_22 = QGridLayout(self.groupBox_2)
-        self.gridLayout_22.setObjectName(u"gridLayout_22")
-        self.radioButton_bounded = QRadioButton(self.groupBox_2)
-        self.radioButton_bounded.setObjectName(u"radioButton_bounded")
-        self.radioButton_bounded.setChecked(True)
-
-        self.gridLayout_22.addWidget(self.radioButton_bounded, 0, 0, 1, 1)
-
-        self.radioButton_lower = QRadioButton(self.groupBox_2)
-        self.radioButton_lower.setObjectName(u"radioButton_lower")
-
-        self.gridLayout_22.addWidget(self.radioButton_lower, 1, 0, 1, 1)
-
-        self.radioButton_upper = QRadioButton(self.groupBox_2)
-        self.radioButton_upper.setObjectName(u"radioButton_upper")
-
-        self.gridLayout_22.addWidget(self.radioButton_upper, 2, 0, 1, 1)
-
-
-        self.gridLayout_19.addWidget(self.groupBox_2, 0, 0, 1, 1)
-
-        self.groupBox_12 = QGroupBox(self.frame_6)
-        self.groupBox_12.setObjectName(u"groupBox_12")
-        self.groupBox_12.setMaximumSize(QSize(16777215, 80))
-        self.gridLayout_20 = QGridLayout(self.groupBox_12)
-        self.gridLayout_20.setObjectName(u"gridLayout_20")
-        self.ScrollBar_lower = QSlider(self.groupBox_12)
-        self.ScrollBar_lower.setObjectName(u"ScrollBar_lower")
-        self.ScrollBar_lower.setMaximum(105)
-        self.ScrollBar_lower.setSingleStep(1)
-        self.ScrollBar_lower.setPageStep(10)
-        self.ScrollBar_lower.setValue(0)
-        self.ScrollBar_lower.setOrientation(Qt.Orientation.Horizontal)
-
-        self.gridLayout_20.addWidget(self.ScrollBar_lower, 0, 0, 1, 1)
-
-        self.doubleSpinBox_lower = QDoubleSpinBox(self.groupBox_12)
-        self.doubleSpinBox_lower.setObjectName(u"doubleSpinBox_lower")
-        self.doubleSpinBox_lower.setMaximumSize(QSize(16777215, 30))
-        self.doubleSpinBox_lower.setMaximum(105.000000000000000)
-        self.doubleSpinBox_lower.setSingleStep(0.100000000000000)
-
-        self.gridLayout_20.addWidget(self.doubleSpinBox_lower, 0, 1, 1, 1)
-
-
-        self.gridLayout_19.addWidget(self.groupBox_12, 1, 0, 1, 1)
-
-        self.groupBox_21 = QGroupBox(self.frame_6)
-        self.groupBox_21.setObjectName(u"groupBox_21")
-        self.groupBox_21.setMaximumSize(QSize(16777215, 80))
-        self.gridLayout_21 = QGridLayout(self.groupBox_21)
-        self.gridLayout_21.setObjectName(u"gridLayout_21")
-        self.ScrollBar_upper = QSlider(self.groupBox_21)
-        self.ScrollBar_upper.setObjectName(u"ScrollBar_upper")
-        self.ScrollBar_upper.setMaximum(105)
-        self.ScrollBar_upper.setSingleStep(1)
-        self.ScrollBar_upper.setPageStep(10)
-        self.ScrollBar_upper.setValue(0)
-        self.ScrollBar_upper.setOrientation(Qt.Orientation.Horizontal)
-
-        self.gridLayout_21.addWidget(self.ScrollBar_upper, 0, 0, 1, 1)
-
-        self.doubleSpinBox_upper = QDoubleSpinBox(self.groupBox_21)
-        self.doubleSpinBox_upper.setObjectName(u"doubleSpinBox_upper")
-        self.doubleSpinBox_upper.setMaximumSize(QSize(16777215, 30))
-        self.doubleSpinBox_upper.setMaximum(105.000000000000000)
-        self.doubleSpinBox_upper.setSingleStep(0.100000000000000)
-
-        self.gridLayout_21.addWidget(self.doubleSpinBox_upper, 0, 1, 1, 1)
-
-
-        self.gridLayout_19.addWidget(self.groupBox_21, 2, 0, 1, 1)
-
-
-        self.gridLayout_75.addWidget(self.frame_6, 2, 0, 1, 2)
-
-        self.pushButton_3 = QPushButton(self.page)
-        self.pushButton_3.setObjectName(u"pushButton_3")
-        self.pushButton_3.setEnabled(False)
-
-        self.gridLayout_75.addWidget(self.pushButton_3, 3, 0, 1, 1)
-
-        self.pushButton_Next1 = QPushButton(self.page)
-        self.pushButton_Next1.setObjectName(u"pushButton_Next1")
-
-        self.gridLayout_75.addWidget(self.pushButton_Next1, 3, 1, 1, 1)
-
-        self.stackedWidget.addWidget(self.page)
-        self.initialization = QWidget()
-        self.initialization.setObjectName(u"initialization")
-        self.gridLayout_76 = QGridLayout(self.initialization)
-        self.gridLayout_76.setObjectName(u"gridLayout_76")
-        self.textBrowser_2 = QTextBrowser(self.initialization)
-        self.textBrowser_2.setObjectName(u"textBrowser_2")
-        self.textBrowser_2.setMaximumSize(QSize(16777215, 50))
-        self.textBrowser_2.setStyleSheet(u"")
-        self.textBrowser_2.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.textBrowser_2.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        self.gridLayout_76.addWidget(self.textBrowser_2, 0, 0, 1, 3)
-
-        self.groupBox_4 = QGroupBox(self.initialization)
-        self.groupBox_4.setObjectName(u"groupBox_4")
-        self.gridLayout_27 = QGridLayout(self.groupBox_4)
-        self.gridLayout_27.setObjectName(u"gridLayout_27")
-        self.doubleSpinBox_Bubradius = QDoubleSpinBox(self.groupBox_4)
-        self.doubleSpinBox_Bubradius.setObjectName(u"doubleSpinBox_Bubradius")
-        self.doubleSpinBox_Bubradius.setMaximumSize(QSize(16777215, 30))
-        self.doubleSpinBox_Bubradius.setFrame(True)
-        self.doubleSpinBox_Bubradius.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self.doubleSpinBox_Bubradius.setMaximum(105.000000000000000)
-        self.doubleSpinBox_Bubradius.setSingleStep(0.100000000000000)
-
-        self.gridLayout_27.addWidget(self.doubleSpinBox_Bubradius, 1, 0, 1, 1)
-
-        self.horizontalSlider_Bubradius = QSlider(self.groupBox_4)
-        self.horizontalSlider_Bubradius.setObjectName(u"horizontalSlider_Bubradius")
-        self.horizontalSlider_Bubradius.setMaximum(600)
-        self.horizontalSlider_Bubradius.setSingleStep(1)
-        self.horizontalSlider_Bubradius.setPageStep(1)
-        self.horizontalSlider_Bubradius.setValue(0)
-        self.horizontalSlider_Bubradius.setOrientation(Qt.Orientation.Horizontal)
-
-        self.gridLayout_27.addWidget(self.horizontalSlider_Bubradius, 1, 1, 1, 1)
-
-
-        self.gridLayout_76.addWidget(self.groupBox_4, 2, 0, 1, 3)
-
-        self.pushButton_Back2 = QPushButton(self.initialization)
-        self.pushButton_Back2.setObjectName(u"pushButton_Back2")
-        self.pushButton_Back2.setEnabled(True)
-
-        self.gridLayout_76.addWidget(self.pushButton_Back2, 5, 0, 1, 2)
-
-        self.pushButton_Next2 = QPushButton(self.initialization)
-        self.pushButton_Next2.setObjectName(u"pushButton_Next2")
-        self.pushButton_Next2.setEnabled(False)
-
-        self.gridLayout_76.addWidget(self.pushButton_Next2, 5, 2, 1, 1)
-
-        self.pushButton_addBubbles = QPushButton(self.initialization)
-        self.pushButton_addBubbles.setObjectName(u"pushButton_addBubbles")
-
-        self.gridLayout_76.addWidget(self.pushButton_addBubbles, 1, 0, 1, 3)
-
-        self.groupBox_5 = QGroupBox(self.initialization)
-        self.groupBox_5.setObjectName(u"groupBox_5")
-        self.gridLayout_26 = QGridLayout(self.groupBox_5)
-        self.gridLayout_26.setObjectName(u"gridLayout_26")
-        self.tableView_activeBub = QTableView(self.groupBox_5)
-        self.tableView_activeBub.setObjectName(u"tableView_activeBub")
-        self.tableView_activeBub.setEnabled(True)
-        self.tableView_activeBub.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.tableView_activeBub.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.tableView_activeBub.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.tableView_activeBub.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.tableView_activeBub.horizontalHeader().setCascadingSectionResizes(False)
-
-        self.gridLayout_26.addWidget(self.tableView_activeBub, 0, 0, 1, 1)
-
-
-        self.gridLayout_76.addWidget(self.groupBox_5, 3, 0, 1, 3)
-
-        self.pushButton_delete = QPushButton(self.initialization)
-        self.pushButton_delete.setObjectName(u"pushButton_delete")
-
-        self.gridLayout_76.addWidget(self.pushButton_delete, 4, 0, 1, 3)
-
-        self.stackedWidget.addWidget(self.initialization)
-        self.page_3 = QWidget()
-        self.page_3.setObjectName(u"page_3")
-        self.gridLayout_77 = QGridLayout(self.page_3)
-        self.gridLayout_77.setObjectName(u"gridLayout_77")
-        self.groupBox_9 = QGroupBox(self.page_3)
-        self.groupBox_9.setObjectName(u"groupBox_9")
-        self.groupBox_9.setMaximumSize(QSize(16777215, 100))
-        self.gridLayout_24 = QGridLayout(self.groupBox_9)
-        self.gridLayout_24.setObjectName(u"gridLayout_24")
-        self.doubleSpinBox_Bubradius_2 = QDoubleSpinBox(self.groupBox_9)
-        self.doubleSpinBox_Bubradius_2.setObjectName(u"doubleSpinBox_Bubradius_2")
-        self.doubleSpinBox_Bubradius_2.setMaximumSize(QSize(16777215, 30))
-        self.doubleSpinBox_Bubradius_2.setFrame(True)
-        self.doubleSpinBox_Bubradius_2.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self.doubleSpinBox_Bubradius_2.setMaximum(105.000000000000000)
-        self.doubleSpinBox_Bubradius_2.setSingleStep(0.100000000000000)
-
-        self.gridLayout_24.addWidget(self.doubleSpinBox_Bubradius_2, 0, 0, 1, 1)
-
-
-        self.gridLayout_77.addWidget(self.groupBox_9, 3, 0, 1, 3)
-
-        self.groupBox_37 = QGroupBox(self.page_3)
-        self.groupBox_37.setObjectName(u"groupBox_37")
-        self.groupBox_37.setMaximumSize(QSize(16777215, 100))
-        self.gridLayout_79 = QGridLayout(self.groupBox_37)
-        self.gridLayout_79.setObjectName(u"gridLayout_79")
-        self.toolButton_3 = QToolButton(self.groupBox_37)
-        self.toolButton_3.setObjectName(u"toolButton_3")
-        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaSeekForward))
-        self.toolButton_3.setIcon(icon1)
-        self.toolButton_3.setIconSize(QSize(20, 20))
-
-        self.gridLayout_79.addWidget(self.toolButton_3, 0, 2, 1, 1)
-
-        self.toolButton_runEvo = QToolButton(self.groupBox_37)
-        self.toolButton_runEvo.setObjectName(u"toolButton_runEvo")
-        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart))
-        self.toolButton_runEvo.setIcon(icon2)
-        self.toolButton_runEvo.setIconSize(QSize(20, 20))
-        self.toolButton_runEvo.setCheckable(True)
-
-        self.gridLayout_79.addWidget(self.toolButton_runEvo, 0, 1, 1, 1)
-
-        self.toolButton_2 = QToolButton(self.groupBox_37)
-        self.toolButton_2.setObjectName(u"toolButton_2")
-        icon3 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaSeekBackward))
-        self.toolButton_2.setIcon(icon3)
-        self.toolButton_2.setIconSize(QSize(20, 20))
-
-        self.gridLayout_79.addWidget(self.toolButton_2, 0, 0, 1, 1)
-
-
-        self.gridLayout_77.addWidget(self.groupBox_37, 1, 0, 1, 4)
-
-        self.textBrowser_3 = QTextBrowser(self.page_3)
-        self.textBrowser_3.setObjectName(u"textBrowser_3")
-        self.textBrowser_3.setMinimumSize(QSize(185, 0))
-        self.textBrowser_3.setMaximumSize(QSize(200, 50))
-        self.textBrowser_3.setStyleSheet(u"")
-        self.textBrowser_3.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.textBrowser_3.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        self.gridLayout_77.addWidget(self.textBrowser_3, 0, 0, 1, 1)
-
-        self.groupBox_11 = QGroupBox(self.page_3)
-        self.groupBox_11.setObjectName(u"groupBox_11")
-        self.groupBox_11.setMaximumSize(QSize(16777215, 100))
-        self.gridLayout_25 = QGridLayout(self.groupBox_11)
-        self.gridLayout_25.setObjectName(u"gridLayout_25")
-        self.doubleSpinBox_Bubradius_4 = QDoubleSpinBox(self.groupBox_11)
-        self.doubleSpinBox_Bubradius_4.setObjectName(u"doubleSpinBox_Bubradius_4")
-        self.doubleSpinBox_Bubradius_4.setMaximumSize(QSize(16777215, 30))
-        self.doubleSpinBox_Bubradius_4.setFrame(True)
-        self.doubleSpinBox_Bubradius_4.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self.doubleSpinBox_Bubradius_4.setMaximum(105.000000000000000)
-        self.doubleSpinBox_Bubradius_4.setSingleStep(0.100000000000000)
-
-        self.gridLayout_25.addWidget(self.doubleSpinBox_Bubradius_4, 0, 0, 1, 1)
-
-
-        self.gridLayout_77.addWidget(self.groupBox_11, 3, 3, 1, 1)
-
-        self.pushButton_Finish = QPushButton(self.page_3)
-        self.pushButton_Finish.setObjectName(u"pushButton_Finish")
-        self.pushButton_Finish.setEnabled(True)
-
-        self.gridLayout_77.addWidget(self.pushButton_Finish, 5, 3, 1, 1)
-
-        self.pushButton_Back3 = QPushButton(self.page_3)
-        self.pushButton_Back3.setObjectName(u"pushButton_Back3")
-        self.pushButton_Back3.setEnabled(True)
-
-        self.gridLayout_77.addWidget(self.pushButton_Back3, 5, 0, 1, 1)
-
-        self.stackedWidget.addWidget(self.page_3)
-        icon4 = QIcon()
-        icon4.addFile(u"../../MRID-GUI/Icons/ITKsnap/snake.gif", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.toolbar.addTab(self.tab_9, icon4, "")
-        self.tab_4 = QWidget()
-        self.tab_4.setObjectName(u"tab_4")
-        self.formLayout = QFormLayout(self.tab_4)
-        self.formLayout.setObjectName(u"formLayout")
-        icon5 = QIcon()
-        icon5.addFile(u"Icons/ITKsnap/paintbrush.gif", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.toolbar.addTab(self.tab_4, icon5, "")
-        self.tab_7 = QWidget()
-        self.tab_7.setObjectName(u"tab_7")
-        self.gridLayout_68 = QGridLayout(self.tab_7)
-        self.gridLayout_68.setObjectName(u"gridLayout_68")
-        icon6 = QIcon()
-        icon6.addFile(u"Icons/Internet/scale.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.toolbar.addTab(self.tab_7, icon6, "")
-        self.tab_5 = QWidget()
-        self.tab_5.setObjectName(u"tab_5")
-        self.gridLayout_67 = QGridLayout(self.tab_5)
-        self.gridLayout_67.setObjectName(u"gridLayout_67")
-        self.groupBox = QGroupBox(self.tab_5)
-        self.groupBox.setObjectName(u"groupBox")
-        self.groupBox.setEnabled(False)
-        self.gridLayout_8 = QGridLayout(self.groupBox)
-        self.gridLayout_8.setObjectName(u"gridLayout_8")
-        self.pushButton_2 = QPushButton(self.groupBox)
-        self.pushButton_2.setObjectName(u"pushButton_2")
-        icon7 = QIcon()
-        icon7.addFile(u"Icons/Internet/platz.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_2.setIcon(icon7)
-
-        self.gridLayout_8.addWidget(self.pushButton_2, 0, 0, 1, 1)
-
-
-        self.gridLayout_67.addWidget(self.groupBox, 0, 0, 1, 1)
-
-        self.groupBox_3 = QGroupBox(self.tab_5)
-        self.groupBox_3.setObjectName(u"groupBox_3")
-        self.groupBox_3.setEnabled(False)
-        self.gridLayout_6 = QGridLayout(self.groupBox_3)
-        self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.pushButton_4 = QPushButton(self.groupBox_3)
-        self.pushButton_4.setObjectName(u"pushButton_4")
-        self.pushButton_4.setIcon(icon7)
-
-        self.gridLayout_6.addWidget(self.pushButton_4, 0, 0, 1, 1)
-
-
-        self.gridLayout_67.addWidget(self.groupBox_3, 1, 0, 1, 1)
-
-        self.groupBox_22 = QGroupBox(self.tab_5)
-        self.groupBox_22.setObjectName(u"groupBox_22")
-        self.groupBox_22.setEnabled(False)
-        self.gridLayout_7 = QGridLayout(self.groupBox_22)
-        self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.spinBox_y_2 = QSpinBox(self.groupBox_22)
-        self.spinBox_y_2.setObjectName(u"spinBox_y_2")
-        self.spinBox_y_2.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self.spinBox_y_2.setMinimum(1)
-        self.spinBox_y_2.setMaximum(120)
-
-        self.gridLayout_7.addWidget(self.spinBox_y_2, 0, 0, 1, 1)
-
-
-        self.gridLayout_67.addWidget(self.groupBox_22, 2, 0, 1, 1)
-
-        self.toolbar.addTab(self.tab_5, icon7, "")
-
-        self.gridLayout_9.addWidget(self.toolbar, 0, 0, 2, 1)
-
-        self.tabWidget.addTab(self.PreSurgery, "")
         self.PostSurgery = QWidget()
         self.PostSurgery.setObjectName(u"PostSurgery")
         self.gridLayout_70 = QGridLayout(self.PostSurgery)
@@ -491,7 +108,7 @@ class Ui_MainWindow(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.groupBox_data0.sizePolicy().hasHeightForWidth())
         self.groupBox_data0.setSizePolicy(sizePolicy1)
-        self.groupBox_data0.setMinimumSize(QSize(1000, 0))
+        self.groupBox_data0.setMinimumSize(QSize(999, 0))
         self.gridLayout_46 = QGridLayout(self.groupBox_data0)
         self.gridLayout_46.setObjectName(u"gridLayout_46")
         self.data_4d_3d = QStackedWidget(self.groupBox_data0)
@@ -502,100 +119,16 @@ class Ui_MainWindow(object):
         self.page_4Ddata0.setObjectName(u"page_4Ddata0")
         self.gridLayout_data0 = QGridLayout(self.page_4Ddata0)
         self.gridLayout_data0.setObjectName(u"gridLayout_data0")
-        self.groupBox_time01 = QGroupBox(self.page_4Ddata0)
-        self.groupBox_time01.setObjectName(u"groupBox_time01")
+        self.groupBox_time02 = QGroupBox(self.page_4Ddata0)
+        self.groupBox_time02.setObjectName(u"groupBox_time02")
         sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.groupBox_time01.sizePolicy().hasHeightForWidth())
-        self.groupBox_time01.setSizePolicy(sizePolicy2)
+        sizePolicy2.setHeightForWidth(self.groupBox_time02.sizePolicy().hasHeightForWidth())
+        self.groupBox_time02.setSizePolicy(sizePolicy2)
         font1 = QFont()
         font1.setPointSize(12)
         font1.setBold(False)
-        self.groupBox_time01.setFont(font1)
-        self.gridLayout_54 = QGridLayout(self.groupBox_time01)
-        self.gridLayout_54.setObjectName(u"gridLayout_54")
-        self.frame_17 = QFrame(self.groupBox_time01)
-        self.frame_17.setObjectName(u"frame_17")
-        self.frame_17.setMinimumSize(QSize(0, 200))
-        self.frame_17.setStyleSheet(u"border-color: rgb(170, 170, 170);\n"
-"background-color: rgb(131, 131, 131);\n"
-"")
-        self.frame_17.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_17.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_51 = QGridLayout(self.frame_17)
-        self.gridLayout_51.setSpacing(0)
-        self.gridLayout_51.setObjectName(u"gridLayout_51")
-        self.gridLayout_51.setContentsMargins(4, 4, 4, 4)
-        self.horizontalLayout_15 = QHBoxLayout()
-        self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
-        self.go_down_data01 = QToolButton(self.frame_17)
-        self.go_down_data01.setObjectName(u"go_down_data01")
-        icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoDown))
-        self.go_down_data01.setIcon(icon8)
-
-        self.horizontalLayout_15.addWidget(self.go_down_data01)
-
-        self.go_up_data01 = QToolButton(self.frame_17)
-        self.go_up_data01.setObjectName(u"go_up_data01")
-        icon9 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
-        self.go_up_data01.setIcon(icon9)
-
-        self.horizontalLayout_15.addWidget(self.go_up_data01)
-
-        self.go_left_data01 = QToolButton(self.frame_17)
-        self.go_left_data01.setObjectName(u"go_left_data01")
-
-        self.horizontalLayout_15.addWidget(self.go_left_data01)
-
-        self.go_right_data01 = QToolButton(self.frame_17)
-        self.go_right_data01.setObjectName(u"go_right_data01")
-
-        self.horizontalLayout_15.addWidget(self.go_right_data01)
-
-
-        self.gridLayout_51.addLayout(self.horizontalLayout_15, 2, 10, 1, 1)
-
-        self.horizontalLayout_14 = QHBoxLayout()
-        self.horizontalLayout_14.setObjectName(u"horizontalLayout_14")
-        self.zoom_in_data01 = QToolButton(self.frame_17)
-        self.zoom_in_data01.setObjectName(u"zoom_in_data01")
-
-        self.horizontalLayout_14.addWidget(self.zoom_in_data01)
-
-        self.zoom_out_data01 = QToolButton(self.frame_17)
-        self.zoom_out_data01.setObjectName(u"zoom_out_data01")
-
-        self.horizontalLayout_14.addWidget(self.zoom_out_data01)
-
-
-        self.gridLayout_51.addLayout(self.horizontalLayout_14, 2, 9, 1, 1)
-
-        self.vtkWidget_data01 = QVTKRenderWindowInteractor(self.frame_17)
-        self.vtkWidget_data01.setObjectName(u"vtkWidget_data01")
-        self.vtkWidget_data01.setStyleSheet(u"background-color: rgb(200, 177, 176);")
-
-        self.gridLayout_51.addWidget(self.vtkWidget_data01, 0, 0, 1, 11)
-
-        self.fit_to_zoom_data01 = QPushButton(self.frame_17)
-        self.fit_to_zoom_data01.setObjectName(u"fit_to_zoom_data01")
-        self.fit_to_zoom_data01.setStyleSheet(u"\n"
-"background-color: rgb(0, 153, 255);")
-        self.fit_to_zoom_data01.setAutoDefault(False)
-        self.fit_to_zoom_data01.setFlat(False)
-
-        self.gridLayout_51.addWidget(self.fit_to_zoom_data01, 2, 0, 2, 1)
-
-
-        self.gridLayout_54.addWidget(self.frame_17, 0, 0, 1, 2)
-
-
-        self.gridLayout_data0.addWidget(self.groupBox_time01, 0, 1, 1, 1)
-
-        self.groupBox_time02 = QGroupBox(self.page_4Ddata0)
-        self.groupBox_time02.setObjectName(u"groupBox_time02")
-        sizePolicy2.setHeightForWidth(self.groupBox_time02.sizePolicy().hasHeightForWidth())
-        self.groupBox_time02.setSizePolicy(sizePolicy2)
         self.groupBox_time02.setFont(font1)
         self.gridLayout_55 = QGridLayout(self.groupBox_time02)
         self.gridLayout_55.setObjectName(u"gridLayout_55")
@@ -630,13 +163,15 @@ class Ui_MainWindow(object):
         self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
         self.go_down_data02 = QToolButton(self.frame_23)
         self.go_down_data02.setObjectName(u"go_down_data02")
-        self.go_down_data02.setIcon(icon8)
+        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoDown))
+        self.go_down_data02.setIcon(icon)
 
         self.horizontalLayout_13.addWidget(self.go_down_data02)
 
         self.go_up_data02 = QToolButton(self.frame_23)
         self.go_up_data02.setObjectName(u"go_up_data02")
-        self.go_up_data02.setIcon(icon9)
+        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
+        self.go_up_data02.setIcon(icon1)
 
         self.horizontalLayout_13.addWidget(self.go_up_data02)
 
@@ -674,96 +209,6 @@ class Ui_MainWindow(object):
 
 
         self.gridLayout_data0.addWidget(self.groupBox_time02, 0, 2, 1, 1)
-
-        self.heatmap_data0 = QGroupBox(self.page_4Ddata0)
-        self.heatmap_data0.setObjectName(u"heatmap_data0")
-        self.heatmap_data0.setFont(font1)
-        self.gridLayout_49 = QGridLayout(self.heatmap_data0)
-        self.gridLayout_49.setObjectName(u"gridLayout_49")
-        self.frame_26 = QFrame(self.heatmap_data0)
-        self.frame_26.setObjectName(u"frame_26")
-        self.frame_26.setEnabled(True)
-        self.frame_26.setMinimumSize(QSize(0, 200))
-        self.frame_26.setStyleSheet(u"border-color: rgb(170, 170, 170);\n"
-"background-color: rgb(131, 131, 131);\n"
-"")
-        self.frame_26.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_26.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_48 = QGridLayout(self.frame_26)
-        self.gridLayout_48.setSpacing(0)
-        self.gridLayout_48.setObjectName(u"gridLayout_48")
-        self.gridLayout_48.setContentsMargins(4, 4, 4, 4)
-        self.horizontalLayout_16 = QHBoxLayout()
-        self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
-        self.zoom_in_data03 = QToolButton(self.frame_26)
-        self.zoom_in_data03.setObjectName(u"zoom_in_data03")
-        self.zoom_in_data03.setEnabled(True)
-        self.zoom_in_data03.setIconSize(QSize(14, 16))
-
-        self.horizontalLayout_16.addWidget(self.zoom_in_data03)
-
-        self.zoom_out_data03 = QToolButton(self.frame_26)
-        self.zoom_out_data03.setObjectName(u"zoom_out_data03")
-        self.zoom_out_data03.setEnabled(True)
-
-        self.horizontalLayout_16.addWidget(self.zoom_out_data03)
-
-
-        self.gridLayout_48.addLayout(self.horizontalLayout_16, 2, 6, 1, 1)
-
-        self.fit_to_zoom_data03 = QPushButton(self.frame_26)
-        self.fit_to_zoom_data03.setObjectName(u"fit_to_zoom_data03")
-        self.fit_to_zoom_data03.setEnabled(True)
-        self.fit_to_zoom_data03.setStyleSheet(u"\n"
-"background-color: rgb(0, 153, 255);")
-        self.fit_to_zoom_data03.setAutoDefault(False)
-        self.fit_to_zoom_data03.setFlat(False)
-
-        self.gridLayout_48.addWidget(self.fit_to_zoom_data03, 1, 0, 2, 1)
-
-        self.vtkWidget_data03 = QVTKRenderWindowInteractor(self.frame_26)
-        self.vtkWidget_data03.setObjectName(u"vtkWidget_data03")
-        self.vtkWidget_data03.setEnabled(True)
-        self.vtkWidget_data03.setStyleSheet(u"background-color: rgb(200, 177, 176);")
-
-        self.gridLayout_48.addWidget(self.vtkWidget_data03, 0, 0, 1, 8)
-
-        self.horizontalLayout_17 = QHBoxLayout()
-        self.horizontalLayout_17.setObjectName(u"horizontalLayout_17")
-        self.go_down_data03 = QToolButton(self.frame_26)
-        self.go_down_data03.setObjectName(u"go_down_data03")
-        self.go_down_data03.setEnabled(True)
-        self.go_down_data03.setIcon(icon8)
-
-        self.horizontalLayout_17.addWidget(self.go_down_data03)
-
-        self.go_up_data03 = QToolButton(self.frame_26)
-        self.go_up_data03.setObjectName(u"go_up_data03")
-        self.go_up_data03.setEnabled(True)
-        self.go_up_data03.setIcon(icon9)
-
-        self.horizontalLayout_17.addWidget(self.go_up_data03)
-
-        self.go_left_data03 = QToolButton(self.frame_26)
-        self.go_left_data03.setObjectName(u"go_left_data03")
-        self.go_left_data03.setEnabled(True)
-
-        self.horizontalLayout_17.addWidget(self.go_left_data03)
-
-        self.go_right_data03 = QToolButton(self.frame_26)
-        self.go_right_data03.setObjectName(u"go_right_data03")
-        self.go_right_data03.setEnabled(True)
-
-        self.horizontalLayout_17.addWidget(self.go_right_data03)
-
-
-        self.gridLayout_48.addLayout(self.horizontalLayout_17, 2, 7, 1, 1)
-
-
-        self.gridLayout_49.addWidget(self.frame_26, 0, 0, 1, 1)
-
-
-        self.gridLayout_data0.addWidget(self.heatmap_data0, 0, 3, 1, 1)
 
         self.tabWidget_time0 = QTabWidget(self.page_4Ddata0)
         self.tabWidget_time0.setObjectName(u"tabWidget_time0")
@@ -921,74 +366,89 @@ class Ui_MainWindow(object):
 
         self.tabWidget_time0.addTab(self.tab_3, "")
 
-        self.gridLayout_data0.addWidget(self.tabWidget_time0, 1, 1, 1, 1)
+        self.gridLayout_data0.addWidget(self.tabWidget_time0, 2, 1, 1, 1)
 
-        self.groupBox_25 = QGroupBox(self.page_4Ddata0)
-        self.groupBox_25.setObjectName(u"groupBox_25")
-        self.groupBox_25.setMinimumSize(QSize(400, 100))
-        self.groupBox_25.setMaximumSize(QSize(16777215, 16777215))
-        self.gridLayout_32 = QGridLayout(self.groupBox_25)
-        self.gridLayout_32.setObjectName(u"gridLayout_32")
-        self.gridLayout_32.setContentsMargins(-1, -1, 9, 9)
-        self.tableintensity_data0 = QTableWidget(self.groupBox_25)
-        if (self.tableintensity_data0.columnCount() < 4):
-            self.tableintensity_data0.setColumnCount(4)
-        __qtablewidgetitem = QTableWidgetItem()
-        self.tableintensity_data0.setHorizontalHeaderItem(0, __qtablewidgetitem)
-        __qtablewidgetitem1 = QTableWidgetItem()
-        self.tableintensity_data0.setHorizontalHeaderItem(1, __qtablewidgetitem1)
-        __qtablewidgetitem2 = QTableWidgetItem()
-        self.tableintensity_data0.setHorizontalHeaderItem(2, __qtablewidgetitem2)
-        __qtablewidgetitem3 = QTableWidgetItem()
-        self.tableintensity_data0.setHorizontalHeaderItem(3, __qtablewidgetitem3)
-        self.tableintensity_data0.setObjectName(u"tableintensity_data0")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.tableintensity_data0.sizePolicy().hasHeightForWidth())
-        self.tableintensity_data0.setSizePolicy(sizePolicy3)
-        self.tableintensity_data0.setMaximumSize(QSize(16777215, 1677))
-        self.tableintensity_data0.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.tableintensity_data0.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-        self.tableintensity_data0.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.tableintensity_data0.horizontalHeader().setDefaultSectionSize(67)
-
-        self.gridLayout_32.addWidget(self.tableintensity_data0, 1, 0, 1, 1)
-
-
-        self.gridLayout_data0.addWidget(self.groupBox_25, 1, 2, 2, 1)
-
-        self.groupbox_legend0 = QGroupBox(self.page_4Ddata0)
-        self.groupbox_legend0.setObjectName(u"groupbox_legend0")
-        self.groupbox_legend0.setMaximumSize(QSize(16777215, 120))
-        self.gridLayout_64 = QGridLayout(self.groupbox_legend0)
-        self.gridLayout_64.setObjectName(u"gridLayout_64")
-        self.frame_27 = QFrame(self.groupbox_legend0)
-        self.frame_27.setObjectName(u"frame_27")
-        self.frame_27.setEnabled(True)
-        self.frame_27.setStyleSheet(u"border-color: rgb(170, 170, 170);\n"
+        self.groupBox_time01 = QGroupBox(self.page_4Ddata0)
+        self.groupBox_time01.setObjectName(u"groupBox_time01")
+        sizePolicy2.setHeightForWidth(self.groupBox_time01.sizePolicy().hasHeightForWidth())
+        self.groupBox_time01.setSizePolicy(sizePolicy2)
+        self.groupBox_time01.setFont(font1)
+        self.gridLayout_54 = QGridLayout(self.groupBox_time01)
+        self.gridLayout_54.setObjectName(u"gridLayout_54")
+        self.frame_17 = QFrame(self.groupBox_time01)
+        self.frame_17.setObjectName(u"frame_17")
+        self.frame_17.setMinimumSize(QSize(0, 200))
+        self.frame_17.setStyleSheet(u"border-color: rgb(170, 170, 170);\n"
 "background-color: rgb(131, 131, 131);\n"
 "")
-        self.frame_27.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_27.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_47 = QGridLayout(self.frame_27)
-        self.gridLayout_47.setSpacing(0)
-        self.gridLayout_47.setObjectName(u"gridLayout_47")
-        self.gridLayout_47.setContentsMargins(4, 4, 4, 4)
-        self.vtkWidget_legend0 = QVTKRenderWindowInteractor(self.frame_27)
-        self.vtkWidget_legend0.setObjectName(u"vtkWidget_legend0")
-        self.vtkWidget_legend0.setEnabled(True)
-        self.vtkWidget_legend0.setMinimumSize(QSize(0, 30))
-        self.vtkWidget_legend0.setMaximumSize(QSize(16777215, 167))
-        self.vtkWidget_legend0.setStyleSheet(u"background-color: rgb(200, 177, 176);")
+        self.frame_17.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_17.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_51 = QGridLayout(self.frame_17)
+        self.gridLayout_51.setSpacing(0)
+        self.gridLayout_51.setObjectName(u"gridLayout_51")
+        self.gridLayout_51.setContentsMargins(4, 4, 4, 4)
+        self.horizontalLayout_15 = QHBoxLayout()
+        self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
+        self.go_down_data01 = QToolButton(self.frame_17)
+        self.go_down_data01.setObjectName(u"go_down_data01")
+        self.go_down_data01.setIcon(icon)
 
-        self.gridLayout_47.addWidget(self.vtkWidget_legend0, 0, 0, 1, 1)
+        self.horizontalLayout_15.addWidget(self.go_down_data01)
+
+        self.go_up_data01 = QToolButton(self.frame_17)
+        self.go_up_data01.setObjectName(u"go_up_data01")
+        self.go_up_data01.setIcon(icon1)
+
+        self.horizontalLayout_15.addWidget(self.go_up_data01)
+
+        self.go_left_data01 = QToolButton(self.frame_17)
+        self.go_left_data01.setObjectName(u"go_left_data01")
+
+        self.horizontalLayout_15.addWidget(self.go_left_data01)
+
+        self.go_right_data01 = QToolButton(self.frame_17)
+        self.go_right_data01.setObjectName(u"go_right_data01")
+
+        self.horizontalLayout_15.addWidget(self.go_right_data01)
 
 
-        self.gridLayout_64.addWidget(self.frame_27, 0, 1, 1, 1)
+        self.gridLayout_51.addLayout(self.horizontalLayout_15, 2, 10, 1, 1)
+
+        self.horizontalLayout_14 = QHBoxLayout()
+        self.horizontalLayout_14.setObjectName(u"horizontalLayout_14")
+        self.zoom_in_data01 = QToolButton(self.frame_17)
+        self.zoom_in_data01.setObjectName(u"zoom_in_data01")
+
+        self.horizontalLayout_14.addWidget(self.zoom_in_data01)
+
+        self.zoom_out_data01 = QToolButton(self.frame_17)
+        self.zoom_out_data01.setObjectName(u"zoom_out_data01")
+
+        self.horizontalLayout_14.addWidget(self.zoom_out_data01)
 
 
-        self.gridLayout_data0.addWidget(self.groupbox_legend0, 1, 3, 2, 1)
+        self.gridLayout_51.addLayout(self.horizontalLayout_14, 2, 9, 1, 1)
+
+        self.vtkWidget_data01 = QVTKRenderWindowInteractor(self.frame_17)
+        self.vtkWidget_data01.setObjectName(u"vtkWidget_data01")
+        self.vtkWidget_data01.setStyleSheet(u"background-color: rgb(200, 177, 176);")
+
+        self.gridLayout_51.addWidget(self.vtkWidget_data01, 0, 0, 1, 11)
+
+        self.fit_to_zoom_data01 = QPushButton(self.frame_17)
+        self.fit_to_zoom_data01.setObjectName(u"fit_to_zoom_data01")
+        self.fit_to_zoom_data01.setStyleSheet(u"\n"
+"background-color: rgb(0, 153, 255);")
+        self.fit_to_zoom_data01.setAutoDefault(False)
+        self.fit_to_zoom_data01.setFlat(False)
+
+        self.gridLayout_51.addWidget(self.fit_to_zoom_data01, 2, 0, 2, 1)
+
+
+        self.gridLayout_54.addWidget(self.frame_17, 0, 0, 1, 2)
+
+
+        self.gridLayout_data0.addWidget(self.groupBox_time01, 0, 1, 1, 1)
 
         self.groupBox_time00 = QGroupBox(self.page_4Ddata0)
         self.groupBox_time00.setObjectName(u"groupBox_time00")
@@ -1037,13 +497,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
         self.go_down_data00 = QToolButton(self.frame_3)
         self.go_down_data00.setObjectName(u"go_down_data00")
-        self.go_down_data00.setIcon(icon8)
+        self.go_down_data00.setIcon(icon)
 
         self.horizontalLayout_9.addWidget(self.go_down_data00)
 
         self.go_up_data00 = QToolButton(self.frame_3)
         self.go_up_data00.setObjectName(u"go_up_data00")
-        self.go_up_data00.setIcon(icon9)
+        self.go_up_data00.setIcon(icon1)
 
         self.horizontalLayout_9.addWidget(self.go_up_data00)
 
@@ -1116,13 +576,195 @@ class Ui_MainWindow(object):
         self.gridLayout_71.addWidget(self.spinBox_z_data0, 0, 3, 1, 1)
 
 
-        self.gridLayout_data0.addWidget(self.groupBox_34, 1, 0, 1, 1)
+        self.gridLayout_data0.addWidget(self.groupBox_34, 2, 0, 1, 1)
+
+        self.heatmap_data0 = QGroupBox(self.page_4Ddata0)
+        self.heatmap_data0.setObjectName(u"heatmap_data0")
+        self.heatmap_data0.setFont(font1)
+        self.gridLayout_49 = QGridLayout(self.heatmap_data0)
+        self.gridLayout_49.setObjectName(u"gridLayout_49")
+        self.stackedWidget_heatmap = QStackedWidget(self.heatmap_data0)
+        self.stackedWidget_heatmap.setObjectName(u"stackedWidget_heatmap")
+        self.page = QWidget()
+        self.page.setObjectName(u"page")
+        self.gridLayout_6 = QGridLayout(self.page)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.frame_26 = QFrame(self.page)
+        self.frame_26.setObjectName(u"frame_26")
+        self.frame_26.setEnabled(True)
+        self.frame_26.setMinimumSize(QSize(0, 200))
+        self.frame_26.setStyleSheet(u"border-color: rgb(170, 170, 170);\n"
+"background-color: rgb(131, 131, 131);\n"
+"")
+        self.frame_26.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_26.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_48 = QGridLayout(self.frame_26)
+        self.gridLayout_48.setSpacing(0)
+        self.gridLayout_48.setObjectName(u"gridLayout_48")
+        self.gridLayout_48.setContentsMargins(4, 4, 4, 4)
+        self.horizontalLayout_16 = QHBoxLayout()
+        self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
+        self.zoom_in_data03 = QToolButton(self.frame_26)
+        self.zoom_in_data03.setObjectName(u"zoom_in_data03")
+        self.zoom_in_data03.setEnabled(True)
+        self.zoom_in_data03.setIconSize(QSize(14, 16))
+
+        self.horizontalLayout_16.addWidget(self.zoom_in_data03)
+
+        self.zoom_out_data03 = QToolButton(self.frame_26)
+        self.zoom_out_data03.setObjectName(u"zoom_out_data03")
+        self.zoom_out_data03.setEnabled(True)
+
+        self.horizontalLayout_16.addWidget(self.zoom_out_data03)
+
+
+        self.gridLayout_48.addLayout(self.horizontalLayout_16, 2, 6, 1, 1)
+
+        self.fit_to_zoom_data03 = QPushButton(self.frame_26)
+        self.fit_to_zoom_data03.setObjectName(u"fit_to_zoom_data03")
+        self.fit_to_zoom_data03.setEnabled(True)
+        self.fit_to_zoom_data03.setStyleSheet(u"\n"
+"background-color: rgb(0, 153, 255);")
+        self.fit_to_zoom_data03.setAutoDefault(False)
+        self.fit_to_zoom_data03.setFlat(False)
+
+        self.gridLayout_48.addWidget(self.fit_to_zoom_data03, 1, 0, 2, 1)
+
+        self.vtkWidget_data03 = QVTKRenderWindowInteractor(self.frame_26)
+        self.vtkWidget_data03.setObjectName(u"vtkWidget_data03")
+        self.vtkWidget_data03.setEnabled(True)
+        self.vtkWidget_data03.setStyleSheet(u"background-color: rgb(200, 177, 176);")
+
+        self.gridLayout_48.addWidget(self.vtkWidget_data03, 0, 0, 1, 8)
+
+        self.horizontalLayout_17 = QHBoxLayout()
+        self.horizontalLayout_17.setObjectName(u"horizontalLayout_17")
+        self.go_down_data03 = QToolButton(self.frame_26)
+        self.go_down_data03.setObjectName(u"go_down_data03")
+        self.go_down_data03.setEnabled(True)
+        self.go_down_data03.setIcon(icon)
+
+        self.horizontalLayout_17.addWidget(self.go_down_data03)
+
+        self.go_up_data03 = QToolButton(self.frame_26)
+        self.go_up_data03.setObjectName(u"go_up_data03")
+        self.go_up_data03.setEnabled(True)
+        self.go_up_data03.setIcon(icon1)
+
+        self.horizontalLayout_17.addWidget(self.go_up_data03)
+
+        self.go_left_data03 = QToolButton(self.frame_26)
+        self.go_left_data03.setObjectName(u"go_left_data03")
+        self.go_left_data03.setEnabled(True)
+
+        self.horizontalLayout_17.addWidget(self.go_left_data03)
+
+        self.go_right_data03 = QToolButton(self.frame_26)
+        self.go_right_data03.setObjectName(u"go_right_data03")
+        self.go_right_data03.setEnabled(True)
+
+        self.horizontalLayout_17.addWidget(self.go_right_data03)
+
+
+        self.gridLayout_48.addLayout(self.horizontalLayout_17, 2, 7, 1, 1)
+
+
+        self.gridLayout_6.addWidget(self.frame_26, 0, 0, 1, 1)
+
+        self.stackedWidget_heatmap.addWidget(self.page)
+        self.page_3 = QWidget()
+        self.page_3.setObjectName(u"page_3")
+        self.gridLayout_7 = QGridLayout(self.page_3)
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.plainTextEdit = QPlainTextEdit(self.page_3)
+        self.plainTextEdit.setObjectName(u"plainTextEdit")
+        self.plainTextEdit.setMinimumSize(QSize(200, 100))
+
+        self.gridLayout_7.addWidget(self.plainTextEdit, 2, 0, 1, 1)
+
+        self.stackedWidget_heatmap.addWidget(self.page_3)
+
+        self.gridLayout_49.addWidget(self.stackedWidget_heatmap, 2, 0, 1, 1)
+
+
+        self.gridLayout_data0.addWidget(self.heatmap_data0, 0, 3, 1, 1)
+
+        self.groupBox_25 = QGroupBox(self.page_4Ddata0)
+        self.groupBox_25.setObjectName(u"groupBox_25")
+        self.groupBox_25.setMinimumSize(QSize(400, 100))
+        self.groupBox_25.setMaximumSize(QSize(16777215, 16777215))
+        self.gridLayout_32 = QGridLayout(self.groupBox_25)
+        self.gridLayout_32.setObjectName(u"gridLayout_32")
+        self.gridLayout_32.setContentsMargins(-1, -1, 9, 9)
+        self.tableintensity_data0 = QTableWidget(self.groupBox_25)
+        if (self.tableintensity_data0.columnCount() < 4):
+            self.tableintensity_data0.setColumnCount(4)
+        __qtablewidgetitem = QTableWidgetItem()
+        self.tableintensity_data0.setHorizontalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        self.tableintensity_data0.setHorizontalHeaderItem(1, __qtablewidgetitem1)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        self.tableintensity_data0.setHorizontalHeaderItem(2, __qtablewidgetitem2)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        self.tableintensity_data0.setHorizontalHeaderItem(3, __qtablewidgetitem3)
+        self.tableintensity_data0.setObjectName(u"tableintensity_data0")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.tableintensity_data0.sizePolicy().hasHeightForWidth())
+        self.tableintensity_data0.setSizePolicy(sizePolicy3)
+        self.tableintensity_data0.setMaximumSize(QSize(16777215, 1677))
+        self.tableintensity_data0.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tableintensity_data0.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.tableintensity_data0.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableintensity_data0.horizontalHeader().setDefaultSectionSize(67)
+
+        self.gridLayout_32.addWidget(self.tableintensity_data0, 1, 0, 1, 1)
+
+
+        self.gridLayout_data0.addWidget(self.groupBox_25, 2, 2, 2, 1)
+
+        self.groupbox_legend0 = QGroupBox(self.page_4Ddata0)
+        self.groupbox_legend0.setObjectName(u"groupbox_legend0")
+        self.groupbox_legend0.setMaximumSize(QSize(16777215, 120))
+        self.gridLayout_64 = QGridLayout(self.groupbox_legend0)
+        self.gridLayout_64.setObjectName(u"gridLayout_64")
+        self.frame_27 = QFrame(self.groupbox_legend0)
+        self.frame_27.setObjectName(u"frame_27")
+        self.frame_27.setEnabled(True)
+        self.frame_27.setStyleSheet(u"border-color: rgb(170, 170, 170);\n"
+"background-color: rgb(131, 131, 131);\n"
+"")
+        self.frame_27.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_27.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_47 = QGridLayout(self.frame_27)
+        self.gridLayout_47.setSpacing(0)
+        self.gridLayout_47.setObjectName(u"gridLayout_47")
+        self.gridLayout_47.setContentsMargins(4, 4, 4, 4)
+        self.vtkWidget_legend0 = QVTKRenderWindowInteractor(self.frame_27)
+        self.vtkWidget_legend0.setObjectName(u"vtkWidget_legend0")
+        self.vtkWidget_legend0.setEnabled(True)
+        self.vtkWidget_legend0.setMinimumSize(QSize(0, 30))
+        self.vtkWidget_legend0.setMaximumSize(QSize(16777215, 167))
+        self.vtkWidget_legend0.setStyleSheet(u"background-color: rgb(200, 177, 176);")
+
+        self.gridLayout_47.addWidget(self.vtkWidget_legend0, 0, 0, 1, 1)
+
+
+        self.gridLayout_64.addWidget(self.frame_27, 0, 1, 1, 1)
+
+
+        self.gridLayout_data0.addWidget(self.groupbox_legend0, 2, 3, 2, 1)
+
+        self.quickWidget_3D = QQuickWidget(self.page_4Ddata0)
+        self.quickWidget_3D.setObjectName(u"quickWidget_3D")
+        self.quickWidget_3D.setMinimumSize(QSize(100, 168))
+        self.quickWidget_3D.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)
+
+        self.gridLayout_data0.addWidget(self.quickWidget_3D, 1, 3, 1, 1)
 
         self.gridLayout_data0.setRowStretch(0, 1)
         self.gridLayout_data0.setColumnStretch(0, 1)
-        self.gridLayout_data0.setColumnStretch(1, 1)
-        self.gridLayout_data0.setColumnStretch(2, 1)
-        self.gridLayout_data0.setColumnStretch(3, 1)
         self.data_4d_3d.addWidget(self.page_4Ddata0)
         self.page_14 = QWidget()
         self.page_14.setObjectName(u"page_14")
@@ -1200,13 +842,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_34.setObjectName(u"horizontalLayout_34")
         self.go_down_data3d2 = QToolButton(self.frame_10)
         self.go_down_data3d2.setObjectName(u"go_down_data3d2")
-        self.go_down_data3d2.setIcon(icon8)
+        self.go_down_data3d2.setIcon(icon)
 
         self.horizontalLayout_34.addWidget(self.go_down_data3d2)
 
         self.go_up_data3d2 = QToolButton(self.frame_10)
         self.go_up_data3d2.setObjectName(u"go_up_data3d2")
-        self.go_up_data3d2.setIcon(icon9)
+        self.go_up_data3d2.setIcon(icon1)
 
         self.horizontalLayout_34.addWidget(self.go_up_data3d2)
 
@@ -1282,13 +924,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_36.setObjectName(u"horizontalLayout_36")
         self.go_down_data3d0 = QToolButton(self.frame_11)
         self.go_down_data3d0.setObjectName(u"go_down_data3d0")
-        self.go_down_data3d0.setIcon(icon8)
+        self.go_down_data3d0.setIcon(icon)
 
         self.horizontalLayout_36.addWidget(self.go_down_data3d0)
 
         self.go_up_data3d0 = QToolButton(self.frame_11)
         self.go_up_data3d0.setObjectName(u"go_up_data3d0")
-        self.go_up_data3d0.setIcon(icon9)
+        self.go_up_data3d0.setIcon(icon1)
 
         self.horizontalLayout_36.addWidget(self.go_up_data3d0)
 
@@ -1341,9 +983,9 @@ class Ui_MainWindow(object):
         self.checkBox_measurement = QCheckBox(self.groupBox_8)
         self.checkBox_measurement.setObjectName(u"checkBox_measurement")
         self.checkBox_measurement.setEnabled(True)
-        icon10 = QIcon()
-        icon10.addFile(u"Icons/Internet/measure.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.checkBox_measurement.setIcon(icon10)
+        icon2 = QIcon()
+        icon2.addFile(u"Icons/Internet/measure.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.checkBox_measurement.setIcon(icon2)
         self.checkBox_measurement.setIconSize(QSize(30, 30))
         self.checkBox_measurement.setChecked(False)
 
@@ -1415,13 +1057,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_32.setObjectName(u"horizontalLayout_32")
         self.go_down_data3d1 = QToolButton(self.frame_9)
         self.go_down_data3d1.setObjectName(u"go_down_data3d1")
-        self.go_down_data3d1.setIcon(icon8)
+        self.go_down_data3d1.setIcon(icon)
 
         self.horizontalLayout_32.addWidget(self.go_down_data3d1)
 
         self.go_up_data3d1 = QToolButton(self.frame_9)
         self.go_up_data3d1.setObjectName(u"go_up_data3d1")
-        self.go_up_data3d1.setIcon(icon9)
+        self.go_up_data3d1.setIcon(icon1)
 
         self.horizontalLayout_32.addWidget(self.go_up_data3d1)
 
@@ -1627,13 +1269,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_31.setObjectName(u"horizontalLayout_31")
         self.go_down_data20 = QToolButton(self.frame_8)
         self.go_down_data20.setObjectName(u"go_down_data20")
-        self.go_down_data20.setIcon(icon8)
+        self.go_down_data20.setIcon(icon)
 
         self.horizontalLayout_31.addWidget(self.go_down_data20)
 
         self.go_up_data20 = QToolButton(self.frame_8)
         self.go_up_data20.setObjectName(u"go_up_data20")
-        self.go_up_data20.setIcon(icon9)
+        self.go_up_data20.setIcon(icon1)
 
         self.horizontalLayout_31.addWidget(self.go_up_data20)
 
@@ -1849,14 +1491,14 @@ class Ui_MainWindow(object):
         self.go_down_data23 = QToolButton(self.frame_29)
         self.go_down_data23.setObjectName(u"go_down_data23")
         self.go_down_data23.setEnabled(False)
-        self.go_down_data23.setIcon(icon8)
+        self.go_down_data23.setIcon(icon)
 
         self.horizontalLayout_27.addWidget(self.go_down_data23)
 
         self.go_up_data23 = QToolButton(self.frame_29)
         self.go_up_data23.setObjectName(u"go_up_data23")
         self.go_up_data23.setEnabled(False)
-        self.go_up_data23.setIcon(icon9)
+        self.go_up_data23.setIcon(icon1)
 
         self.horizontalLayout_27.addWidget(self.go_up_data23)
 
@@ -1986,13 +1628,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_25.setObjectName(u"horizontalLayout_25")
         self.go_down_data21 = QToolButton(self.frame_19)
         self.go_down_data21.setObjectName(u"go_down_data21")
-        self.go_down_data21.setIcon(icon8)
+        self.go_down_data21.setIcon(icon)
 
         self.horizontalLayout_25.addWidget(self.go_down_data21)
 
         self.go_up_data21 = QToolButton(self.frame_19)
         self.go_up_data21.setObjectName(u"go_up_data21")
-        self.go_up_data21.setIcon(icon9)
+        self.go_up_data21.setIcon(icon1)
 
         self.horizontalLayout_25.addWidget(self.go_up_data21)
 
@@ -2068,13 +1710,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_29.setObjectName(u"horizontalLayout_29")
         self.go_down_data21_2 = QToolButton(self.frame_25)
         self.go_down_data21_2.setObjectName(u"go_down_data21_2")
-        self.go_down_data21_2.setIcon(icon8)
+        self.go_down_data21_2.setIcon(icon)
 
         self.horizontalLayout_29.addWidget(self.go_down_data21_2)
 
         self.go_up_data22 = QToolButton(self.frame_25)
         self.go_up_data22.setObjectName(u"go_up_data22")
-        self.go_up_data22.setIcon(icon9)
+        self.go_up_data22.setIcon(icon1)
 
         self.horizontalLayout_29.addWidget(self.go_up_data22)
 
@@ -2223,13 +1865,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_19.setObjectName(u"horizontalLayout_19")
         self.go_down_data10 = QToolButton(self.frame_24)
         self.go_down_data10.setObjectName(u"go_down_data10")
-        self.go_down_data10.setIcon(icon8)
+        self.go_down_data10.setIcon(icon)
 
         self.horizontalLayout_19.addWidget(self.go_down_data10)
 
         self.go_up_data10 = QToolButton(self.frame_24)
         self.go_up_data10.setObjectName(u"go_up_data10")
-        self.go_up_data10.setIcon(icon9)
+        self.go_up_data10.setIcon(icon1)
 
         self.horizontalLayout_19.addWidget(self.go_up_data10)
 
@@ -2297,13 +1939,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_18.setObjectName(u"horizontalLayout_18")
         self.go_down_data11 = QToolButton(self.frame_7)
         self.go_down_data11.setObjectName(u"go_down_data11")
-        self.go_down_data11.setIcon(icon8)
+        self.go_down_data11.setIcon(icon)
 
         self.horizontalLayout_18.addWidget(self.go_down_data11)
 
         self.go_up_data11 = QToolButton(self.frame_7)
         self.go_up_data11.setObjectName(u"go_up_data11")
-        self.go_up_data11.setIcon(icon9)
+        self.go_up_data11.setIcon(icon1)
 
         self.horizontalLayout_18.addWidget(self.go_up_data11)
 
@@ -2379,13 +2021,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_21.setObjectName(u"horizontalLayout_21")
         self.go_down_data12 = QToolButton(self.frame_18)
         self.go_down_data12.setObjectName(u"go_down_data12")
-        self.go_down_data12.setIcon(icon8)
+        self.go_down_data12.setIcon(icon)
 
         self.horizontalLayout_21.addWidget(self.go_down_data12)
 
         self.go_up_data12 = QToolButton(self.frame_18)
         self.go_up_data12.setObjectName(u"go_up_data12")
-        self.go_up_data12.setIcon(icon9)
+        self.go_up_data12.setIcon(icon1)
 
         self.horizontalLayout_21.addWidget(self.go_up_data12)
 
@@ -2463,14 +2105,14 @@ class Ui_MainWindow(object):
         self.go_down_data13 = QToolButton(self.frame_28)
         self.go_down_data13.setObjectName(u"go_down_data13")
         self.go_down_data13.setEnabled(True)
-        self.go_down_data13.setIcon(icon8)
+        self.go_down_data13.setIcon(icon)
 
         self.horizontalLayout_23.addWidget(self.go_down_data13)
 
         self.go_up_data13 = QToolButton(self.frame_28)
         self.go_up_data13.setObjectName(u"go_up_data13")
         self.go_up_data13.setEnabled(True)
-        self.go_up_data13.setIcon(icon9)
+        self.go_up_data13.setIcon(icon1)
 
         self.horizontalLayout_23.addWidget(self.go_up_data13)
 
@@ -2508,7 +2150,7 @@ class Ui_MainWindow(object):
         self.gridLayout_88.addLayout(self.horizontalLayout_24, 2, 6, 1, 1)
 
 
-        self.gridLayout_87.addWidget(self.frame_28, 0, 0, 1, 1)
+        self.gridLayout_87.addWidget(self.frame_28, 1, 0, 1, 1)
 
 
         self.gridLayout_89.addWidget(self.heatmap_data1, 0, 3, 1, 1)
@@ -2780,6 +2422,107 @@ class Ui_MainWindow(object):
         self.tab_15.setObjectName(u"tab_15")
         self.gridLayout_104 = QGridLayout(self.tab_15)
         self.gridLayout_104.setObjectName(u"gridLayout_104")
+        self.groupBox_register = QGroupBox(self.tab_15)
+        self.groupBox_register.setObjectName(u"groupBox_register")
+        self.gridLayout_14 = QGridLayout(self.groupBox_register)
+        self.gridLayout_14.setObjectName(u"gridLayout_14")
+        self.groupBox_17 = QGroupBox(self.groupBox_register)
+        self.groupBox_17.setObjectName(u"groupBox_17")
+        self.gridLayout_4 = QGridLayout(self.groupBox_17)
+        self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.comboBox_coarest = QComboBox(self.groupBox_17)
+        self.comboBox_coarest.addItem("")
+        self.comboBox_coarest.addItem("")
+        self.comboBox_coarest.addItem("")
+        self.comboBox_coarest.setObjectName(u"comboBox_coarest")
+        self.comboBox_coarest.setEnabled(True)
+
+        self.gridLayout_4.addWidget(self.comboBox_coarest, 0, 0, 1, 1)
+
+
+        self.gridLayout_14.addWidget(self.groupBox_17, 1, 0, 1, 1)
+
+        self.groupBox_26 = QGroupBox(self.groupBox_register)
+        self.groupBox_26.setObjectName(u"groupBox_26")
+        self.gridLayout_3 = QGridLayout(self.groupBox_26)
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.comboBox_finest = QComboBox(self.groupBox_26)
+        self.comboBox_finest.addItem("")
+        self.comboBox_finest.addItem("")
+        self.comboBox_finest.addItem("")
+        self.comboBox_finest.setObjectName(u"comboBox_finest")
+        self.comboBox_finest.setEnabled(True)
+
+        self.gridLayout_3.addWidget(self.comboBox_finest, 0, 0, 1, 1)
+
+
+        self.gridLayout_14.addWidget(self.groupBox_26, 1, 1, 1, 1)
+
+        self.pushButton_registration = QPushButton(self.groupBox_register)
+        self.pushButton_registration.setObjectName(u"pushButton_registration")
+        self.pushButton_registration.setAcceptDrops(False)
+
+        self.gridLayout_14.addWidget(self.pushButton_registration, 2, 0, 1, 2)
+
+        self.groupBox_27 = QGroupBox(self.groupBox_register)
+        self.groupBox_27.setObjectName(u"groupBox_27")
+        self.gridLayout_2 = QGridLayout(self.groupBox_27)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.comboBox_movingimg = QComboBox(self.groupBox_27)
+        self.comboBox_movingimg.setObjectName(u"comboBox_movingimg")
+        self.comboBox_movingimg.setEnabled(True)
+
+        self.gridLayout_2.addWidget(self.comboBox_movingimg, 0, 1, 1, 1)
+
+
+        self.gridLayout_14.addWidget(self.groupBox_27, 0, 0, 1, 2)
+
+
+        self.gridLayout_104.addWidget(self.groupBox_register, 1, 0, 1, 1)
+
+        self.groupBox_resample = QGroupBox(self.tab_15)
+        self.groupBox_resample.setObjectName(u"groupBox_resample")
+        self.gridLayout_17 = QGridLayout(self.groupBox_resample)
+        self.gridLayout_17.setObjectName(u"gridLayout_17")
+        self.pushButton_done = QPushButton(self.groupBox_resample)
+        self.pushButton_done.setObjectName(u"pushButton_done")
+
+        self.gridLayout_17.addWidget(self.pushButton_done, 4, 0, 1, 1)
+
+        self.pushButton_openfile = QPushButton(self.groupBox_resample)
+        self.pushButton_openfile.setObjectName(u"pushButton_openfile")
+
+        self.gridLayout_17.addWidget(self.pushButton_openfile, 4, 1, 1, 1)
+
+        self.pushButton_resample25um = QPushButton(self.groupBox_resample)
+        self.pushButton_resample25um.setObjectName(u"pushButton_resample25um")
+
+        self.gridLayout_17.addWidget(self.pushButton_resample25um, 3, 0, 1, 2)
+
+        self.pushButton_resample100um = QPushButton(self.groupBox_resample)
+        self.pushButton_resample100um.setObjectName(u"pushButton_resample100um")
+
+        self.gridLayout_17.addWidget(self.pushButton_resample100um, 2, 0, 1, 2)
+
+        self.comboBox_resamplefiles = QComboBox(self.groupBox_resample)
+        self.comboBox_resamplefiles.setObjectName(u"comboBox_resamplefiles")
+
+        self.gridLayout_17.addWidget(self.comboBox_resamplefiles, 1, 0, 1, 2)
+
+        self.textBrowser_4 = QTextBrowser(self.groupBox_resample)
+        self.textBrowser_4.setObjectName(u"textBrowser_4")
+        self.textBrowser_4.setMaximumSize(QSize(16777215, 100))
+        self.textBrowser_4.setStyleSheet(u"")
+        self.textBrowser_4.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textBrowser_4.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        self.gridLayout_17.addWidget(self.textBrowser_4, 0, 0, 1, 2)
+
+        self.gridLayout_17.setColumnStretch(0, 1)
+        self.gridLayout_17.setColumnStretch(1, 1)
+
+        self.gridLayout_104.addWidget(self.groupBox_resample, 0, 3, 1, 1)
+
         self.ManualContrastAdjustments = QGroupBox(self.tab_15)
         self.ManualContrastAdjustments.setObjectName(u"ManualContrastAdjustments")
         sizePolicy.setHeightForWidth(self.ManualContrastAdjustments.sizePolicy().hasHeightForWidth())
@@ -3315,49 +3058,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_104.addWidget(self.ManualContrastAdjustments, 1, 2, 1, 1)
 
-        self.groupBox_resample = QGroupBox(self.tab_15)
-        self.groupBox_resample.setObjectName(u"groupBox_resample")
-        self.gridLayout_17 = QGridLayout(self.groupBox_resample)
-        self.gridLayout_17.setObjectName(u"gridLayout_17")
-        self.pushButton_done = QPushButton(self.groupBox_resample)
-        self.pushButton_done.setObjectName(u"pushButton_done")
-
-        self.gridLayout_17.addWidget(self.pushButton_done, 4, 0, 1, 1)
-
-        self.pushButton_openfile = QPushButton(self.groupBox_resample)
-        self.pushButton_openfile.setObjectName(u"pushButton_openfile")
-
-        self.gridLayout_17.addWidget(self.pushButton_openfile, 4, 1, 1, 1)
-
-        self.pushButton_resample25um = QPushButton(self.groupBox_resample)
-        self.pushButton_resample25um.setObjectName(u"pushButton_resample25um")
-
-        self.gridLayout_17.addWidget(self.pushButton_resample25um, 3, 0, 1, 2)
-
-        self.pushButton_resample100um = QPushButton(self.groupBox_resample)
-        self.pushButton_resample100um.setObjectName(u"pushButton_resample100um")
-
-        self.gridLayout_17.addWidget(self.pushButton_resample100um, 2, 0, 1, 2)
-
-        self.comboBox_resamplefiles = QComboBox(self.groupBox_resample)
-        self.comboBox_resamplefiles.setObjectName(u"comboBox_resamplefiles")
-
-        self.gridLayout_17.addWidget(self.comboBox_resamplefiles, 1, 0, 1, 2)
-
-        self.textBrowser_4 = QTextBrowser(self.groupBox_resample)
-        self.textBrowser_4.setObjectName(u"textBrowser_4")
-        self.textBrowser_4.setMaximumSize(QSize(16777215, 100))
-        self.textBrowser_4.setStyleSheet(u"")
-        self.textBrowser_4.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.textBrowser_4.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        self.gridLayout_17.addWidget(self.textBrowser_4, 0, 0, 1, 2)
-
-        self.gridLayout_17.setColumnStretch(0, 1)
-        self.gridLayout_17.setColumnStretch(1, 1)
-
-        self.gridLayout_104.addWidget(self.groupBox_resample, 0, 3, 1, 1)
-
         self.groupBox_paintbrush_3d = QGroupBox(self.tab_15)
         self.groupBox_paintbrush_3d.setObjectName(u"groupBox_paintbrush_3d")
         self.gridLayout_18 = QGridLayout(self.groupBox_paintbrush_3d)
@@ -3368,9 +3068,9 @@ class Ui_MainWindow(object):
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.paint_square = QToolButton(self.groupBox_14)
         self.paint_square.setObjectName(u"paint_square")
-        icon11 = QIcon()
-        icon11.addFile(u"Icons/ITKsnap/brush_shape_square.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.paint_square.setIcon(icon11)
+        icon3 = QIcon()
+        icon3.addFile(u"Icons/ITKsnap/brush_shape_square.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.paint_square.setIcon(icon3)
         self.paint_square.setIconSize(QSize(20, 20))
         self.paint_square.setCheckable(True)
         self.paint_square.setChecked(True)
@@ -3381,9 +3081,9 @@ class Ui_MainWindow(object):
         self.paint_round = QToolButton(self.groupBox_14)
         self.paint_round.setObjectName(u"paint_round")
         self.paint_round.setEnabled(True)
-        icon12 = QIcon()
-        icon12.addFile(u"Icons/ITKsnap/brush_shape_round.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.paint_round.setIcon(icon12)
+        icon4 = QIcon()
+        icon4.addFile(u"Icons/ITKsnap/brush_shape_round.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.paint_round.setIcon(icon4)
         self.paint_round.setIconSize(QSize(20, 20))
         self.paint_round.setCheckable(True)
         self.paint_round.setAutoExclusive(False)
@@ -3512,180 +3212,6 @@ class Ui_MainWindow(object):
         self.gridLayout_18.setColumnStretch(1, 1)
 
         self.gridLayout_104.addWidget(self.groupBox_paintbrush_3d, 1, 3, 1, 1)
-
-        self.groupBox_23 = QGroupBox(self.tab_15)
-        self.groupBox_23.setObjectName(u"groupBox_23")
-        self.gridLayout_158 = QGridLayout(self.groupBox_23)
-        self.gridLayout_158.setObjectName(u"gridLayout_158")
-        self.tabWidget_4 = QTabWidget(self.groupBox_23)
-        self.tabWidget_4.setObjectName(u"tabWidget_4")
-        self.tab_28 = QWidget()
-        self.tab_28.setObjectName(u"tab_28")
-        self.gridLayout_148 = QGridLayout(self.tab_28)
-        self.gridLayout_148.setObjectName(u"gridLayout_148")
-        self.changeBrightness_data3d0 = QSlider(self.tab_28)
-        self.changeBrightness_data3d0.setObjectName(u"changeBrightness_data3d0")
-        self.changeBrightness_data3d0.setMaximum(99)
-        self.changeBrightness_data3d0.setSingleStep(1)
-        self.changeBrightness_data3d0.setPageStep(10)
-        self.changeBrightness_data3d0.setValue(0)
-        self.changeBrightness_data3d0.setOrientation(Qt.Orientation.Horizontal)
-
-        self.gridLayout_148.addWidget(self.changeBrightness_data3d0, 3, 0, 1, 2)
-
-        self.display_level_data3d0 = QLCDNumber(self.tab_28)
-        self.display_level_data3d0.setObjectName(u"display_level_data3d0")
-        self.display_level_data3d0.setMaximumSize(QSize(16777215, 100))
-        self.display_level_data3d0.setAutoFillBackground(False)
-        self.display_level_data3d0.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
-
-        self.gridLayout_148.addWidget(self.display_level_data3d0, 2, 1, 1, 1)
-
-        self.label_29 = QLabel(self.tab_28)
-        self.label_29.setObjectName(u"label_29")
-        self.label_29.setFont(font3)
-
-        self.gridLayout_148.addWidget(self.label_29, 2, 0, 1, 1)
-
-        self.display_window_data3d0 = QLCDNumber(self.tab_28)
-        self.display_window_data3d0.setObjectName(u"display_window_data3d0")
-        self.display_window_data3d0.setMaximumSize(QSize(70, 100))
-        self.display_window_data3d0.setAutoFillBackground(False)
-        self.display_window_data3d0.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
-
-        self.gridLayout_148.addWidget(self.display_window_data3d0, 0, 1, 1, 1)
-
-        self.changeContrast_data3d0 = QSlider(self.tab_28)
-        self.changeContrast_data3d0.setObjectName(u"changeContrast_data3d0")
-        self.changeContrast_data3d0.setStyleSheet(u"")
-        self.changeContrast_data3d0.setMaximum(99)
-        self.changeContrast_data3d0.setSingleStep(1)
-        self.changeContrast_data3d0.setPageStep(10)
-        self.changeContrast_data3d0.setValue(0)
-        self.changeContrast_data3d0.setOrientation(Qt.Orientation.Horizontal)
-
-        self.gridLayout_148.addWidget(self.changeContrast_data3d0, 1, 0, 1, 2)
-
-        self.label_30 = QLabel(self.tab_28)
-        self.label_30.setObjectName(u"label_30")
-        self.label_30.setFont(font3)
-
-        self.gridLayout_148.addWidget(self.label_30, 0, 0, 1, 1)
-
-        self.tabWidget_4.addTab(self.tab_28, "")
-        self.tab_29 = QWidget()
-        self.tab_29.setObjectName(u"tab_29")
-        self.gridLayout_151 = QGridLayout(self.tab_29)
-        self.gridLayout_151.setObjectName(u"gridLayout_151")
-        self.label_31 = QLabel(self.tab_29)
-        self.label_31.setObjectName(u"label_31")
-        self.label_31.setFont(font3)
-
-        self.gridLayout_151.addWidget(self.label_31, 0, 0, 1, 1)
-
-        self.display_window_data3d1 = QLCDNumber(self.tab_29)
-        self.display_window_data3d1.setObjectName(u"display_window_data3d1")
-        self.display_window_data3d1.setMaximumSize(QSize(70, 100))
-        self.display_window_data3d1.setAutoFillBackground(False)
-        self.display_window_data3d1.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
-
-        self.gridLayout_151.addWidget(self.display_window_data3d1, 0, 1, 1, 1)
-
-        self.changeContrast_data3d1 = QSlider(self.tab_29)
-        self.changeContrast_data3d1.setObjectName(u"changeContrast_data3d1")
-        self.changeContrast_data3d1.setStyleSheet(u"")
-        self.changeContrast_data3d1.setMaximum(99)
-        self.changeContrast_data3d1.setSingleStep(1)
-        self.changeContrast_data3d1.setPageStep(10)
-        self.changeContrast_data3d1.setValue(0)
-        self.changeContrast_data3d1.setOrientation(Qt.Orientation.Horizontal)
-
-        self.gridLayout_151.addWidget(self.changeContrast_data3d1, 1, 0, 1, 2)
-
-        self.label_32 = QLabel(self.tab_29)
-        self.label_32.setObjectName(u"label_32")
-        self.label_32.setFont(font3)
-
-        self.gridLayout_151.addWidget(self.label_32, 2, 0, 1, 1)
-
-        self.display_level_data3d1 = QLCDNumber(self.tab_29)
-        self.display_level_data3d1.setObjectName(u"display_level_data3d1")
-        self.display_level_data3d1.setMaximumSize(QSize(16777215, 100))
-        self.display_level_data3d1.setAutoFillBackground(False)
-        self.display_level_data3d1.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
-
-        self.gridLayout_151.addWidget(self.display_level_data3d1, 2, 1, 1, 1)
-
-        self.changeBrightness_data3d1 = QSlider(self.tab_29)
-        self.changeBrightness_data3d1.setObjectName(u"changeBrightness_data3d1")
-        self.changeBrightness_data3d1.setMaximum(99)
-        self.changeBrightness_data3d1.setSingleStep(1)
-        self.changeBrightness_data3d1.setPageStep(10)
-        self.changeBrightness_data3d1.setValue(0)
-        self.changeBrightness_data3d1.setOrientation(Qt.Orientation.Horizontal)
-
-        self.gridLayout_151.addWidget(self.changeBrightness_data3d1, 3, 0, 1, 2)
-
-        self.tabWidget_4.addTab(self.tab_29, "")
-        self.tab_30 = QWidget()
-        self.tab_30.setObjectName(u"tab_30")
-        self.gridLayout_154 = QGridLayout(self.tab_30)
-        self.gridLayout_154.setObjectName(u"gridLayout_154")
-        self.label_33 = QLabel(self.tab_30)
-        self.label_33.setObjectName(u"label_33")
-        self.label_33.setFont(font3)
-
-        self.gridLayout_154.addWidget(self.label_33, 0, 0, 1, 1)
-
-        self.display_window_data3d2 = QLCDNumber(self.tab_30)
-        self.display_window_data3d2.setObjectName(u"display_window_data3d2")
-        self.display_window_data3d2.setMaximumSize(QSize(70, 100))
-        self.display_window_data3d2.setAutoFillBackground(False)
-        self.display_window_data3d2.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
-
-        self.gridLayout_154.addWidget(self.display_window_data3d2, 0, 1, 1, 1)
-
-        self.changeContrast_data3d2 = QSlider(self.tab_30)
-        self.changeContrast_data3d2.setObjectName(u"changeContrast_data3d2")
-        self.changeContrast_data3d2.setStyleSheet(u"")
-        self.changeContrast_data3d2.setMaximum(99)
-        self.changeContrast_data3d2.setSingleStep(1)
-        self.changeContrast_data3d2.setPageStep(10)
-        self.changeContrast_data3d2.setValue(0)
-        self.changeContrast_data3d2.setOrientation(Qt.Orientation.Horizontal)
-
-        self.gridLayout_154.addWidget(self.changeContrast_data3d2, 1, 0, 1, 2)
-
-        self.label_34 = QLabel(self.tab_30)
-        self.label_34.setObjectName(u"label_34")
-        self.label_34.setFont(font3)
-
-        self.gridLayout_154.addWidget(self.label_34, 2, 0, 1, 1)
-
-        self.display_level_data3d2 = QLCDNumber(self.tab_30)
-        self.display_level_data3d2.setObjectName(u"display_level_data3d2")
-        self.display_level_data3d2.setMaximumSize(QSize(16777215, 100))
-        self.display_level_data3d2.setAutoFillBackground(False)
-        self.display_level_data3d2.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
-
-        self.gridLayout_154.addWidget(self.display_level_data3d2, 2, 1, 1, 1)
-
-        self.changeBrightness_data3d2 = QSlider(self.tab_30)
-        self.changeBrightness_data3d2.setObjectName(u"changeBrightness_data3d2")
-        self.changeBrightness_data3d2.setMaximum(99)
-        self.changeBrightness_data3d2.setSingleStep(1)
-        self.changeBrightness_data3d2.setPageStep(10)
-        self.changeBrightness_data3d2.setValue(0)
-        self.changeBrightness_data3d2.setOrientation(Qt.Orientation.Horizontal)
-
-        self.gridLayout_154.addWidget(self.changeBrightness_data3d2, 3, 0, 1, 2)
-
-        self.tabWidget_4.addTab(self.tab_30, "")
-
-        self.gridLayout_158.addWidget(self.tabWidget_4, 0, 0, 1, 1)
-
-
-        self.gridLayout_104.addWidget(self.groupBox_23, 0, 2, 1, 1)
 
         self.groupBox_paintbrush = QGroupBox(self.tab_15)
         self.groupBox_paintbrush.setObjectName(u"groupBox_paintbrush")
@@ -3956,7 +3482,7 @@ class Ui_MainWindow(object):
         font6.setHintingPreference(QFont.PreferDefaultHinting)
         self.paint_square_Post.setFont(font6)
         self.paint_square_Post.setStyleSheet(u"")
-        self.paint_square_Post.setIcon(icon11)
+        self.paint_square_Post.setIcon(icon3)
         self.paint_square_Post.setIconSize(QSize(20, 20))
         self.paint_square_Post.setCheckable(True)
         self.paint_square_Post.setChecked(True)
@@ -3967,7 +3493,7 @@ class Ui_MainWindow(object):
         self.paint_round_Post = QToolButton(self.groupBox_29)
         self.paint_round_Post.setObjectName(u"paint_round_Post")
         self.paint_round_Post.setEnabled(True)
-        self.paint_round_Post.setIcon(icon12)
+        self.paint_round_Post.setIcon(icon4)
         self.paint_round_Post.setIconSize(QSize(20, 20))
         self.paint_round_Post.setCheckable(True)
         self.paint_round_Post.setAutoExclusive(False)
@@ -4040,8 +3566,8 @@ class Ui_MainWindow(object):
         self.gridLayout_138.setObjectName(u"gridLayout_138")
         self.pushButton_trans0 = QPushButton(self.groupBox_trans0)
         self.pushButton_trans0.setObjectName(u"pushButton_trans0")
-        icon13 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentOpen))
-        self.pushButton_trans0.setIcon(icon13)
+        icon5 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentOpen))
+        self.pushButton_trans0.setIcon(icon5)
         self.pushButton_trans0.setIconSize(QSize(40, 40))
 
         self.gridLayout_138.addWidget(self.pushButton_trans0, 0, 0, 1, 1)
@@ -4060,7 +3586,7 @@ class Ui_MainWindow(object):
         self.gridLayout_140.setObjectName(u"gridLayout_140")
         self.pushButton_trans1 = QPushButton(self.groupBox_trans1)
         self.pushButton_trans1.setObjectName(u"pushButton_trans1")
-        self.pushButton_trans1.setIcon(icon13)
+        self.pushButton_trans1.setIcon(icon5)
         self.pushButton_trans1.setIconSize(QSize(40, 40))
 
         self.gridLayout_140.addWidget(self.pushButton_trans1, 0, 0, 1, 1)
@@ -4079,7 +3605,7 @@ class Ui_MainWindow(object):
         self.gridLayout_141.setObjectName(u"gridLayout_141")
         self.pushButton_trans2 = QPushButton(self.groupBox_trans2)
         self.pushButton_trans2.setObjectName(u"pushButton_trans2")
-        self.pushButton_trans2.setIcon(icon13)
+        self.pushButton_trans2.setIcon(icon5)
         self.pushButton_trans2.setIconSize(QSize(40, 40))
 
         self.gridLayout_141.addWidget(self.pushButton_trans2, 0, 0, 1, 1)
@@ -4099,65 +3625,556 @@ class Ui_MainWindow(object):
 
         self.gridLayout_104.addWidget(self.groupBox_paintbrush, 0, 4, 2, 1)
 
-        self.groupBox_register = QGroupBox(self.tab_15)
-        self.groupBox_register.setObjectName(u"groupBox_register")
-        self.gridLayout_14 = QGridLayout(self.groupBox_register)
-        self.gridLayout_14.setObjectName(u"gridLayout_14")
-        self.groupBox_17 = QGroupBox(self.groupBox_register)
-        self.groupBox_17.setObjectName(u"groupBox_17")
-        self.gridLayout_4 = QGridLayout(self.groupBox_17)
-        self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.comboBox_coarest = QComboBox(self.groupBox_17)
-        self.comboBox_coarest.addItem("")
-        self.comboBox_coarest.addItem("")
-        self.comboBox_coarest.addItem("")
-        self.comboBox_coarest.setObjectName(u"comboBox_coarest")
-        self.comboBox_coarest.setEnabled(True)
+        self.groupBox_23 = QGroupBox(self.tab_15)
+        self.groupBox_23.setObjectName(u"groupBox_23")
+        self.gridLayout_158 = QGridLayout(self.groupBox_23)
+        self.gridLayout_158.setObjectName(u"gridLayout_158")
+        self.tabWidget_4 = QTabWidget(self.groupBox_23)
+        self.tabWidget_4.setObjectName(u"tabWidget_4")
+        self.tab_28 = QWidget()
+        self.tab_28.setObjectName(u"tab_28")
+        self.gridLayout_148 = QGridLayout(self.tab_28)
+        self.gridLayout_148.setObjectName(u"gridLayout_148")
+        self.changeBrightness_data3d0 = QSlider(self.tab_28)
+        self.changeBrightness_data3d0.setObjectName(u"changeBrightness_data3d0")
+        self.changeBrightness_data3d0.setMaximum(99)
+        self.changeBrightness_data3d0.setSingleStep(1)
+        self.changeBrightness_data3d0.setPageStep(10)
+        self.changeBrightness_data3d0.setValue(0)
+        self.changeBrightness_data3d0.setOrientation(Qt.Orientation.Horizontal)
 
-        self.gridLayout_4.addWidget(self.comboBox_coarest, 0, 0, 1, 1)
+        self.gridLayout_148.addWidget(self.changeBrightness_data3d0, 3, 0, 1, 2)
+
+        self.display_level_data3d0 = QLCDNumber(self.tab_28)
+        self.display_level_data3d0.setObjectName(u"display_level_data3d0")
+        self.display_level_data3d0.setMaximumSize(QSize(16777215, 100))
+        self.display_level_data3d0.setAutoFillBackground(False)
+        self.display_level_data3d0.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
+
+        self.gridLayout_148.addWidget(self.display_level_data3d0, 2, 1, 1, 1)
+
+        self.label_29 = QLabel(self.tab_28)
+        self.label_29.setObjectName(u"label_29")
+        self.label_29.setFont(font3)
+
+        self.gridLayout_148.addWidget(self.label_29, 2, 0, 1, 1)
+
+        self.display_window_data3d0 = QLCDNumber(self.tab_28)
+        self.display_window_data3d0.setObjectName(u"display_window_data3d0")
+        self.display_window_data3d0.setMaximumSize(QSize(70, 100))
+        self.display_window_data3d0.setAutoFillBackground(False)
+        self.display_window_data3d0.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
+
+        self.gridLayout_148.addWidget(self.display_window_data3d0, 0, 1, 1, 1)
+
+        self.changeContrast_data3d0 = QSlider(self.tab_28)
+        self.changeContrast_data3d0.setObjectName(u"changeContrast_data3d0")
+        self.changeContrast_data3d0.setStyleSheet(u"")
+        self.changeContrast_data3d0.setMaximum(99)
+        self.changeContrast_data3d0.setSingleStep(1)
+        self.changeContrast_data3d0.setPageStep(10)
+        self.changeContrast_data3d0.setValue(0)
+        self.changeContrast_data3d0.setOrientation(Qt.Orientation.Horizontal)
+
+        self.gridLayout_148.addWidget(self.changeContrast_data3d0, 1, 0, 1, 2)
+
+        self.label_30 = QLabel(self.tab_28)
+        self.label_30.setObjectName(u"label_30")
+        self.label_30.setFont(font3)
+
+        self.gridLayout_148.addWidget(self.label_30, 0, 0, 1, 1)
+
+        self.tabWidget_4.addTab(self.tab_28, "")
+        self.tab_29 = QWidget()
+        self.tab_29.setObjectName(u"tab_29")
+        self.gridLayout_151 = QGridLayout(self.tab_29)
+        self.gridLayout_151.setObjectName(u"gridLayout_151")
+        self.label_31 = QLabel(self.tab_29)
+        self.label_31.setObjectName(u"label_31")
+        self.label_31.setFont(font3)
+
+        self.gridLayout_151.addWidget(self.label_31, 0, 0, 1, 1)
+
+        self.display_window_data3d1 = QLCDNumber(self.tab_29)
+        self.display_window_data3d1.setObjectName(u"display_window_data3d1")
+        self.display_window_data3d1.setMaximumSize(QSize(70, 100))
+        self.display_window_data3d1.setAutoFillBackground(False)
+        self.display_window_data3d1.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
+
+        self.gridLayout_151.addWidget(self.display_window_data3d1, 0, 1, 1, 1)
+
+        self.changeContrast_data3d1 = QSlider(self.tab_29)
+        self.changeContrast_data3d1.setObjectName(u"changeContrast_data3d1")
+        self.changeContrast_data3d1.setStyleSheet(u"")
+        self.changeContrast_data3d1.setMaximum(99)
+        self.changeContrast_data3d1.setSingleStep(1)
+        self.changeContrast_data3d1.setPageStep(10)
+        self.changeContrast_data3d1.setValue(0)
+        self.changeContrast_data3d1.setOrientation(Qt.Orientation.Horizontal)
+
+        self.gridLayout_151.addWidget(self.changeContrast_data3d1, 1, 0, 1, 2)
+
+        self.label_32 = QLabel(self.tab_29)
+        self.label_32.setObjectName(u"label_32")
+        self.label_32.setFont(font3)
+
+        self.gridLayout_151.addWidget(self.label_32, 2, 0, 1, 1)
+
+        self.display_level_data3d1 = QLCDNumber(self.tab_29)
+        self.display_level_data3d1.setObjectName(u"display_level_data3d1")
+        self.display_level_data3d1.setMaximumSize(QSize(16777215, 100))
+        self.display_level_data3d1.setAutoFillBackground(False)
+        self.display_level_data3d1.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
+
+        self.gridLayout_151.addWidget(self.display_level_data3d1, 2, 1, 1, 1)
+
+        self.changeBrightness_data3d1 = QSlider(self.tab_29)
+        self.changeBrightness_data3d1.setObjectName(u"changeBrightness_data3d1")
+        self.changeBrightness_data3d1.setMaximum(99)
+        self.changeBrightness_data3d1.setSingleStep(1)
+        self.changeBrightness_data3d1.setPageStep(10)
+        self.changeBrightness_data3d1.setValue(0)
+        self.changeBrightness_data3d1.setOrientation(Qt.Orientation.Horizontal)
+
+        self.gridLayout_151.addWidget(self.changeBrightness_data3d1, 3, 0, 1, 2)
+
+        self.tabWidget_4.addTab(self.tab_29, "")
+        self.tab_30 = QWidget()
+        self.tab_30.setObjectName(u"tab_30")
+        self.gridLayout_154 = QGridLayout(self.tab_30)
+        self.gridLayout_154.setObjectName(u"gridLayout_154")
+        self.label_33 = QLabel(self.tab_30)
+        self.label_33.setObjectName(u"label_33")
+        self.label_33.setFont(font3)
+
+        self.gridLayout_154.addWidget(self.label_33, 0, 0, 1, 1)
+
+        self.display_window_data3d2 = QLCDNumber(self.tab_30)
+        self.display_window_data3d2.setObjectName(u"display_window_data3d2")
+        self.display_window_data3d2.setMaximumSize(QSize(70, 100))
+        self.display_window_data3d2.setAutoFillBackground(False)
+        self.display_window_data3d2.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
+
+        self.gridLayout_154.addWidget(self.display_window_data3d2, 0, 1, 1, 1)
+
+        self.changeContrast_data3d2 = QSlider(self.tab_30)
+        self.changeContrast_data3d2.setObjectName(u"changeContrast_data3d2")
+        self.changeContrast_data3d2.setStyleSheet(u"")
+        self.changeContrast_data3d2.setMaximum(99)
+        self.changeContrast_data3d2.setSingleStep(1)
+        self.changeContrast_data3d2.setPageStep(10)
+        self.changeContrast_data3d2.setValue(0)
+        self.changeContrast_data3d2.setOrientation(Qt.Orientation.Horizontal)
+
+        self.gridLayout_154.addWidget(self.changeContrast_data3d2, 1, 0, 1, 2)
+
+        self.label_34 = QLabel(self.tab_30)
+        self.label_34.setObjectName(u"label_34")
+        self.label_34.setFont(font3)
+
+        self.gridLayout_154.addWidget(self.label_34, 2, 0, 1, 1)
+
+        self.display_level_data3d2 = QLCDNumber(self.tab_30)
+        self.display_level_data3d2.setObjectName(u"display_level_data3d2")
+        self.display_level_data3d2.setMaximumSize(QSize(16777215, 100))
+        self.display_level_data3d2.setAutoFillBackground(False)
+        self.display_level_data3d2.setStyleSheet(u"color: rgb(0, 0, 0); background-color: white;")
+
+        self.gridLayout_154.addWidget(self.display_level_data3d2, 2, 1, 1, 1)
+
+        self.changeBrightness_data3d2 = QSlider(self.tab_30)
+        self.changeBrightness_data3d2.setObjectName(u"changeBrightness_data3d2")
+        self.changeBrightness_data3d2.setMaximum(99)
+        self.changeBrightness_data3d2.setSingleStep(1)
+        self.changeBrightness_data3d2.setPageStep(10)
+        self.changeBrightness_data3d2.setValue(0)
+        self.changeBrightness_data3d2.setOrientation(Qt.Orientation.Horizontal)
+
+        self.gridLayout_154.addWidget(self.changeBrightness_data3d2, 3, 0, 1, 2)
+
+        self.tabWidget_4.addTab(self.tab_30, "")
+
+        self.gridLayout_158.addWidget(self.tabWidget_4, 0, 0, 1, 1)
 
 
-        self.gridLayout_14.addWidget(self.groupBox_17, 1, 0, 1, 1)
+        self.gridLayout_104.addWidget(self.groupBox_23, 0, 0, 1, 1)
 
-        self.groupBox_26 = QGroupBox(self.groupBox_register)
-        self.groupBox_26.setObjectName(u"groupBox_26")
-        self.gridLayout_3 = QGridLayout(self.groupBox_26)
-        self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.comboBox_finest = QComboBox(self.groupBox_26)
-        self.comboBox_finest.addItem("")
-        self.comboBox_finest.addItem("")
-        self.comboBox_finest.addItem("")
-        self.comboBox_finest.setObjectName(u"comboBox_finest")
-        self.comboBox_finest.setEnabled(True)
+        self.groupBox_segmentation = QGroupBox(self.tab_15)
+        self.groupBox_segmentation.setObjectName(u"groupBox_segmentation")
+        self.gridLayout_5 = QGridLayout(self.groupBox_segmentation)
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.stackedWidget = QStackedWidget(self.groupBox_segmentation)
+        self.stackedWidget.setObjectName(u"stackedWidget")
+        self.stackedWidget.setEnabled(True)
+        self.stackedWidget.setMaximumSize(QSize(215, 16777215))
+        self.page_13 = QWidget()
+        self.page_13.setObjectName(u"page_13")
+        self.gridLayout_152 = QGridLayout(self.page_13)
+        self.gridLayout_152.setObjectName(u"gridLayout_152")
+        self.textBrowser_5 = QTextBrowser(self.page_13)
+        self.textBrowser_5.setObjectName(u"textBrowser_5")
+        self.textBrowser_5.setMaximumSize(QSize(16777215, 50))
+        self.textBrowser_5.setStyleSheet(u"")
+        self.textBrowser_5.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textBrowser_5.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        self.gridLayout_3.addWidget(self.comboBox_finest, 0, 0, 1, 1)
+        self.gridLayout_152.addWidget(self.textBrowser_5, 0, 0, 1, 2)
+
+        self.checkBox_threshold = QCheckBox(self.page_13)
+        self.checkBox_threshold.setObjectName(u"checkBox_threshold")
+        self.checkBox_threshold.setEnabled(True)
+        self.checkBox_threshold.setChecked(False)
+
+        self.gridLayout_152.addWidget(self.checkBox_threshold, 1, 0, 1, 2)
+
+        self.frame_15 = QFrame(self.page_13)
+        self.frame_15.setObjectName(u"frame_15")
+        self.frame_15.setMaximumSize(QSize(16777215, 300))
+        self.frame_15.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_15.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_28 = QGridLayout(self.frame_15)
+        self.gridLayout_28.setObjectName(u"gridLayout_28")
+        self.groupBox_7 = QGroupBox(self.frame_15)
+        self.groupBox_7.setObjectName(u"groupBox_7")
+        self.groupBox_7.setMaximumSize(QSize(16777215, 100))
+        self.gridLayout_29 = QGridLayout(self.groupBox_7)
+        self.gridLayout_29.setObjectName(u"gridLayout_29")
+        self.radioButton_bounded = QRadioButton(self.groupBox_7)
+        self.radioButton_bounded.setObjectName(u"radioButton_bounded")
+        self.radioButton_bounded.setChecked(True)
+
+        self.gridLayout_29.addWidget(self.radioButton_bounded, 0, 0, 1, 1)
+
+        self.radioButton_lower = QRadioButton(self.groupBox_7)
+        self.radioButton_lower.setObjectName(u"radioButton_lower")
+
+        self.gridLayout_29.addWidget(self.radioButton_lower, 1, 0, 1, 1)
+
+        self.radioButton_upper = QRadioButton(self.groupBox_7)
+        self.radioButton_upper.setObjectName(u"radioButton_upper")
+
+        self.gridLayout_29.addWidget(self.radioButton_upper, 2, 0, 1, 1)
 
 
-        self.gridLayout_14.addWidget(self.groupBox_26, 1, 1, 1, 1)
+        self.gridLayout_28.addWidget(self.groupBox_7, 0, 0, 1, 1)
 
-        self.pushButton_registration = QPushButton(self.groupBox_register)
-        self.pushButton_registration.setObjectName(u"pushButton_registration")
-        self.pushButton_registration.setAcceptDrops(False)
+        self.groupBox_13 = QGroupBox(self.frame_15)
+        self.groupBox_13.setObjectName(u"groupBox_13")
+        self.groupBox_13.setMaximumSize(QSize(16777215, 80))
+        self.gridLayout_30 = QGridLayout(self.groupBox_13)
+        self.gridLayout_30.setObjectName(u"gridLayout_30")
+        self.ScrollBar_lower = QSlider(self.groupBox_13)
+        self.ScrollBar_lower.setObjectName(u"ScrollBar_lower")
+        self.ScrollBar_lower.setMaximum(105)
+        self.ScrollBar_lower.setSingleStep(1)
+        self.ScrollBar_lower.setPageStep(10)
+        self.ScrollBar_lower.setValue(0)
+        self.ScrollBar_lower.setOrientation(Qt.Orientation.Horizontal)
 
-        self.gridLayout_14.addWidget(self.pushButton_registration, 2, 0, 1, 2)
+        self.gridLayout_30.addWidget(self.ScrollBar_lower, 0, 0, 1, 1)
 
-        self.groupBox_27 = QGroupBox(self.groupBox_register)
-        self.groupBox_27.setObjectName(u"groupBox_27")
-        self.gridLayout_2 = QGridLayout(self.groupBox_27)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.comboBox_movingimg = QComboBox(self.groupBox_27)
-        self.comboBox_movingimg.setObjectName(u"comboBox_movingimg")
-        self.comboBox_movingimg.setEnabled(True)
+        self.doubleSpinBox_lower = QDoubleSpinBox(self.groupBox_13)
+        self.doubleSpinBox_lower.setObjectName(u"doubleSpinBox_lower")
+        self.doubleSpinBox_lower.setMaximumSize(QSize(16777215, 30))
+        self.doubleSpinBox_lower.setMaximum(105.000000000000000)
+        self.doubleSpinBox_lower.setSingleStep(0.100000000000000)
 
-        self.gridLayout_2.addWidget(self.comboBox_movingimg, 0, 1, 1, 1)
+        self.gridLayout_30.addWidget(self.doubleSpinBox_lower, 0, 1, 1, 1)
 
 
-        self.gridLayout_14.addWidget(self.groupBox_27, 0, 0, 1, 2)
+        self.gridLayout_28.addWidget(self.groupBox_13, 1, 0, 1, 1)
+
+        self.groupBox_63 = QGroupBox(self.frame_15)
+        self.groupBox_63.setObjectName(u"groupBox_63")
+        self.groupBox_63.setMaximumSize(QSize(16777215, 80))
+        self.gridLayout_31 = QGridLayout(self.groupBox_63)
+        self.gridLayout_31.setObjectName(u"gridLayout_31")
+        self.ScrollBar_upper = QSlider(self.groupBox_63)
+        self.ScrollBar_upper.setObjectName(u"ScrollBar_upper")
+        self.ScrollBar_upper.setMaximum(105)
+        self.ScrollBar_upper.setSingleStep(1)
+        self.ScrollBar_upper.setPageStep(10)
+        self.ScrollBar_upper.setValue(0)
+        self.ScrollBar_upper.setOrientation(Qt.Orientation.Horizontal)
+
+        self.gridLayout_31.addWidget(self.ScrollBar_upper, 0, 0, 1, 1)
+
+        self.doubleSpinBox_upper = QDoubleSpinBox(self.groupBox_63)
+        self.doubleSpinBox_upper.setObjectName(u"doubleSpinBox_upper")
+        self.doubleSpinBox_upper.setMaximumSize(QSize(16777215, 30))
+        self.doubleSpinBox_upper.setMaximum(105.000000000000000)
+        self.doubleSpinBox_upper.setSingleStep(0.100000000000000)
+
+        self.gridLayout_31.addWidget(self.doubleSpinBox_upper, 0, 1, 1, 1)
 
 
-        self.gridLayout_104.addWidget(self.groupBox_register, 1, 0, 1, 1)
+        self.gridLayout_28.addWidget(self.groupBox_63, 2, 0, 1, 1)
+
+
+        self.gridLayout_152.addWidget(self.frame_15, 2, 0, 1, 2)
+
+        self.pushButton_5 = QPushButton(self.page_13)
+        self.pushButton_5.setObjectName(u"pushButton_5")
+        self.pushButton_5.setEnabled(False)
+
+        self.gridLayout_152.addWidget(self.pushButton_5, 3, 0, 1, 1)
+
+        self.pushButton_Next1 = QPushButton(self.page_13)
+        self.pushButton_Next1.setObjectName(u"pushButton_Next1")
+
+        self.gridLayout_152.addWidget(self.pushButton_Next1, 3, 1, 1, 1)
+
+        self.stackedWidget.addWidget(self.page_13)
+        self.initialization = QWidget()
+        self.initialization.setObjectName(u"initialization")
+        self.gridLayout_153 = QGridLayout(self.initialization)
+        self.gridLayout_153.setObjectName(u"gridLayout_153")
+        self.textBrowser_6 = QTextBrowser(self.initialization)
+        self.textBrowser_6.setObjectName(u"textBrowser_6")
+        self.textBrowser_6.setMaximumSize(QSize(16777215, 50))
+        self.textBrowser_6.setStyleSheet(u"")
+        self.textBrowser_6.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textBrowser_6.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        self.gridLayout_153.addWidget(self.textBrowser_6, 0, 0, 1, 3)
+
+        self.groupBox_10 = QGroupBox(self.initialization)
+        self.groupBox_10.setObjectName(u"groupBox_10")
+        self.gridLayout_155 = QGridLayout(self.groupBox_10)
+        self.gridLayout_155.setObjectName(u"gridLayout_155")
+        self.doubleSpinBox_Bubradius = QDoubleSpinBox(self.groupBox_10)
+        self.doubleSpinBox_Bubradius.setObjectName(u"doubleSpinBox_Bubradius")
+        self.doubleSpinBox_Bubradius.setMaximumSize(QSize(16777215, 30))
+        self.doubleSpinBox_Bubradius.setFrame(True)
+        self.doubleSpinBox_Bubradius.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.doubleSpinBox_Bubradius.setMaximum(105.000000000000000)
+        self.doubleSpinBox_Bubradius.setSingleStep(0.100000000000000)
+
+        self.gridLayout_155.addWidget(self.doubleSpinBox_Bubradius, 1, 0, 1, 1)
+
+        self.horizontalSlider_Bubradius = QSlider(self.groupBox_10)
+        self.horizontalSlider_Bubradius.setObjectName(u"horizontalSlider_Bubradius")
+        self.horizontalSlider_Bubradius.setMaximum(600)
+        self.horizontalSlider_Bubradius.setSingleStep(1)
+        self.horizontalSlider_Bubradius.setPageStep(1)
+        self.horizontalSlider_Bubradius.setValue(0)
+        self.horizontalSlider_Bubradius.setOrientation(Qt.Orientation.Horizontal)
+
+        self.gridLayout_155.addWidget(self.horizontalSlider_Bubradius, 1, 1, 1, 1)
+
+
+        self.gridLayout_153.addWidget(self.groupBox_10, 2, 0, 1, 3)
+
+        self.pushButton_Back2 = QPushButton(self.initialization)
+        self.pushButton_Back2.setObjectName(u"pushButton_Back2")
+        self.pushButton_Back2.setEnabled(True)
+
+        self.gridLayout_153.addWidget(self.pushButton_Back2, 5, 0, 1, 2)
+
+        self.pushButton_Next2 = QPushButton(self.initialization)
+        self.pushButton_Next2.setObjectName(u"pushButton_Next2")
+        self.pushButton_Next2.setEnabled(False)
+
+        self.gridLayout_153.addWidget(self.pushButton_Next2, 5, 2, 1, 1)
+
+        self.pushButton_addBubbles = QPushButton(self.initialization)
+        self.pushButton_addBubbles.setObjectName(u"pushButton_addBubbles")
+
+        self.gridLayout_153.addWidget(self.pushButton_addBubbles, 1, 0, 1, 3)
+
+        self.groupBox_16 = QGroupBox(self.initialization)
+        self.groupBox_16.setObjectName(u"groupBox_16")
+        self.gridLayout_159 = QGridLayout(self.groupBox_16)
+        self.gridLayout_159.setObjectName(u"gridLayout_159")
+        self.tableView_activeBub = QTableView(self.groupBox_16)
+        self.tableView_activeBub.setObjectName(u"tableView_activeBub")
+        self.tableView_activeBub.setEnabled(True)
+        self.tableView_activeBub.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.tableView_activeBub.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.tableView_activeBub.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.tableView_activeBub.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableView_activeBub.horizontalHeader().setCascadingSectionResizes(False)
+
+        self.gridLayout_159.addWidget(self.tableView_activeBub, 0, 0, 1, 1)
+
+
+        self.gridLayout_153.addWidget(self.groupBox_16, 3, 0, 1, 3)
+
+        self.pushButton_delete = QPushButton(self.initialization)
+        self.pushButton_delete.setObjectName(u"pushButton_delete")
+
+        self.gridLayout_153.addWidget(self.pushButton_delete, 4, 0, 1, 3)
+
+        self.stackedWidget.addWidget(self.initialization)
+        self.page_16 = QWidget()
+        self.page_16.setObjectName(u"page_16")
+        self.gridLayout_160 = QGridLayout(self.page_16)
+        self.gridLayout_160.setObjectName(u"gridLayout_160")
+        self.groupBox_64 = QGroupBox(self.page_16)
+        self.groupBox_64.setObjectName(u"groupBox_64")
+        self.groupBox_64.setMaximumSize(QSize(16777215, 100))
+        self.gridLayout_161 = QGridLayout(self.groupBox_64)
+        self.gridLayout_161.setObjectName(u"gridLayout_161")
+        self.doubleSpinBox_Bubradiusxx = QDoubleSpinBox(self.groupBox_64)
+        self.doubleSpinBox_Bubradiusxx.setObjectName(u"doubleSpinBox_Bubradiusxx")
+        self.doubleSpinBox_Bubradiusxx.setMaximumSize(QSize(16777215, 30))
+        self.doubleSpinBox_Bubradiusxx.setFrame(True)
+        self.doubleSpinBox_Bubradiusxx.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.doubleSpinBox_Bubradiusxx.setMaximum(105.000000000000000)
+        self.doubleSpinBox_Bubradiusxx.setSingleStep(0.100000000000000)
+
+        self.gridLayout_161.addWidget(self.doubleSpinBox_Bubradiusxx, 0, 0, 1, 1)
+
+
+        self.gridLayout_160.addWidget(self.groupBox_64, 3, 0, 1, 3)
+
+        self.groupBox_65 = QGroupBox(self.page_16)
+        self.groupBox_65.setObjectName(u"groupBox_65")
+        self.groupBox_65.setMaximumSize(QSize(16777215, 100))
+        self.gridLayout_163 = QGridLayout(self.groupBox_65)
+        self.gridLayout_163.setObjectName(u"gridLayout_163")
+        self.toolButton_forwardEvo = QToolButton(self.groupBox_65)
+        self.toolButton_forwardEvo.setObjectName(u"toolButton_forwardEvo")
+        icon6 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaSeekForward))
+        self.toolButton_forwardEvo.setIcon(icon6)
+        self.toolButton_forwardEvo.setIconSize(QSize(20, 20))
+
+        self.gridLayout_163.addWidget(self.toolButton_forwardEvo, 0, 2, 1, 1)
+
+        self.toolButton_runEvo = QToolButton(self.groupBox_65)
+        self.toolButton_runEvo.setObjectName(u"toolButton_runEvo")
+        icon7 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart))
+        self.toolButton_runEvo.setIcon(icon7)
+        self.toolButton_runEvo.setIconSize(QSize(20, 20))
+        self.toolButton_runEvo.setCheckable(True)
+
+        self.gridLayout_163.addWidget(self.toolButton_runEvo, 0, 1, 1, 1)
+
+        self.toolButton_backwardEvo = QToolButton(self.groupBox_65)
+        self.toolButton_backwardEvo.setObjectName(u"toolButton_backwardEvo")
+        icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaSeekBackward))
+        self.toolButton_backwardEvo.setIcon(icon8)
+        self.toolButton_backwardEvo.setIconSize(QSize(20, 20))
+
+        self.gridLayout_163.addWidget(self.toolButton_backwardEvo, 0, 0, 1, 1)
+
+
+        self.gridLayout_160.addWidget(self.groupBox_65, 1, 0, 1, 4)
+
+        self.textBrowser_7 = QTextBrowser(self.page_16)
+        self.textBrowser_7.setObjectName(u"textBrowser_7")
+        self.textBrowser_7.setMinimumSize(QSize(185, 0))
+        self.textBrowser_7.setMaximumSize(QSize(200, 50))
+        self.textBrowser_7.setStyleSheet(u"")
+        self.textBrowser_7.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.textBrowser_7.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        self.gridLayout_160.addWidget(self.textBrowser_7, 0, 0, 1, 1)
+
+        self.groupBox_66 = QGroupBox(self.page_16)
+        self.groupBox_66.setObjectName(u"groupBox_66")
+        self.groupBox_66.setMaximumSize(QSize(16777215, 100))
+        self.gridLayout_164 = QGridLayout(self.groupBox_66)
+        self.gridLayout_164.setObjectName(u"gridLayout_164")
+        self.doubleSpinBox_Bubradius_6 = QDoubleSpinBox(self.groupBox_66)
+        self.doubleSpinBox_Bubradius_6.setObjectName(u"doubleSpinBox_Bubradius_6")
+        self.doubleSpinBox_Bubradius_6.setMaximumSize(QSize(16777215, 30))
+        self.doubleSpinBox_Bubradius_6.setFrame(True)
+        self.doubleSpinBox_Bubradius_6.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.doubleSpinBox_Bubradius_6.setMaximum(105.000000000000000)
+        self.doubleSpinBox_Bubradius_6.setSingleStep(0.100000000000000)
+
+        self.gridLayout_164.addWidget(self.doubleSpinBox_Bubradius_6, 0, 0, 1, 1)
+
+
+        self.gridLayout_160.addWidget(self.groupBox_66, 3, 3, 1, 1)
+
+        self.pushButton_Finish = QPushButton(self.page_16)
+        self.pushButton_Finish.setObjectName(u"pushButton_Finish")
+        self.pushButton_Finish.setEnabled(True)
+
+        self.gridLayout_160.addWidget(self.pushButton_Finish, 5, 3, 1, 1)
+
+        self.pushButton_Back3 = QPushButton(self.page_16)
+        self.pushButton_Back3.setObjectName(u"pushButton_Back3")
+        self.pushButton_Back3.setEnabled(True)
+
+        self.gridLayout_160.addWidget(self.pushButton_Back3, 5, 0, 1, 1)
+
+        self.stackedWidget.addWidget(self.page_16)
+
+        self.gridLayout_5.addWidget(self.stackedWidget, 0, 0, 1, 1)
+
+
+        self.gridLayout_104.addWidget(self.groupBox_segmentation, 0, 2, 1, 1)
 
         self.tabWidget.addTab(self.tab_15, "")
+        self.tab_25 = QWidget()
+        self.tab_25.setObjectName(u"tab_25")
+        self.frame_12 = QFrame(self.tab_25)
+        self.frame_12.setObjectName(u"frame_12")
+        self.frame_12.setGeometry(QRect(10, 10, 361, 331))
+        self.frame_12.setMinimumSize(QSize(0, 200))
+        self.frame_12.setStyleSheet(u"border-color: rgb(170, 170, 170);\n"
+"background-color: rgb(131, 131, 131);\n"
+"")
+        self.frame_12.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_12.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_147 = QGridLayout(self.frame_12)
+        self.gridLayout_147.setSpacing(0)
+        self.gridLayout_147.setObjectName(u"gridLayout_147")
+        self.gridLayout_147.setContentsMargins(4, 4, 4, 4)
+        self.vtkWidget_data_coronal_2 = QVTKRenderWindowInteractor(self.frame_12)
+        self.vtkWidget_data_coronal_2.setObjectName(u"vtkWidget_data_coronal_2")
+        self.vtkWidget_data_coronal_2.setStyleSheet(u"background-color: rgb(200, 177, 176);")
+
+        self.gridLayout_147.addWidget(self.vtkWidget_data_coronal_2, 1, 0, 1, 8)
+
+        self.textEdit_4 = QTextEdit(self.frame_12)
+        self.textEdit_4.setObjectName(u"textEdit_4")
+
+        self.gridLayout_147.addWidget(self.textEdit_4, 0, 0, 1, 1)
+
+        self.frame_13 = QFrame(self.tab_25)
+        self.frame_13.setObjectName(u"frame_13")
+        self.frame_13.setGeometry(QRect(430, 20, 901, 641))
+        self.frame_13.setMinimumSize(QSize(0, 200))
+        self.frame_13.setStyleSheet(u"border-color: rgb(170, 170, 170);\n"
+"background-color: rgb(131, 131, 131);\n"
+"")
+        self.frame_13.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_13.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_149 = QGridLayout(self.frame_13)
+        self.gridLayout_149.setSpacing(0)
+        self.gridLayout_149.setObjectName(u"gridLayout_149")
+        self.gridLayout_149.setContentsMargins(4, 4, 4, 4)
+        self.textEdit_3 = QTextEdit(self.frame_13)
+        self.textEdit_3.setObjectName(u"textEdit_3")
+
+        self.gridLayout_149.addWidget(self.textEdit_3, 0, 0, 1, 1)
+
+        self.frame_14 = QFrame(self.tab_25)
+        self.frame_14.setObjectName(u"frame_14")
+        self.frame_14.setGeometry(QRect(20, 420, 361, 331))
+        self.frame_14.setMinimumSize(QSize(0, 200))
+        self.frame_14.setStyleSheet(u"border-color: rgb(170, 170, 170);\n"
+"background-color: rgb(131, 131, 131);\n"
+"")
+        self.frame_14.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_14.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_150 = QGridLayout(self.frame_14)
+        self.gridLayout_150.setSpacing(0)
+        self.gridLayout_150.setObjectName(u"gridLayout_150")
+        self.gridLayout_150.setContentsMargins(4, 4, 4, 4)
+        self.textEdit_5 = QTextEdit(self.frame_14)
+        self.textEdit_5.setObjectName(u"textEdit_5")
+
+        self.gridLayout_150.addWidget(self.textEdit_5, 0, 0, 1, 1)
+
+        self.graphicsView = QGraphicsView(self.tab_25)
+        self.graphicsView.setObjectName(u"graphicsView")
+        self.graphicsView.setGeometry(QRect(430, 670, 901, 192))
+        self.tabWidget.addTab(self.tab_25, "")
 
         self.gridLayout_34.addWidget(self.tabWidget, 0, 0, 1, 1)
 
@@ -4182,6 +4199,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuTools.menuAction())
         self.menubar.addAction(self.menu4D_Tools.menuAction())
         self.menuGUI.addAction(self.actionOpen)
+        self.menuGUI.addAction(self.actionOpen_ephys_Data)
         self.menuGUI.addSeparator()
         self.menuGUI.addAction(self.actionAdd_Another_View)
         self.menuGUI.addAction(self.actionAdd)
@@ -4194,24 +4212,25 @@ class Ui_MainWindow(object):
         self.menuTools.addAction(self.actionResample)
         self.menuTools.addAction(self.actionRegister)
         self.menuTools.addSeparator()
+        self.menuTools.addAction(self.actionSegmentation)
         self.menu4D_Tools.addAction(self.actionStart_MRIDlabels)
         self.menu4D_Tools.addAction(self.menuElectrode_Localization.menuAction())
         self.menu4D_Tools.addSeparator()
         self.menu4D_Tools.addAction(self.actionContrast_Adjustments)
         self.menuElectrode_Localization.addAction(self.actionGaussian_Centers)
         self.menuElectrode_Localization.addAction(self.actionGet_Coordinates)
+        self.menuElectrode_Localization.addAction(self.actionGet_Position_in_HPC)
 
         self.retranslateUi(MainWindow)
 
-        self.tabWidget.setCurrentIndex(1)
-        self.toolbar.setCurrentIndex(3)
-        self.stackedWidget.setCurrentIndex(0)
-        self.data_4d_3d.setCurrentIndex(1)
-        self.fit_to_zoom_data01.setDefault(False)
+        self.tabWidget.setCurrentIndex(0)
+        self.data_4d_3d.setCurrentIndex(0)
         self.fit_to_zoom_data02.setDefault(False)
-        self.fit_to_zoom_data03.setDefault(False)
         self.tabWidget_time0.setCurrentIndex(2)
+        self.fit_to_zoom_data01.setDefault(False)
         self.fit_to_zoom_data00.setDefault(False)
+        self.stackedWidget_heatmap.setCurrentIndex(1)
+        self.fit_to_zoom_data03.setDefault(False)
         self.fit_to_zoom_data3d2.setDefault(False)
         self.fit_to_zoom_data3d0.setDefault(False)
         self.fit_to_zoom_data3d1.setDefault(False)
@@ -4225,18 +4244,19 @@ class Ui_MainWindow(object):
         self.fit_to_zoom_data12.setDefault(False)
         self.fit_to_zoom_data13.setDefault(False)
         self.tabWidget_time1.setCurrentIndex(0)
+        self.comboBox_coarest.setCurrentIndex(0)
+        self.comboBox_finest.setCurrentIndex(0)
+        self.comboBox_movingimg.setCurrentIndex(-1)
         self.contrast_data.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(0)
         self.tabWidget_5.setCurrentIndex(2)
         self.tabWidget_6.setCurrentIndex(2)
-        self.tabWidget_4.setCurrentIndex(0)
         self.stackedWidget_MRIDfiles.setCurrentIndex(0)
         self.stackedWidget_4D.setCurrentIndex(0)
         self.stackedWidget_mrid.setCurrentIndex(0)
         self.histogram_label.setCurrentIndex(-1)
-        self.comboBox_coarest.setCurrentIndex(0)
-        self.comboBox_finest.setCurrentIndex(0)
-        self.comboBox_movingimg.setCurrentIndex(-1)
+        self.tabWidget_4.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -4262,82 +4282,10 @@ class Ui_MainWindow(object):
         self.actionRegister.setText(QCoreApplication.translate("MainWindow", u"Registration", None))
         self.actionContrast_Adjustments_2.setText(QCoreApplication.translate("MainWindow", u"Measurement", None))
         self.actionStart_MRIDlabels.setText(QCoreApplication.translate("MainWindow", u"MRID-tag label creation", None))
-#if QT_CONFIG(tooltip)
-        self.PreSurgery.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Pre</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.toolbar.setToolTip("")
-#endif // QT_CONFIG(tooltip)
-        self.toolbar.setTabText(self.toolbar.indexOf(self.tab_8), "")
-        self.textBrowser.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Step 1/3<br /></span><span style=\" font-size:10pt; font-weight:700;\">Presegmentation</span></p></body></html>", None))
-        self.checkBox_threshold.setText(QCoreApplication.translate("MainWindow", u"Threshold OFF", None))
-        self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"THRESHOLD", None))
-        self.radioButton_bounded.setText(QCoreApplication.translate("MainWindow", u"Bounded", None))
-        self.radioButton_lower.setText(QCoreApplication.translate("MainWindow", u"Lower-Only", None))
-        self.radioButton_upper.setText(QCoreApplication.translate("MainWindow", u"Upper-Only", None))
-        self.groupBox_12.setTitle(QCoreApplication.translate("MainWindow", u"Lower Threshold", None))
-        self.groupBox_21.setTitle(QCoreApplication.translate("MainWindow", u"Upper Threshold", None))
-        self.pushButton_3.setText(QCoreApplication.translate("MainWindow", u"Back", None))
-        self.pushButton_Next1.setText(QCoreApplication.translate("MainWindow", u"Next", None))
-        self.textBrowser_2.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Step 2/3<br /></span><span style=\" font-size:10pt; font-weight:700;\">Initialization</span></p></body></html>", None))
-        self.groupBox_4.setTitle(QCoreApplication.translate("MainWindow", u"Bubble Radius", None))
-        self.pushButton_Back2.setText(QCoreApplication.translate("MainWindow", u"Back", None))
-        self.pushButton_Next2.setText(QCoreApplication.translate("MainWindow", u"Next", None))
-        self.pushButton_addBubbles.setText(QCoreApplication.translate("MainWindow", u"Add Bubble at Cursor", None))
-        self.groupBox_5.setTitle(QCoreApplication.translate("MainWindow", u"Active Bubbles", None))
-        self.pushButton_delete.setText(QCoreApplication.translate("MainWindow", u"Delete Active Bubble", None))
-        self.groupBox_9.setTitle(QCoreApplication.translate("MainWindow", u"Step Size", None))
-        self.groupBox_37.setTitle(QCoreApplication.translate("MainWindow", u"Start / Pause", None))
-        self.toolButton_3.setText(QCoreApplication.translate("MainWindow", u"...", None))
-        self.toolButton_runEvo.setText(QCoreApplication.translate("MainWindow", u"...", None))
-        self.toolButton_2.setText(QCoreApplication.translate("MainWindow", u"...", None))
-        self.textBrowser_3.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Step 3/3<br /></span><span style=\" font-size:10pt; font-weight:700;\">Evolution</span></p></body></html>", None))
-        self.groupBox_11.setTitle(QCoreApplication.translate("MainWindow", u"Iteration", None))
-        self.pushButton_Finish.setText(QCoreApplication.translate("MainWindow", u"Finsish", None))
-        self.pushButton_Back3.setText(QCoreApplication.translate("MainWindow", u"Back", None))
-        self.toolbar.setTabText(self.toolbar.indexOf(self.tab_9), "")
-        self.toolbar.setTabText(self.toolbar.indexOf(self.tab_4), "")
-#if QT_CONFIG(tooltip)
-        self.toolbar.setTabToolTip(self.toolbar.indexOf(self.tab_4), QCoreApplication.translate("MainWindow", u"Paintbrush / manual Segmentation", None))
-#endif // QT_CONFIG(tooltip)
-        self.toolbar.setTabText(self.toolbar.indexOf(self.tab_7), "")
-        self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"Lambda Position", None))
-        self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"Pick Position", None))
-        self.groupBox_3.setTitle(QCoreApplication.translate("MainWindow", u"Bregma Position", None))
-        self.pushButton_4.setText(QCoreApplication.translate("MainWindow", u"Pick Position", None))
-        self.groupBox_22.setTitle(QCoreApplication.translate("MainWindow", u"Distance", None))
-        self.toolbar.setTabText(self.toolbar.indexOf(self.tab_5), "")
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.PreSurgery), QCoreApplication.translate("MainWindow", u"3D Data", None))
+        self.actionOpen_ephys_Data.setText(QCoreApplication.translate("MainWindow", u"Open ephys Data", None))
+        self.actionSegmentation.setText(QCoreApplication.translate("MainWindow", u"Segmentation", None))
+        self.actionGet_Position_in_HPC.setText(QCoreApplication.translate("MainWindow", u"Get Position in HPC", None))
         self.groupBox_data0.setTitle(QCoreApplication.translate("MainWindow", u"View", None))
-        self.groupBox_time01.setTitle(QCoreApplication.translate("MainWindow", u"Timestamp t=4", None))
-        self.go_down_data01.setText(QCoreApplication.translate("MainWindow", u"<", None))
-        self.go_up_data01.setText(QCoreApplication.translate("MainWindow", u">", None))
-        self.go_left_data01.setText(QCoreApplication.translate("MainWindow", u"<", None))
-        self.go_right_data01.setText(QCoreApplication.translate("MainWindow", u">", None))
-        self.zoom_in_data01.setText(QCoreApplication.translate("MainWindow", u"+", None))
-        self.zoom_out_data01.setText(QCoreApplication.translate("MainWindow", u"-", None))
-        self.fit_to_zoom_data01.setText(QCoreApplication.translate("MainWindow", u"Fit-to-Zoom", None))
         self.groupBox_time02.setTitle(QCoreApplication.translate("MainWindow", u"Timestamp t=8", None))
         self.fit_to_zoom_data02.setText(QCoreApplication.translate("MainWindow", u"Fit-to-Zoom", None))
         self.go_down_data02.setText(QCoreApplication.translate("MainWindow", u"<", None))
@@ -4346,14 +4294,6 @@ class Ui_MainWindow(object):
         self.go_right_data02.setText(QCoreApplication.translate("MainWindow", u">", None))
         self.zoom_in_data02.setText(QCoreApplication.translate("MainWindow", u"+", None))
         self.zoom_out_data02.setText(QCoreApplication.translate("MainWindow", u"-", None))
-        self.heatmap_data0.setTitle(QCoreApplication.translate("MainWindow", u"Heatmap", None))
-        self.zoom_in_data03.setText(QCoreApplication.translate("MainWindow", u"+", None))
-        self.zoom_out_data03.setText(QCoreApplication.translate("MainWindow", u"-", None))
-        self.fit_to_zoom_data03.setText(QCoreApplication.translate("MainWindow", u"Fit-to-Zoom", None))
-        self.go_down_data03.setText(QCoreApplication.translate("MainWindow", u"<", None))
-        self.go_up_data03.setText(QCoreApplication.translate("MainWindow", u">", None))
-        self.go_left_data03.setText(QCoreApplication.translate("MainWindow", u"<", None))
-        self.go_right_data03.setText(QCoreApplication.translate("MainWindow", u">", None))
         self.groupBox_46.setTitle(QCoreApplication.translate("MainWindow", u"Timestamp Slider", None))
         self.groupBox_49.setTitle(QCoreApplication.translate("MainWindow", u"Contrast Adjustment", None))
         self.pushButton_reset_data00.setText(QCoreApplication.translate("MainWindow", u"Reset", None))
@@ -4369,14 +4309,14 @@ class Ui_MainWindow(object):
         self.pushButton_reset_data02.setText(QCoreApplication.translate("MainWindow", u"Reset", None))
         self.pushButton_auto_data02.setText(QCoreApplication.translate("MainWindow", u"Auto", None))
         self.tabWidget_time0.setTabText(self.tabWidget_time0.indexOf(self.tab_3), QCoreApplication.translate("MainWindow", u"Timestamp  t=8", None))
-        self.groupBox_25.setTitle(QCoreApplication.translate("MainWindow", u"Intensity under cursor", None))
-        ___qtablewidgetitem = self.tableintensity_data0.horizontalHeaderItem(1)
-        ___qtablewidgetitem.setText(QCoreApplication.translate("MainWindow", u"Layer", None));
-        ___qtablewidgetitem1 = self.tableintensity_data0.horizontalHeaderItem(2)
-        ___qtablewidgetitem1.setText(QCoreApplication.translate("MainWindow", u"Intensity", None));
-        ___qtablewidgetitem2 = self.tableintensity_data0.horizontalHeaderItem(3)
-        ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindow", u"Opacity", None));
-        self.groupbox_legend0.setTitle(QCoreApplication.translate("MainWindow", u"Heatmap Intensities", None))
+        self.groupBox_time01.setTitle(QCoreApplication.translate("MainWindow", u"Timestamp t=4", None))
+        self.go_down_data01.setText(QCoreApplication.translate("MainWindow", u"<", None))
+        self.go_up_data01.setText(QCoreApplication.translate("MainWindow", u">", None))
+        self.go_left_data01.setText(QCoreApplication.translate("MainWindow", u"<", None))
+        self.go_right_data01.setText(QCoreApplication.translate("MainWindow", u">", None))
+        self.zoom_in_data01.setText(QCoreApplication.translate("MainWindow", u"+", None))
+        self.zoom_out_data01.setText(QCoreApplication.translate("MainWindow", u"-", None))
+        self.fit_to_zoom_data01.setText(QCoreApplication.translate("MainWindow", u"Fit-to-Zoom", None))
         self.groupBox_time00.setTitle(QCoreApplication.translate("MainWindow", u"Timestamp t=0", None))
         self.fit_to_zoom_data00.setText(QCoreApplication.translate("MainWindow", u"Fit-to-Zoom", None))
         self.go_down_data00.setText(QCoreApplication.translate("MainWindow", u"<", None))
@@ -4386,6 +4326,24 @@ class Ui_MainWindow(object):
         self.zoom_in_data00.setText(QCoreApplication.translate("MainWindow", u"+", None))
         self.zoom_out_data00.setText(QCoreApplication.translate("MainWindow", u"-", None))
         self.groupBox_34.setTitle(QCoreApplication.translate("MainWindow", u"Cursor Position (x,y,z)", None))
+        self.heatmap_data0.setTitle(QCoreApplication.translate("MainWindow", u"Heatmap", None))
+        self.zoom_in_data03.setText(QCoreApplication.translate("MainWindow", u"+", None))
+        self.zoom_out_data03.setText(QCoreApplication.translate("MainWindow", u"-", None))
+        self.fit_to_zoom_data03.setText(QCoreApplication.translate("MainWindow", u"Fit-to-Zoom", None))
+        self.go_down_data03.setText(QCoreApplication.translate("MainWindow", u"<", None))
+        self.go_up_data03.setText(QCoreApplication.translate("MainWindow", u">", None))
+        self.go_left_data03.setText(QCoreApplication.translate("MainWindow", u"<", None))
+        self.go_right_data03.setText(QCoreApplication.translate("MainWindow", u">", None))
+        self.plainTextEdit.setPlainText(QCoreApplication.translate("MainWindow", u"widget index correct\n"
+"", None))
+        self.groupBox_25.setTitle(QCoreApplication.translate("MainWindow", u"Intensity under cursor", None))
+        ___qtablewidgetitem = self.tableintensity_data0.horizontalHeaderItem(1)
+        ___qtablewidgetitem.setText(QCoreApplication.translate("MainWindow", u"Layer", None));
+        ___qtablewidgetitem1 = self.tableintensity_data0.horizontalHeaderItem(2)
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("MainWindow", u"Intensity", None));
+        ___qtablewidgetitem2 = self.tableintensity_data0.horizontalHeaderItem(3)
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindow", u"Opacity", None));
+        self.groupbox_legend0.setTitle(QCoreApplication.translate("MainWindow", u"Heatmap Intensities", None))
         self.groupBox_68.setTitle(QCoreApplication.translate("MainWindow", u"Cursor Position (x,y,z)", None))
         self.fit_to_zoom_data3d2.setText(QCoreApplication.translate("MainWindow", u"Fit-to-Zoom", None))
         self.go_down_data3d2.setText(QCoreApplication.translate("MainWindow", u"<", None))
@@ -4545,6 +4503,34 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem11.setText(QCoreApplication.translate("MainWindow", u"Opacity", None));
         self.groupbox_legend1.setTitle(QCoreApplication.translate("MainWindow", u"Heatmap Intensities", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.PostSurgery), QCoreApplication.translate("MainWindow", u"4D Data", None))
+        self.groupBox_register.setTitle(QCoreApplication.translate("MainWindow", u"Registration (Rigid Transformation)", None))
+        self.groupBox_17.setTitle(QCoreApplication.translate("MainWindow", u"Coarest Level", None))
+        self.comboBox_coarest.setItemText(0, QCoreApplication.translate("MainWindow", u"4x", None))
+        self.comboBox_coarest.setItemText(1, QCoreApplication.translate("MainWindow", u"2x", None))
+        self.comboBox_coarest.setItemText(2, QCoreApplication.translate("MainWindow", u"1x", None))
+
+        self.groupBox_26.setTitle(QCoreApplication.translate("MainWindow", u"Finest Level", None))
+        self.comboBox_finest.setItemText(0, QCoreApplication.translate("MainWindow", u"1x", None))
+        self.comboBox_finest.setItemText(1, QCoreApplication.translate("MainWindow", u"2x", None))
+        self.comboBox_finest.setItemText(2, QCoreApplication.translate("MainWindow", u"4x", None))
+
+        self.pushButton_registration.setText(QCoreApplication.translate("MainWindow", u"Run Registration", None))
+        self.groupBox_27.setTitle(QCoreApplication.translate("MainWindow", u"Moving Image", None))
+        self.groupBox_resample.setTitle(QCoreApplication.translate("MainWindow", u"Resample", None))
+        self.pushButton_done.setText(QCoreApplication.translate("MainWindow", u"Done", None))
+        self.pushButton_openfile.setText(QCoreApplication.translate("MainWindow", u"Done, open \n"
+"resampled 100um file", None))
+        self.pushButton_resample25um.setText(QCoreApplication.translate("MainWindow", u"Resample 25um", None))
+        self.pushButton_resample100um.setText(QCoreApplication.translate("MainWindow", u"Resample 100um", None))
+        self.textBrowser_4.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Please select the file to resample!<br />Click on the buttons below to resample the data, after it is directlz saved in the directory.</p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br />(Resample 100um resamples the data in z-axis only)</p></body></html>", None))
         self.ManualContrastAdjustments.setTitle(QCoreApplication.translate("MainWindow", u"Manual Contrast Adjustement", None))
         self.label_11.setText(QCoreApplication.translate("MainWindow", u"Brightness / Level", None))
         self.label_12.setText(QCoreApplication.translate("MainWindow", u"Contrast / Window", None))
@@ -4576,21 +4562,6 @@ class Ui_MainWindow(object):
         self.label_28.setText(QCoreApplication.translate("MainWindow", u"Brightness / Level", None))
         self.tabWidget_6.setTabText(self.tabWidget_6.indexOf(self.tab_21), QCoreApplication.translate("MainWindow", u"Timest 3", None))
         self.contrast_data.setItemText(self.contrast_data.indexOf(self.contrast_data2), QCoreApplication.translate("MainWindow", u"Data 2", None))
-        self.groupBox_resample.setTitle(QCoreApplication.translate("MainWindow", u"Resample", None))
-        self.pushButton_done.setText(QCoreApplication.translate("MainWindow", u"Done", None))
-        self.pushButton_openfile.setText(QCoreApplication.translate("MainWindow", u"Done, open \n"
-"resampled 100um file", None))
-        self.pushButton_resample25um.setText(QCoreApplication.translate("MainWindow", u"Resample 25um", None))
-        self.pushButton_resample100um.setText(QCoreApplication.translate("MainWindow", u"Resample 100um", None))
-        self.textBrowser_4.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Please select the file to resample!<br />Click on the buttons below to resample the data, after it is directlz saved in the directory.</p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br />(Resample 100um resamples the data in z-axis only)</p></body></html>", None))
         self.groupBox_paintbrush_3d.setTitle(QCoreApplication.translate("MainWindow", u"Paintbrush", None))
         self.groupBox_14.setTitle(QCoreApplication.translate("MainWindow", u"Brush Style", None))
         self.paint_square.setText("")
@@ -4607,16 +4578,6 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem14.setText(QCoreApplication.translate("MainWindow", u"Label", None));
         self.checkBox_Brush.setText(QCoreApplication.translate("MainWindow", u"Brush ON", None))
         self.groupBox_20.setTitle(QCoreApplication.translate("MainWindow", u"Overall label opacity", None))
-        self.groupBox_23.setTitle(QCoreApplication.translate("MainWindow", u"Manual Contrast Adjustments", None))
-        self.label_29.setText(QCoreApplication.translate("MainWindow", u"Brightness / Level", None))
-        self.label_30.setText(QCoreApplication.translate("MainWindow", u"Contrast / Window", None))
-        self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_28), QCoreApplication.translate("MainWindow", u"Coronal", None))
-        self.label_31.setText(QCoreApplication.translate("MainWindow", u"Contrast / Window", None))
-        self.label_32.setText(QCoreApplication.translate("MainWindow", u"Brightness / Level", None))
-        self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_29), QCoreApplication.translate("MainWindow", u"Sagittal", None))
-        self.label_33.setText(QCoreApplication.translate("MainWindow", u"Contrast / Window", None))
-        self.label_34.setText(QCoreApplication.translate("MainWindow", u"Brightness / Level", None))
-        self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_30), QCoreApplication.translate("MainWindow", u"Axial", None))
         self.groupBox_paintbrush.setTitle(QCoreApplication.translate("MainWindow", u"Paintbrush", None))
         self.pushButton_anatfile.setText(QCoreApplication.translate("MainWindow", u"Add anatomical region label mask", None))
         self.pushButton_segfile.setText(QCoreApplication.translate("MainWindow", u"Add segmentation label mask", None))
@@ -4698,20 +4659,98 @@ class Ui_MainWindow(object):
 "li.checked::marker { content: \"\\2612\"; }\n"
 "</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Please select the correct transformation files for dataview</p></body></html>", None))
-        self.groupBox_register.setTitle(QCoreApplication.translate("MainWindow", u"Registration (Rigid Transformation)", None))
-        self.groupBox_17.setTitle(QCoreApplication.translate("MainWindow", u"Coarest Level", None))
-        self.comboBox_coarest.setItemText(0, QCoreApplication.translate("MainWindow", u"4x", None))
-        self.comboBox_coarest.setItemText(1, QCoreApplication.translate("MainWindow", u"2x", None))
-        self.comboBox_coarest.setItemText(2, QCoreApplication.translate("MainWindow", u"1x", None))
-
-        self.groupBox_26.setTitle(QCoreApplication.translate("MainWindow", u"Finest Level", None))
-        self.comboBox_finest.setItemText(0, QCoreApplication.translate("MainWindow", u"1x", None))
-        self.comboBox_finest.setItemText(1, QCoreApplication.translate("MainWindow", u"2x", None))
-        self.comboBox_finest.setItemText(2, QCoreApplication.translate("MainWindow", u"4x", None))
-
-        self.pushButton_registration.setText(QCoreApplication.translate("MainWindow", u"Run Registration", None))
-        self.groupBox_27.setTitle(QCoreApplication.translate("MainWindow", u"Moving Image", None))
+        self.groupBox_23.setTitle(QCoreApplication.translate("MainWindow", u"Manual Contrast Adjustments", None))
+        self.label_29.setText(QCoreApplication.translate("MainWindow", u"Brightness / Level", None))
+        self.label_30.setText(QCoreApplication.translate("MainWindow", u"Contrast / Window", None))
+        self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_28), QCoreApplication.translate("MainWindow", u"Coronal", None))
+        self.label_31.setText(QCoreApplication.translate("MainWindow", u"Contrast / Window", None))
+        self.label_32.setText(QCoreApplication.translate("MainWindow", u"Brightness / Level", None))
+        self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_29), QCoreApplication.translate("MainWindow", u"Sagittal", None))
+        self.label_33.setText(QCoreApplication.translate("MainWindow", u"Contrast / Window", None))
+        self.label_34.setText(QCoreApplication.translate("MainWindow", u"Brightness / Level", None))
+        self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_30), QCoreApplication.translate("MainWindow", u"Axial", None))
+        self.groupBox_segmentation.setTitle(QCoreApplication.translate("MainWindow", u"Segmentation", None))
+        self.textBrowser_5.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Step 1/3<br /></span><span style=\" font-size:10pt; font-weight:700;\">Presegmentation</span></p></body></html>", None))
+        self.checkBox_threshold.setText(QCoreApplication.translate("MainWindow", u"Threshold OFF", None))
+        self.groupBox_7.setTitle(QCoreApplication.translate("MainWindow", u"THRESHOLD", None))
+        self.radioButton_bounded.setText(QCoreApplication.translate("MainWindow", u"Bounded", None))
+        self.radioButton_lower.setText(QCoreApplication.translate("MainWindow", u"Lower-Only", None))
+        self.radioButton_upper.setText(QCoreApplication.translate("MainWindow", u"Upper-Only", None))
+        self.groupBox_13.setTitle(QCoreApplication.translate("MainWindow", u"Lower Threshold", None))
+        self.groupBox_63.setTitle(QCoreApplication.translate("MainWindow", u"Upper Threshold", None))
+        self.pushButton_5.setText(QCoreApplication.translate("MainWindow", u"Back", None))
+        self.pushButton_Next1.setText(QCoreApplication.translate("MainWindow", u"Next", None))
+        self.textBrowser_6.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Step 2/3<br /></span><span style=\" font-size:10pt; font-weight:700;\">Initialization</span></p></body></html>", None))
+        self.groupBox_10.setTitle(QCoreApplication.translate("MainWindow", u"Bubble Radius", None))
+        self.pushButton_Back2.setText(QCoreApplication.translate("MainWindow", u"Back", None))
+        self.pushButton_Next2.setText(QCoreApplication.translate("MainWindow", u"Next", None))
+        self.pushButton_addBubbles.setText(QCoreApplication.translate("MainWindow", u"Add Bubble at Cursor", None))
+        self.groupBox_16.setTitle(QCoreApplication.translate("MainWindow", u"Active Bubbles", None))
+        self.pushButton_delete.setText(QCoreApplication.translate("MainWindow", u"Delete Active Bubble", None))
+        self.groupBox_64.setTitle(QCoreApplication.translate("MainWindow", u"Step Size", None))
+        self.groupBox_65.setTitle(QCoreApplication.translate("MainWindow", u"Start / Pause", None))
+        self.toolButton_forwardEvo.setText(QCoreApplication.translate("MainWindow", u"...", None))
+        self.toolButton_runEvo.setText(QCoreApplication.translate("MainWindow", u"...", None))
+        self.toolButton_backwardEvo.setText(QCoreApplication.translate("MainWindow", u"...", None))
+        self.textBrowser_7.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Step 3/3<br /></span><span style=\" font-size:10pt; font-weight:700;\">Evolution</span></p></body></html>", None))
+        self.groupBox_66.setTitle(QCoreApplication.translate("MainWindow", u"Iteration", None))
+        self.pushButton_Finish.setText(QCoreApplication.translate("MainWindow", u"Finsish", None))
+        self.pushButton_Back3.setText(QCoreApplication.translate("MainWindow", u"Back", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_15), QCoreApplication.translate("MainWindow", u"Popups for 4D Data", None))
+        self.textEdit_4.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:48pt; color:#ffffff;\">Atlas 3D</span></p></body></html>", None))
+        self.textEdit_3.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:72pt; color:#ffffff;\"><br /></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:72pt; color:#fffff"
+                        "f;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:72pt; color:#ffffff;\">          ephys data</span></p></body></html>", None))
+        self.textEdit_5.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:48pt; color:#ffffff;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:48pt; color:#ffffff;\">Cam"
+                        "era</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:48pt; color:#ffffff;\"><br /></p></body></html>", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_25), QCoreApplication.translate("MainWindow", u"ephys", None))
         self.menuGUI.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuTools.setTitle(QCoreApplication.translate("MainWindow", u"3D Tools", None))
         self.menu4D_Tools.setTitle(QCoreApplication.translate("MainWindow", u"4D Tools", None))

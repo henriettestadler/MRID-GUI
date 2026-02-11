@@ -125,6 +125,8 @@ class Minimap:
             tolerance = 1e-3
             if (xmin <= xminR + tolerance and xmax >= xmaxR - tolerance and ymin <= yminR + tolerance and ymax >= ymaxR - tolerance):
                 for idx in range(len(self.LoadMRI.renderers)):
+                    if idx==3:
+                        continue
                     mm_renderer = self.LoadMRI.minimap.minimap_renderers[idx][view_name]
                     self.LoadMRI.zoom_tf[view_name]=False
                     mm_renderer.SetDraw(False)
@@ -133,6 +135,8 @@ class Minimap:
                         self.zoom_rects[idx][view_name].SetVisibility(False)
             else:
                 for idx in range(len(self.LoadMRI.renderers)):
+                    if idx==3:
+                        continue
                     self.LoadMRI.zoom_tf[view_name]=True
                     mm_renderer = self.LoadMRI.minimap.minimap_renderers[idx][view_name]
                     mm_renderer.SetDraw(True)
@@ -152,7 +156,7 @@ class Minimap:
                 for view_name, mm_renderer in views.items():
                     mm_renderer = self.LoadMRI.minimap.minimap_renderers[image_index][view_name]
                     mm_renderer.GetRenderWindow().Render()
-                    if self.LoadMRI.vol_dim==4:
+                    if image_index==3:
                         break
             return
 

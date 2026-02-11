@@ -84,7 +84,7 @@ class IntensityTable:
         btn.setIcon(self.icon_visible)
         btn.setToolTip("Toggle visibility")
         btn.setAutoRaise(True)
-        btn.clicked.connect(lambda checked, r=self.index , b=btn: self.toggle_visibility(checked,r, b))
+        btn.clicked.connect(lambda checked, r=self.index , b=btn: self.toggle_visibility(checked,r, b,data_index))
         btn.setStyleSheet("""
             QToolButton {
                 border: none;

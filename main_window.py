@@ -1,6 +1,5 @@
 # This Python file uses the following encoding: utf-8
 # Important: You need to run the following command to generate the ui_form.py file: pyside6-uic form.ui -o ui_form.py
-
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow
 from ui_form import Ui_MainWindow
@@ -19,6 +18,9 @@ from file_handling.loadimage_into3D import LoadImage3D
 from file_handling.loadimage_into4D import LoadImage4D
 from core.cursor import Cursor
 from PySide6 import QtWidgets
+from ephys.init_ephys import InitEphys
+from PySide6.QtCore import Qt, QCoreApplication,QUrl
+from gui_utils.visualization3D import Visualization3D
 
 class MainWindow(QMainWindow):
     """
@@ -29,11 +31,9 @@ class MainWindow(QMainWindow):
         Initialize the main window
         """
         super().__init__(parent)
+        self.resize_bool=True
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
-        self.resize_bool=True
-
         self.add_actions()
 
     def add_actions(self):
@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
 
         # Connect all buttons to open file
         self.ui.actionOpen.triggered.connect(self.open_user_dialog)
+        self.ui.actionOpen_ephys_Data.triggered.connect(self.ephys_data)
         self.ui.actionQuit.triggered.connect(self.quit)
 
 
@@ -54,7 +55,8 @@ class MainWindow(QMainWindow):
         #only show one row of views and center the three visible widgets
         self.ui.groupBox_data2.setVisible(False)
         self.ui.groupBox_data1.setVisible(False)
-        self.ui.heatmap_data0.setVisible(False)
+        #self.ui.heatmap_data0.setVisible(False)
+        self.ui.stackedWidget_heatmap.setVisible(True)
 
         self.ui.groupbox_legend0.setVisible(False)
         self.ui.contrast_data.setItemEnabled(0, False)
@@ -65,7 +67,49 @@ class MainWindow(QMainWindow):
         self.resize(1600, 900)
         self.setMinimumSize(1500,800)
         self.on_gui_resize()
+        save_path = "C:/Users/shadowfax/Downloads/atlas_filtered.nii.gz"
+        #self.visualization_3D(save_path)
 
+    def visualization_3D(self,save_path):
+        ## Quick3D Visualization
+        print('here bin ich')
+        #self.ui.stackedWidget_heatmap.setCurrentIndex(1)
+        QApplication.processEvents()
+        self.ui.quickWidget_3D.setVisible(True)
+
+        #self.volume_provider = Visualization3D(save_path)
+        #self.ui.quickWidget_3D.engine().rootContext().setContextProperty("Visualization3D", self.volume_provider)
+
+        qml_path = os.path.abspath("gui_utils/volumer_viewer.qml")
+        self.ui.quickWidget_3D.setSource(QUrl.fromLocalFile(qml_path))
+
+        print('fertig bin ich')
+        self.ui.quickWidget_3D.setStyleSheet("background-color: magenta;")
+        self.ui.quickWidget_3D.show()
+        self.ui.quickWidget_3D.raise_()
+        print("quickWidget geometry:", self.ui.quickWidget_3D.geometry())
+        print("quickWidget visible:", self.ui.quickWidget_3D.isVisible())
+        print("quickWidget source:", self.ui.quickWidget_3D.source())
+        print("quickWidget format:", self.ui.quickWidget_3D.format())
+        print("text visible:", self.ui.plainTextEdit.isVisible())
+        print("File exists:", os.path.exists(os.path.abspath(qml_path)))
+
+
+
+    def ephys_data(self):
+        file_name, _ = QFileDialog.getOpenFileName(
+            None,
+            "Open ephys Data File",
+            "",
+            "Data files (*.dat)"
+        )
+
+        #User cancelled
+        if not file_name:
+            return
+
+        self.ui.tabWidget.setCurrentIndex(2)
+        self.Ephys = InitEphys(self,file_name)
 
     def resizeEvent(self, event):
         """
@@ -121,10 +165,68 @@ class MainWindow(QMainWindow):
                     return
 
             if hasattr(self, "LoadMRI"):
+                #def open_as_new_file(self,buttons_gui3d,MW):
+                """
+                    Replace the currently loaded MRI file with the new resampled one.
+                    Clears old renderers, actors, and measurement lines from the GUI.
+                """
+                data_index = 0
+                self.LoadMRI.file_name[data_index] = file_name
+                img = sITK.ReadImage(file_name)
+                #new volume and spacing
+                self.LoadMRI.volume[data_index] = {}
+                self.LoadMRI.volume[data_index][0] = sITK.GetArrayFromImage(img)
+                self.LoadMRI.volume[data_index][1] = sITK.GetArrayFromImage(img)
+                self.LoadMRI.volume[data_index][2] = sITK.GetArrayFromImage(img)
+                self.LoadMRI.ref_image = img
+                self.LoadMRI.spacing = {}
+                self.LoadMRI.spacing[data_index] = []
+                self.LoadMRI.spacing[data_index] = img.GetSpacing()[::-1]
+                self.LoadMRI.vol_dim = self.LoadMRI.volume[data_index][0].ndim
+
+                self.LoadMRI.is_first_slice = False
+
+                #delete measurement actors
+                for view_name, line_actor,line_slice_index,text_actor in self.LoadMRI.measurement_lines:
+                    renderer = self.LoadMRI.measurement_renderer[view_name]
+                    renderer.RemoveActor(line_actor)
+                    text_actor.SetVisibility(0)
+                self.LoadMRI.measurement_lines = []
+
+                for idx in self.LoadMRI.minimap.minimap_renderers:
+                    for vn in self.LoadMRI.minimap.minimap_renderers[idx]:
+                        self.LoadMRI.minimap.minimap_renderers[idx][vn].RemoveAllViewProps()
+                    self.LoadMRI.minimap.minimap_renderers[idx] = {}
+
+
+                for idx in self.LoadMRI.renderers:
+                    for vn in self.LoadMRI.renderers[idx]:
+                        self.LoadMRI.renderers[idx][vn].RemoveAllViewProps()
+                    self.LoadMRI.renderers[idx] = {}
+                    self.LoadMRI.actors[idx] = {}
+                    self.LoadMRI.img_vtks[idx] = {}
+
+                #remove old renderers
+                for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
+                    for view_name, vtk_widget in vtk_widget_image.items():
+                        ren_win = vtk_widget.GetRenderWindow()
+                        ren_coll = ren_win.GetRenderers()
+
+                        renderers_to_remove = [ren_coll.GetItemAsObject(i) for i in range(ren_coll.GetNumberOfItems())]
+
+                        for old_renderer in renderers_to_remove:
+                            ren_win.RemoveRenderer(old_renderer)
+
+                #load file again, update cursor
+                self.LoadMRI = LoadMRI()
+                self.LoadMRI.file_name = {}
+                self.LoadMRI.file_name[0]= file_name
+                self.ui.comboBox_resamplefiles.addItem(os.path.basename(file_name)) #add to combobox for resampling
                 if volume.ndim==4:
                     data_view = {btn_axial: "axial", btn_coronal: "coronal", btn_sagittal: "sagittal"}.get(msg_box.clickedButton())
                     self.restart_gui(file_name,data_view)
                 else:
+                    data_view = "coronal" #for 3d data
                     self.restart_gui(file_name)
                 return
 
@@ -238,13 +340,18 @@ class MainWindow(QMainWindow):
                 img_flipped = sITK.Flip(image[:, :, :,t], self.LoadMRI.axes_to_flip[data_index], flipAboutOrigin=True)
                 flipped_volumes.append(sITK.GetArrayFromImage(img_flipped))
             self.LoadMRI.volume4D[data_index] = np.stack(flipped_volumes)
+            print(self.LoadMRI.volume4D[0].shape)
+            if self.LoadMRI.volume4D[0].shape[0]>8:
+                self.LoadMRI.timestamp4D = [0,4,8]
+            else:
+                self.LoadMRI.timestamp4D = [0,2,5]
             self.LoadMRI.volume[data_index][0] = self.LoadMRI.volume4D[data_index][self.LoadMRI.timestamp4D[0],:, :, :]
             self.LoadMRI.volume[data_index][1] = self.LoadMRI.volume4D[data_index][self.LoadMRI.timestamp4D[1],:, :, :]
             self.LoadMRI.volume[data_index][2] = self.LoadMRI.volume4D[data_index][self.LoadMRI.timestamp4D[2],:, :, :]
             self.LoadMRI.spacing[data_index] = [self.LoadMRI.spacing[data_index][1],self.LoadMRI.spacing[data_index][2],self.LoadMRI.spacing[data_index][3]]
 
 
-        self.ui.tabWidget.setCurrentIndex(1)
+        self.ui.tabWidget.setCurrentIndex(0)
         self.ui.data_4d_3d.setCurrentIndex(tab_idx)
 
         #Initiate GUI and connect buttons
@@ -339,12 +446,13 @@ class MainWindow(QMainWindow):
                     tabclass.update_table(os.path.basename(file_name), vol,idx)
 
 
-    def restart_gui(self, file_name, data_view=None):
+    def restart_gui(self, file_name, data_view='coronal'):
         """
         Restart GUI if new main image is loaded.
         """
         # Disconnect any important signals
-        zoom_notifier.factorChanged.disconnect(self.LoadMRI.minimap.create_small_rectangle)
+        if hasattr(self.LoadMRI, "minimap"):
+            zoom_notifier.factorChanged.disconnect(self.LoadMRI.minimap.create_small_rectangle)
 
         # Clear stored references
         self.LoadMRI = None
@@ -378,6 +486,8 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
+    #to mix vtk and QtQuick3D
+    QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     app = QApplication(sys.argv)
     widget = MainWindow()
     widget.show()

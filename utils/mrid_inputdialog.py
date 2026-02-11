@@ -195,6 +195,6 @@ class MRID_InputDialog(QtWidgets.QDialog):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    dlg = InputDialog()
+    dlg = MRID_InputDialog()
     if dlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
         data = dlg.get_values()

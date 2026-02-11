@@ -1,35 +1,27 @@
 import numpy as np
-import com
+from mrid_utils import com
 import os
 import nibabel as nib
 
 # TODO: HENRIETTE, BELOW MIGHT BE UNNECESSARY FOR YOU, JUST LOADING ATLAS IMAGES AND LABELS, just make sure you have the necessary variables loaded somewhere
-root=""
-dwi_path=os.path.join(root, "WHS_SD_rat_atlas_v4_pack","WHS_SD_rat_DWI_v1.01.nii.gz")
-nii_dwi=nib.load(dwi_path)
-dwi=np.asanyarray(nii_dwi.dataobj)
-dwi=dwi[:,:,:,0]
+#root=""
 
-mask_path=os.path.join(root, "WHS_SD_rat_atlas_v4_pack","WHS_SD_v2_brainmask_bin.nii.gz")
-nii_mask=nib.load(mask_path)
-mask=np.asanyarray(nii_mask.dataobj)
+#
+#mask_path=os.path.join(root, "WHS_SD_rat_atlas_v4_pack","WHS_SD_v2_brainmask_bin.nii.gz")
+#nii_mask=nib.load(mask_path)
+#mask=np.asanyarray(nii_mask.dataobj)
 
 # t2s_path=os.path.join(root, "WHS_SD_rat_atlas_v4_pack","WHS_SD_rat_T2star_v1.01.nii.gz")
 # nii_t2s=nib.load(t2s_path)
 # t2s=np.asanyarray(nii_t2s.dataobj)
 
-atlas_path=os.path.join(root, "WHS_SD_rat_atlas_v4_pack","WHS_SD_rat_atlas_v4.nii.gz")
-nii_atlas=nib.load(atlas_path)
-atlas=np.asanyarray(nii_atlas.dataobj)
-
-labels_path='./atlas_labels.rtf'
-atlaslabelsdf=read_whs_labels(labels_path)
 # TODO: HENRIETTE, ABOVE MIGHT BE UNNECESSARY FOR YOU, JUST LOADING ATLAS IMAGES AND LABELS
 
 def map_electrodes_main(fitted_points, mrid_dict, px_size = 25, channel_separation = 50, total_ch = 64):
     """
     Map electrode channels along the best-fit trajectory in MRI space given the mrid_dict
     """
+    ## GET: channel_separation and total_ch and ask for ATLAS directory?
     last_ch_dist = com.get_dist_to_deepest_ch(mrid_dict)
     print("Distance from last (deepest) CoM to the deepest channel (um):")
     print(last_ch_dist)
@@ -61,7 +53,7 @@ def map_electrodes_main(fitted_points, mrid_dict, px_size = 25, channel_separati
             print(nchannels)
             nchannels = total_ch
 
-            ch_coords_segment, _ = interpolate_channels(bottom, top, nchannels, offset=last_ch_dist)
+            ch_coords_segment, _ = interpolate_channels(bottom, top, nchannels, offset=last_ch_dist, channel_separation=channel_separation)
 
         elif i == len(fitted_points) - 2 and i != 0:
             print("Last segment mapping")
@@ -111,7 +103,7 @@ def interpolate_channels(bottom_coord, top_coord, nchannels, offset, channel_sep
     return (ch_coords).astype('int'), unitvec
 
 
-def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savepath):
+def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi):
     # Coronal slice to be plotted selector
     # temp_y = 0
 
@@ -122,13 +114,14 @@ def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savep
     dwi1Dsignal = np.zeros((num_channels,))
     pyrCh = 9999
     regionNames = []
+    regionNumbers = []
     # pyrChIdx = 0
-    pyrLyExists = False
+    #pyrLyExists = False
 
     with open(os.path.join(savepath, "channel_atlas_coordinates.txt"), 'w') as f:
 
         for idx, coord in enumerate(ch_coord):
-            print(idx)
+            #print(idx,coord, ch_coord)
             atlasIdx = ((moving_coordinates[:, 0] == coord[0]) & (moving_coordinates[:, 1] == coord[1]) & (
                         moving_coordinates[:, 2] == coord[2]))
             if fixed_coordinates[atlasIdx].any():
@@ -143,21 +136,22 @@ def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savep
             atlasCoord = fixed_coordinates[atlasIdx][0]
             x, y, z = atlasCoord.astype(int)
             label = atlas[x, y, z]
-
+            print('label',label)
             anat_region = atlaslabelsdf["Anatomical Regions"][atlaslabelsdf["Labels"] == label].values[0]
             regionNames.append(anat_region)
+            regionNumbers.append(label)
 
             currPixVal = dwi[x, y, z]
             dwi1Dsignal[idx] = currPixVal
             if anat_region == "Cornu ammonis 1":
-                pyrLyExists = True
+                #pyrLyExists = True
                 if currPixVal < minPixVal:
                     minPixVal = currPixVal
                     pyrCh = idx
                     # pyrChIdx = idx
 
             line = "CH:" + str(idx) + " in " + anat_region + ' Segment: ' + str(label) + " atlas coord: " + str(
-                atlasCoord)
+                atlasCoord) #str(chMap[idx])
             print(line)
             f.write(line)
             f.write('\n')
@@ -198,4 +192,5 @@ def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savep
     #     plt.savefig(os.path.join(savepath, "dwi_1D_cross_section.pdf"), dpi=2000)
     #     plt.show()
 
-    return dwi1Dsignal
+    regionNumbers = list(dict.fromkeys(regionNumbers))
+    return dwi1Dsignal, regionNumbers

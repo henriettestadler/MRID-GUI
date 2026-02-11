@@ -10,9 +10,13 @@ from utils.mrid_inputdialog import MRID_InputDialog
 from PySide6 import QtWidgets
 from core.electrode_localization import ElectrodeLoc
 from PySide6.QtWidgets import QMessageBox, QFileDialog, QDialog, QDockWidget,QVBoxLayout
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt,QUrl
 import SimpleITK as sITK
-
+from gui_utils.visualization3D import Visualization3D
+from PySide6 import QtGui
+from PySide6.QtQuick import QQuickView
+from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import QUrl
 
 class PopupDialog(QDialog):
     """
@@ -87,6 +91,8 @@ class ButtonsGUI_4D:
         self.ui.actionStart_MRIDlabels.triggered.connect(self.open_input_dialog)
         self.ui.actionContrast_Adjustments.triggered.connect(self.contrast_adjustments)
         self.ui.actionAdd_Another_View.triggered.connect(self.add_other_view)
+
+        self.ui.actionGet_Position_in_HPC.triggered.connect(self.visualization_start)
 
         layout = self.ui.gridLayout_data0
         layout.setColumnStretch(0, 1)
@@ -491,11 +497,11 @@ class ButtonsGUI_4D:
             1. Warping and Gaussian Centres Extraction
             2. Final localisation
         """
+        self.ui.stackedWidget_4D.setCurrentIndex(4)
         if not hasattr(self.LoadMRI,'PaintbrushGUI'):
             dock = QDockWidget("Electrode Localization", self.MW)
             dock.setWidget(self.ui.groupBox_paintbrush)     # use your existing widget from Designer
             self.MW.addDockWidget(Qt.RightDockWidgetArea, dock)
-            self.ui.stackedWidget_4D.setCurrentIndex(4)
             self.ui.stackedWidget_MRIDfiles.setVisible(False)
             #resize for heatmap and dock
             min_w = self.MW.minimumWidth()
@@ -522,7 +528,7 @@ class ButtonsGUI_4D:
         """
         Warping and Gaussian Centres Extraction
         """
-        self.LoadMRI.ElectrodeLoc = ElectrodeLoc(self.LoadMRI)
+        self.LoadMRI.ElectrodeLoc = ElectrodeLoc(self.LoadMRI,self.MW)
         self.LoadMRI.ElectrodeLoc.get_gaussian_centers(self.transformation_files)
         self.ui.stackedWidget_4D.setCurrentIndex(self.ui.stackedWidget_4D.currentIndex()+1)
         self.ui.pushButton_Gaussian.clicked.connect(self.electrode_localisation)
@@ -534,7 +540,7 @@ class ButtonsGUI_4D:
         """
         files, _ = QFileDialog.getOpenFileNames(
             None,
-            f"Please select all transformation files for selected data_view",
+            "Please select all transformation files for selected data_view",
             "",
             "Text files (*.txt)"
         )
@@ -555,7 +561,7 @@ class ButtonsGUI_4D:
         """
         self.LoadMRI.vtk_widgets[3] = {}
         if not hasattr(self.LoadMRI,'ElectrodeLoc'):
-            self.LoadMRI.ElectrodeLoc = ElectrodeLoc(self.LoadMRI)
+            self.LoadMRI.ElectrodeLoc = ElectrodeLoc(self.LoadMRI,self.MW)
 
         for idx in range(len(self.LoadMRI.vtk_widgets[0])):
             data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
@@ -564,7 +570,7 @@ class ButtonsGUI_4D:
             title = "Electrode Localizations"
             groupBox.setTitle(title)
             groupBox.setVisible(True)
-        self.LoadMRI.ElectrodeLoc.getCoordinates()
+        save_path = self.LoadMRI.ElectrodeLoc.getCoordinates()
         self.ui.stackedWidget_4D.setCurrentIndex(self.ui.stackedWidget_4D.currentIndex()+1)
         for idx in range(len(self.LoadMRI.vtk_widgets[0])):
             data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
@@ -577,6 +583,8 @@ class ButtonsGUI_4D:
             layout.setColumnStretch(1, 1)
             layout.setColumnStretch(2, 1)
             layout.setColumnStretch(3, 1)
+
+        self.visualisation_3D(save_path)
 
     def contrast_adjustments(self):
         """
@@ -592,5 +600,59 @@ class ButtonsGUI_4D:
         self.popup.show()
 
 
+    def visualization_start(self):
+        save_path = "C:/Users/shadowfax/Downloads/atlas_filtered.nii.gz"
+        self.visualization_3D(save_path)
 
+    #def visualization_3D(self,save_path):
+    #    ## Quick3D Visualization
+    #    print('here bin ich')
+    #    self.volume_provider = Visualization3D(save_path)
+    #    self.ui.quickWidget_3D.engine().rootContext().setContextProperty("Visualization3D", self.volume_provider)
+#
+    #    qml_path = os.path.abspath("gui_utils/volumer_viewer.qml")
+    #    self.ui.quickWidget_3D.setSource(QUrl.fromLocalFile(qml_path))
+    #    self.ui.heatmap_data0.setVisible(True)
+    #    self.ui.stackedWidget_heatmap.setCurrentIndex(1)
+#
+    #    print('fertig bin ich')
+    #    self.ui.quickWidget_3D.setStyleSheet("background-color: magenta;")
+    #    print("quickWidget geometry:", self.ui.quickWidget_3D.geometry())
+    #    print("quickWidget visible:", self.ui.quickWidget_3D.isVisible())
+    #    print("Absolute QML path:", os.path.abspath(qml_path))
+    #    print("File exists:", os.path.exists(os.path.abspath(qml_path)))
 
+    def visualization_3D(self, save_path):
+        from PySide6.QtQuick import QQuickView
+        from PySide6.QtWidgets import QWidget
+        from PySide6.QtCore import QUrl
+
+        self.volume_provider = Visualization3D(save_path)
+
+        self.quick3d_view = QQuickView()
+        # Crucial: Set the color to transparent or a specific color to see if it renders
+        self.quick3d_view.setColor(QtGui.QColor("black"))
+
+        self.quick3d_view.rootContext().setContextProperty(
+            "Visualization3D", self.volume_provider
+        )
+
+        qml_path = os.path.abspath("gui_utils/volumer_viewer.qml")
+        self.quick3d_view.setSource(QUrl.fromLocalFile(qml_path))
+
+        placeholder = self.ui.quickWidget_3D
+        parent_widget = placeholder.parentWidget()
+        layout = parent_widget.layout()
+
+        # Create the container
+        self.quick3d_container = QWidget.createWindowContainer(self.quick3d_view, parent_widget)
+
+        # Ensure the container takes up space
+        self.quick3d_container.setMinimumSize(placeholder.size())
+
+        layout.replaceWidget(placeholder, self.quick3d_container)
+        placeholder.deleteLater()
+
+        # FORCE UI UPDATE
+        self.quick3d_container.show()
+        self.ui.stackedWidget_heatmap.setCurrentIndex(1)

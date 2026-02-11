@@ -23,6 +23,7 @@ def get_dist_to_deepest_ch(mrid_dict, offset=11):
     """
     Returns the distance from the deepest channel to the CoM of the deepest pattern
     """
+    print(mrid_dict)
     deepest_pattern = mrid_dict["dimensions"][-1, :]
     b, a, h = deepest_pattern
 

@@ -75,6 +75,8 @@ def read_data(path):
 
 def save_nii(data, affine, path2save, header=None):
     nii2save=nib.Nifti1Image(data, affine, header=header)
+    if not os.path.exists(os.path.dirname(path2save)):
+        os.makedirs(os.path.dirname(path2save))
     nib.save(nii2save, path2save)
 
 def read_labels(labels_path):
@@ -127,8 +129,8 @@ def get_gaussian_centers(sessionpath, mrid):
             gaussian_centers_coronal = np.load(os.path.join(orientpath, "gaussian_centers.npy"))
             gaussian_sigmas_coronal = np.load(os.path.join(orientpath, "gaussian_sigmas.npy"))
 
-            #print("Coronal sliced gaussian centers exist: ")
-            #print(gaussian_centers_coronal)
+            print("Coronal sliced gaussian centers exist: ")
+            print(gaussian_centers_coronal)
             try:
                 contrast_intensities_coronal = np.load(
                     os.path.join(orientpath, "contrast_intensities_fixedROI.npy"))
@@ -148,8 +150,8 @@ def get_gaussian_centers(sessionpath, mrid):
             gaussian_centers_sagittal = np.load(os.path.join(orientpath, "gaussian_centers.npy"))
             gaussian_sigmas_sagittal = np.load(os.path.join(orientpath, "gaussian_sigmas.npy"))
 
-            #print("Sagittal sliced gaussian centers exist: ")
-            #print(gaussian_centers_sagittal)
+            print("Sagittal sliced gaussian centers exist: ")
+            print(gaussian_centers_sagittal)
             try:
                 contrast_intensities_sagittal = np.load(
                     os.path.join(orientpath, "contrast_intensities_fixedROI.npy"))
@@ -187,6 +189,8 @@ def get_gaussian_centers(sessionpath, mrid):
 
 
 def get_mrid_dimensions(mrid_dict, bundle_start):
+    print('dim ',mrid_dict["dimensions"])
+    print('start ', bundle_start)
     pattern_dimensions = mrid_dict["dimensions"][bundle_start:, :]
     pattern_intersegment = mrid_dict["intersegment_distances"][bundle_start:]
     ionp_amount = mrid_dict["ionp_amount"][bundle_start:]
@@ -194,3 +198,39 @@ def get_mrid_dimensions(mrid_dict, bundle_start):
     pattern_dist, pattern_points = com.get_centomass(pattern_dimensions, pattern_intersegment)
 
     return pattern_dist, pattern_points, pattern_lengths, ionp_amount
+
+
+def read_whs_labels(path):
+    """
+    Reads the labels from WHS atlas
+    """
+#     labels_path='./atlas_labels.rtf'
+    labels=[]
+    anats=[]
+    with open(path) as f:
+        lines = f.readlines()
+        for i,line in enumerate(lines):
+            #if i>6 and i%2==1:
+                ##Added because .rtf differs .labels
+                if not line or line.startswith("#"):
+                    print(line)
+                    continue
+                #if i==7:
+                #print(line,line.split('\\cf'))
+                #anat= ' '.join(line.split('\\cf')[1].split()[8:])
+#               #  label=[line.split('\\cf')[1].split()[0], anat]
+                #anats.append(anat.split("\"")[1])
+                #labels.append(int(line.split('\\cf')[1].split()[0]))
+#                 print(label)
+                #else:
+                anat=' '.join(line.split()[7:])
+    #             label=[line.split()[0], anat]
+                anats.append(anat.split("\"")[1])
+                labels.append(int(line.split()[0]))
+    #             print(label)
+
+    df=pd.DataFrame()
+    df["Labels"]=labels
+    df["Anatomical Regions"]=anats
+    print(df)
+    return df

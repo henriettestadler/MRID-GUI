@@ -33,6 +33,7 @@ def run_gaussian_analysis(filename, savepath, roi_name, orientation, data_volume
     gaussian_centers, gaussAmp, gaussSig, popt = find_gaussian_centers(heatmaps, fixed_img,
                                                                        px_size, orientation, verbose)
 
+    print("Gaussian centers", gaussian_centers)
     #make sure the folder exists
     os.makedirs(savepath,exist_ok=True)
     gausscent_filename = "gaussian_centers.npy"
@@ -226,7 +227,7 @@ def combine_gauss_centers_3D(gaussian_centers_coronal, contrast_intensities_coro
     if gaussian_centers[:, 2].any():
         gaussian_centers[:, 2] = gaussian_centers[:, 2] / (sagittal_weights + axial_weights)
 
-
+    print("gaussian centers: ",gaussian_centers)
     if savepath:
         filename = "gaussian_centers_3D.npy"
         np.save(os.path.join(savepath, filename), gaussian_centers)

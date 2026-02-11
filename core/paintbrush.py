@@ -104,16 +104,17 @@ class Paintbrush:
             if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):  # XY plane, spacing Z ignored
                 x0, x1 = max(0, x-half), min(nx - 1, x +half+ (0 if self.size % 2 == 0 else 1))
                 y0, y1 = max(0, y-half), min(ny - 1, y +half+ (0 if self.size % 2 == 0 else 1))
+                print('square',x0,x1,y0,y1,self.size,half)
                 # Only overwrite voxels with paintover_value
                 if paintover_value != 0:
                     mask = self.label_volume[data_index][z, y0:y1, x0:x1] == paintover_value-1
                     self.label_volume[data_index][z, y0:y1, x0:x1][mask] = int(label_value)
                     if label_value > self.LoadMRI.mrid_tags.num_regions:
-                        self.seg_volume[z, y0:y1, x0:x1][mask] = int(label_value)
+                        self.seg_volume[data_index][z, y0:y1, x0:x1][mask] = int(label_value)
                 elif paintover_value == 0:
                     self.label_volume[data_index][z, y0:y1, x0:x1] = int(label_value)
                     if label_value > self.LoadMRI.mrid_tags.num_regions:
-                        self.seg_volume[z, y0:y1, x0:x1] = int(label_value)
+                        self.seg_volume[data_index][z, y0:y1, x0:x1] = int(label_value)
                 else:
                     return
 
@@ -124,11 +125,11 @@ class Paintbrush:
                     mask = self.label_volume[data_index][z0:z1, y, x0:x1] == paintover_value-1
                     self.label_volume[data_index][z0:z1, y, x0:x1][mask] = int(label_value)
                     if label_value > self.LoadMRI.mrid_tags.num_regions:
-                        self.seg_volume[z0:z1, y, x0:x1][mask] = int(label_value)
+                        self.seg_volume[data_index][z0:z1, y, x0:x1][mask] = int(label_value)
                 elif paintover_value == 0:
                     self.label_volume[data_index][z0:z1, y, x0:x1] = int(label_value)
                     if label_value > self.LoadMRI.mrid_tags.num_regions:
-                        self.seg_volume[z0:z1, y, x0:x1] = int(label_value)
+                        self.seg_volume[data_index][z0:z1, y, x0:x1] = int(label_value)
                 else:
                     return
 
@@ -139,11 +140,11 @@ class Paintbrush:
                     mask = self.label_volume[data_index][z0:z1, y0:y1, x] == paintover_value-1
                     self.label_volume[data_index][z0:z1, y0:y1, x][mask] = int(label_value)
                     if label_value > self.LoadMRI.mrid_tags.num_regions:
-                        self.seg_volume[z0:z1, y0:y1, x][mask] = int(label_value)
+                        self.seg_volume[data_index][z0:z1, y0:y1, x][mask] = int(label_value)
                 elif paintover_value == 0:
                     self.label_volume[data_index][z0:z1, y0:y1, x] = int(label_value)
                     if label_value > self.LoadMRI.mrid_tags.num_regions:
-                        self.seg_volume[z0:z1, y0:y1, x] = int(label_value)
+                        self.seg_volume[data_index][z0:z1, y0:y1, x] = int(label_value)
                 else:
                     return
         elif self.brush_type == 'round':
@@ -204,12 +205,12 @@ class Paintbrush:
                                 if self.label_volume[data_index][z, yi, xi] == paintover_value - 1 or paintover_value == 0:
                                     self.label_volume[data_index][z, yi, xi] = label_value
                                     if label_value > self.LoadMRI.mrid_tags.num_regions:
-                                        self.seg_volume[z, yi, xi] = label_value
+                                        self.seg_volume[data_index][z, yi, xi] = label_value
                             elif view_name == 'coronal':
                                 if self.label_volume[data_index][yi, y, xi] == paintover_value - 1 or paintover_value == 0:
                                     self.label_volume[data_index][yi, y, xi] = label_value
                                     if label_value > self.LoadMRI.mrid_tags.num_regions:
-                                       self.seg_volume[yi, y, xi] = label_value
+                                       self.seg_volume[data_index][yi, y, xi] = label_value
                                 # apply mask
                                 self.label_volume[data_index][:, y, :]
                             elif view_name == 'sagittal':
@@ -219,7 +220,7 @@ class Paintbrush:
                                     if self.label_volume[data_index][self.LoadMRI.volume[0][0].shape[0]-xi, yi, x] == paintover_value - 1 or paintover_value == 0:
                                         self.label_volume[data_index][self.LoadMRI.volume[0][0].shape[0]-xi, yi, x] = label_value
                                         if label_value > self.LoadMRI.mrid_tags.num_regions:
-                                           self.seg_volume[self.LoadMRI.volume[0][0].shape[0]-xi, yi, x] = label_value
+                                           self.seg_volume[data_index][self.LoadMRI.volume[0][0].shape[0]-xi, yi, x] = label_value
 
         # Update the overlay
         self.update_overlay(data_index) #z, y, x)

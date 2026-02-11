@@ -60,9 +60,15 @@ class LoadImage4D:
             self.LoadMRI.paintbrush.label_volume[idx] = vol
 
         #directly visualizing it
+        # Refresh all
+        if self.LoadMRI.vol_dim== 3:
+            self.LoadMRI.update_slices(0,idx,data_view)
+        else:
+            for i in 0,1,2:
+                self.LoadMRI.update_slices(i,idx,data_view)
 
 
-    def load_segmentation(self,filename):
+    def load_segmentation(self,filename,data_view,idx):
         """
         Loads files including "-segmentation" in filename as segmentation label mask.
 
@@ -82,9 +88,24 @@ class LoadImage4D:
         vol = sITK.GetArrayFromImage(img_flipped)
 
         #combine segmentation and anat
-        self.LoadMRI.paintbrush.label_volume = np.maximum(self.LoadMRI.paintbrush.label_volume, vol)
+        if data_view=='sagittal':
+            #self.LoadMRI.paintbrush.label_volume[idx] = np.swapaxes(vol, 1, 2)  #transpose and flip in x and y # #
+            self.LoadMRI.paintbrush.label_volume[idx] = np.maximum(self.LoadMRI.paintbrush.label_volume[idx], np.swapaxes(vol, 1, 2))
+        else:
+            #self.LoadMRI.paintbrush.label_volume[idx] = vol
+            self.LoadMRI.paintbrush.label_volume[idx] = np.maximum(self.LoadMRI.paintbrush.label_volume[idx], vol)
 
-
+        #directly visualizing it
+        # Refresh all
+        if self.LoadMRI.vol_dim== 3:
+            self.LoadMRI.update_slices(0,idx,data_view)
+        else:
+            for i in 0,1,2:
+                self.LoadMRI.update_slices(i,idx,data_view)
+        #directly generating supervised heatmap!
+        roi_indices = np.unique(vol)
+        print(vol)
+        self.LoadMRI.mrid_tags.update_heatmap(data_view,idx,roi_indices)
 
 
 
@@ -116,7 +137,6 @@ class LoadImage4D:
         counts_dict = dict(counts)
 
         tag_labels = False
-
 
         for i, label in enumerate(labels):
             if label.endswith("1"):

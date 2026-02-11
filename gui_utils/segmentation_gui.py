@@ -1,7 +1,7 @@
 # This Python file uses the following encoding: utf-8
-from core.segmentation.threshold import ThresholdSegmentation
-from core.segmentation.initialization import SegmentationInitialization
-from core.segmentation.evolution import SegmentationEvolution
+from core.segmentation import Segmentation, SegmentationInitialization, SegmentationEvolution
+from PySide6.QtGui import QStandardItem
+
 
 class SegmentationGUI:
     """
@@ -21,7 +21,9 @@ class SegmentationGUI:
     """
     def __init__(self,MW):
         """Initialize the segmentation GUI and connect UI elements to corresponding handlers."""
+        self.LoadMRI = MW.LoadMRI
         self.ui = MW.ui
+        self.initialization_first_time = True
         self.ui.checkBox_threshold.stateChanged.connect(self.on_threshold_changed)
         self.ui.pushButton_Next1.clicked.connect(self.active_bubbles)
         self.ui.pushButton_Back2.clicked.connect(self.threshold_seg)
@@ -38,52 +40,53 @@ class SegmentationGUI:
         if checked:  # If true, original images not needed
             self.LoadMRI.threshold_on = True
             #Segmentation
-            self.LoadMRI.Threshold = ThresholdSegmentation(self.LoadMRI)
-            #threshold limits
-            self.ui.doubleSpinBox_lower.setValue(self.LoadMRI.Threshold.lower)
-            self.ui.ScrollBar_lower.setValue(self.LoadMRI.Threshold.lower)
-            self.ui.doubleSpinBox_upper.setValue(self.LoadMRI.Threshold.upper)
-            self.ui.ScrollBar_upper.setValue(self.LoadMRI.Threshold.upper)
-            self.ui.doubleSpinBox_lower.setRange(0,int(self.LoadMRI.volume[self.LoadMRI.thres_idx][0].max())+1)
-            self.ui.ScrollBar_lower.setRange(0,int(self.LoadMRI.volume[self.LoadMRI.thres_idx][0].max())+1)
-            self.ui.doubleSpinBox_upper.setRange(0,int(self.LoadMRI.volume[self.LoadMRI.thres_idx][0].max())+1)
-            self.ui.ScrollBar_upper.setRange(0,int(self.LoadMRI.volume[self.LoadMRI.thres_idx][0].max())+1)
-            self.ui.doubleSpinBox_lower.valueChanged.connect(self.on_spin_changed_lower)
-            self.ui.ScrollBar_lower.valueChanged.connect(self.on_scroll_changed_lower)
-            self.ui.doubleSpinBox_upper.valueChanged.connect(self.on_spin_changed_upper)
-            self.ui.ScrollBar_upper.valueChanged.connect(self.on_scroll_changed_upper)
+            if not hasattr(self.LoadMRI, 'Segmentation'):
+                self.LoadMRI.Segmentation = Segmentation(self.LoadMRI)
+                #threshold limits
+                self.ui.doubleSpinBox_lower.setValue(self.LoadMRI.Segmentation.lower)
+                self.ui.ScrollBar_lower.setValue(self.LoadMRI.Segmentation.lower)
+                self.ui.doubleSpinBox_upper.setValue(self.LoadMRI.Segmentation.upper)
+                self.ui.ScrollBar_upper.setValue(self.LoadMRI.Segmentation.upper)
+                self.ui.doubleSpinBox_lower.setRange(0,int(self.LoadMRI.volume[0][0].max())+1)
+                self.ui.ScrollBar_lower.setRange(0,int(self.LoadMRI.volume[0][0].max())+1)
+                self.ui.doubleSpinBox_upper.setRange(0,int(self.LoadMRI.volume[0][0].max())+1)
+                self.ui.ScrollBar_upper.setRange(0,int(self.LoadMRI.volume[0][0].max())+1)
+                self.ui.doubleSpinBox_lower.valueChanged.connect(self.on_spin_changed_lower)
+                self.ui.ScrollBar_lower.valueChanged.connect(self.on_scroll_changed_lower)
+                self.ui.doubleSpinBox_upper.valueChanged.connect(self.on_spin_changed_upper)
+                self.ui.ScrollBar_upper.valueChanged.connect(self.on_scroll_changed_upper)
 
-            #threshold buttons
-            self.ui.radioButton_bounded.toggled.connect(
-                lambda checked: (setattr(self.LoadMRI.Threshold, 'threshold_mode', 'bounded'), self.update_threshold_display()) if checked else None
-            )
-            self.ui.radioButton_lower.toggled.connect(
-                lambda checked: (setattr(self.LoadMRI.Threshold, 'threshold_mode', 'lower'), self.update_threshold_display()) if checked else None
-            )
-            self.ui.radioButton_upper.toggled.connect(
-                lambda checked: (setattr(self.LoadMRI.Threshold, 'threshold_mode', 'upper'), self.update_threshold_display()) if checked else None
-            )
+                #threshold buttons
+                self.ui.radioButton_bounded.toggled.connect(
+                    lambda checked: (setattr(self.LoadMRI.Segmentation, 'threshold_mode', 'bounded'), self.update_threshold_display()) if checked else None
+                )
+                self.ui.radioButton_lower.toggled.connect(
+                    lambda checked: (setattr(self.LoadMRI.Segmentation, 'threshold_mode', 'lower'), self.update_threshold_display()) if checked else None
+                )
+                self.ui.radioButton_upper.toggled.connect(
+                    lambda checked: (setattr(self.LoadMRI.Segmentation, 'threshold_mode', 'upper'), self.update_threshold_display()) if checked else None
+                )
 
             #threshold ON/OFF
             self.ui.checkBox_threshold.setText("Threshold ON")
             self.update_threshold_display()
-            self.LoadMRI.intensity_table.update_table("Threshold",0)
+            #self.LoadMRI.intensity_table.update_table("Threshold",0)
         else:  # If false, original images needed and loaded incase indexes have changed
             self.LoadMRI.threshold_on = False
             self.ui.checkBox_threshold.setText("Threshold OFF")
             for _,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
                 for view_name, widget in vtk_widget_image.items():
-                    if view_name in self.LoadMRI.actors_non_mainimage[self.LoadMRI.thres_idx]:
+                    if view_name in self.LoadMRI.actors_non_mainimage[0]:
                         renderer = self.LoadMRI.renderers[0][view_name]
-                        renderer.RemoveActor(self.LoadMRI.actors_non_mainimage[self.LoadMRI.thres_idx][view_name])
-                        del self.LoadMRI.actors_non_mainimage[self.LoadMRI.thres_idx][view_name]
+                        renderer.RemoveActor(self.LoadMRI.actors_non_mainimage[0][view_name])
+                        del self.LoadMRI.actors_non_mainimage[0][view_name]
                         widget.GetRenderWindow().Render()
 
-            self.LoadMRI.volume[self.LoadMRI.thres_idx] = {}
+            #self.LoadMRI.volume[0] = {}
             ##if more files!!!
-            self.LoadMRI.actors_non_mainimage[self.LoadMRI.thres_idx] = {}
-            self.LoadMRI.intensity_table.update_table("Threshold",0)
-            self.LoadMRI.update_slices(0)
+            #self.LoadMRI.actors_non_mainimage[0] = {}
+            #self.LoadMRI.intensity_table.update_table("Threshold",0)
+            self.LoadMRI.update_slices(0,0,'coronal')
 
 
     def threshold_seg(self):
@@ -94,64 +97,91 @@ class SegmentationGUI:
 
     def update_threshold_display(self):
         """Refresh the thresholded image display according to current mode and bounds."""
-        if self.LoadMRI.Threshold.threshold_mode == 'bounded':
-            self.LoadMRI.th_img = self.LoadMRI.Threshold.smooth_binary_threshold(self.LoadMRI.volume[self.LoadMRI.thres_idx][0], lower=self.LoadMRI.Threshold.lower, upper=self.LoadMRI.Threshold.upper)
+        if self.LoadMRI.Segmentation.threshold_mode == 'bounded':
+            self.LoadMRI.th_img = self.LoadMRI.Segmentation.smooth_binary_threshold(self.LoadMRI.volume[0][0], lower=self.LoadMRI.Segmentation.lower, upper=self.LoadMRI.Segmentation.upper)
             self.ui.ScrollBar_lower.setEnabled(True)
             self.ui.doubleSpinBox_lower.setEnabled(True)
             self.ui.ScrollBar_upper.setEnabled(True)
             self.ui.doubleSpinBox_upper.setEnabled(True)
-        elif self.LoadMRI.Threshold.threshold_mode == 'lower':
-            self.LoadMRI.th_img = self.LoadMRI.Threshold.smooth_binary_threshold(self.LoadMRI.volume[self.LoadMRI.thres_idx][0], lower=self.LoadMRI.Threshold.lower, upper=None)
+        elif self.LoadMRI.Segmentation.threshold_mode == 'lower':
+            self.LoadMRI.th_img = self.LoadMRI.Segmentation.smooth_binary_threshold(self.LoadMRI.volume[0][0], lower=self.LoadMRI.Segmentation.lower, upper=None)
             self.ui.ScrollBar_lower.setEnabled(True)
             self.ui.doubleSpinBox_lower.setEnabled(True)
             self.ui.ScrollBar_upper.setEnabled(False)
             self.ui.doubleSpinBox_upper.setEnabled(False)
-        elif self.LoadMRI.Threshold.threshold_mode == 'upper':
-            self.LoadMRI.th_img = self.LoadMRI.Threshold.smooth_binary_threshold(self.LoadMRI.volume[self.LoadMRI.thres_idx][0], lower=None, upper=self.LoadMRI.Threshold.upper)
+        elif self.LoadMRI.Segmentation.threshold_mode == 'upper':
+            self.LoadMRI.th_img = self.LoadMRI.Segmentation.smooth_binary_threshold(self.LoadMRI.volume[0][0], lower=None, upper=self.LoadMRI.Segmentation.upper)
             self.ui.ScrollBar_lower.setEnabled(False)
             self.ui.doubleSpinBox_lower.setEnabled(False)
             self.ui.ScrollBar_upper.setEnabled(True)
             self.ui.doubleSpinBox_upper.setEnabled(True)
-        self.LoadMRI.Threshold.only_update_displayed_image()
+        self.LoadMRI.Segmentation.only_update_displayed_image()
+
+        #create table entry or update with new volume
+        indices = [i for i, val in enumerate(self.LoadMRI.intensity_table0.file_name) if val == 'Threshold Image']
+        if not indices:
+            self.LoadMRI.intensity_table0.update_table('Threshold Image',self.LoadMRI.th_img/ 32767.0, 0)
+        else:
+            index = indices[0]
+            self.LoadMRI.intensity_table0.intensity_volumes[index] = self.LoadMRI.th_img/ 32767.0
+            #update table
+            self.LoadMRI.intensity_table0.update_intensity_values(0)
 
     # --- Synchronize UI values for lower/upper threshold bounds ---
     def on_spin_changed_lower(self,val):
-        self.LoadMRI.Threshold.lower = val
-        self.ui.ScrollBar_lower.setValue(self.LoadMRI.Threshold.lower)
+        self.LoadMRI.Segmentation.lower = val
+        self.ui.ScrollBar_lower.blockSignals(True)
+        self.ui.ScrollBar_lower.setValue(self.LoadMRI.Segmentation.lower)
+        self.ui.ScrollBar_lower.blockSignals(False)
         self.check_rangeLow()
         self.update_threshold_display()
+        return
 
     def on_spin_changed_upper(self,val):
-        self.LoadMRI.Threshold.upper = val
-        self.ui.ScrollBar_upper.setValue(self.LoadMRI.Threshold.upper)
+        self.LoadMRI.Segmentation.upper = val
+        self.ui.ScrollBar_upper.blockSignals(True)
+        self.ui.ScrollBar_upper.setValue(self.LoadMRI.Segmentation.upper)
+        self.ui.ScrollBar_upper.blockSignals(False)
         self.check_rangeUp()
         self.update_threshold_display()
 
     def on_scroll_changed_lower(self,val):
-        self.LoadMRI.Threshold.lower = val
-        self.ui.doubleSpinBox_lower.setValue(self.LoadMRI.Threshold.lower)
+        self.LoadMRI.Segmentation.lower = val
+        self.ui.doubleSpinBox_lower.blockSignals(True)
+        self.ui.doubleSpinBox_lower.setValue(self.LoadMRI.Segmentation.lower)
+        self.ui.doubleSpinBox_lower.blockSignals(False)
         self.check_rangeLow()
         self.update_threshold_display()
 
     def on_scroll_changed_upper(self,val):
-        self.LoadMRI.Threshold.upper = val
-        self.ui.doubleSpinBox_upper.setValue(self.LoadMRI.Threshold.upper)
+        self.LoadMRI.Segmentation.upper = val
+        self.ui.doubleSpinBox_upper.blockSignals(True)
+        self.ui.doubleSpinBox_upper.setValue(self.LoadMRI.Segmentation.upper)
+        self.ui.doubleSpinBox_upper.blockSignals(False)
         self.check_rangeUp()
         self.update_threshold_display()
 
     def check_rangeUp(self):
         """Ensure upper bound >= lower bound."""
-        if self.LoadMRI.Threshold.upper < self.LoadMRI.Threshold.lower:
-            self.LoadMRI.Threshold.lower = self.LoadMRI.Threshold.upper
-            self.ui.doubleSpinBox_lower.setValue(self.LoadMRI.Threshold.lower)
-            self.ui.ScrollBar_lower.setValue(self.LoadMRI.Threshold.lower)
+        if self.LoadMRI.Segmentation.upper < self.LoadMRI.Segmentation.lower:
+            self.LoadMRI.Segmentation.lower = self.LoadMRI.Segmentation.upper
+            self.ui.doubleSpinBox_lower.blockSignals(True)
+            self.ui.ScrollBar_lower.blockSignals(True)
+            self.ui.doubleSpinBox_lower.setValue(self.LoadMRI.Segmentation.lower)
+            self.ui.ScrollBar_lower.setValue(self.LoadMRI.Segmentation.lower)
+            self.ui.doubleSpinBox_lower.blockSignals(False)
+            self.ui.ScrollBar_lower.blockSignals(False)
 
     def check_rangeLow(self):
         """Ensure upper bound >= lower bound."""
-        if self.LoadMRI.Threshold.lower > self.LoadMRI.Threshold.upper:
-            self.LoadMRI.Threshold.upper = self.LoadMRI.Threshold.lower
-            self.ui.doubleSpinBox_upper.setValue(self.LoadMRI.Threshold.upper)
-            self.ui.ScrollBar_upper.setValue(self.LoadMRI.Threshold.upper)
+        if self.LoadMRI.Segmentation.lower > self.LoadMRI.Segmentation.upper:
+            self.LoadMRI.Segmentation.upper = self.LoadMRI.Segmentation.lower
+            self.ui.doubleSpinBox_upper.blockSignals(True)
+            self.ui.ScrollBar_upper.blockSignals(True)
+            self.ui.doubleSpinBox_upper.setValue(self.LoadMRI.Segmentation.upper)
+            self.ui.ScrollBar_upper.setValue(self.LoadMRI.Segmentation.upper)
+            self.ui.doubleSpinBox_upper.blockSignals(False)
+            self.ui.ScrollBar_upper.blockSignals(False)
 
 
     def active_bubbles(self):
@@ -260,8 +290,12 @@ class SegmentationGUI:
         #if self.evolution_first_time:
             # SChange button icons: play, pause
         button = self.ui.toolButton_runEvo
-        self.LoadMRI.SegEvolution = SegmentationEvolution(self.LoadMRI,self.LoadMRI.SegInitialization,self.LoadMRI.Threshold,button)
-        self.ui.toolButton_runEvo.clicked.connect(self.LoadMRI.SegEvolution.initialize_segmentation_itk)
+        self.LoadMRI.SegEvolution = SegmentationEvolution(self.LoadMRI,self.LoadMRI.SegInitialization,self.LoadMRI.Segmentation,button)
+        self.LoadMRI.SegEvolution.initialize_segmentation_itk()
+        self.ui.toolButton_runEvo.clicked.connect(lambda val: self.LoadMRI.SegEvolution.segmentation_itk(iterations=20))
+        self.ui.toolButton_forwardEvo.clicked.connect(lambda val: self.LoadMRI.SegEvolution.segmentation_itk(iterations=2))
+
+
         #    self.evolution_first_time = False
         #else:
         #    self.load_mri.SegEvolution.new_evolution()

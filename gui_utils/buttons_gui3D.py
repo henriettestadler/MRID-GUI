@@ -9,6 +9,8 @@ from core.interactor_style import CustomInteractorStyle
 from utils.minimap_handler import Minimap
 from gui_utils.paintbrush_gui import PaintbrushGUI
 from core.registration import Registration
+from core.segmentation import Segmentation
+from gui_utils.segmentation_gui import SegmentationGUI
 
 # This Python file uses the following encoding: utf-8
 from PySide6.QtWidgets import QDockWidget,QDialog,QVBoxLayout
@@ -82,6 +84,7 @@ class ButtonsGUI_3D:
         self.ui.actionRegister.triggered.connect(self.initialize_registration)
         self.ui.actionResample.triggered.connect(self.initialize_resampling)
         self.ui.actionPaintbrush.triggered.connect(self.initialize_paintbrush)
+        self.ui.actionSegmentation.triggered.connect(self.initialize_segmentation)
 
 
 
@@ -184,7 +187,7 @@ class ButtonsGUI_3D:
         # initialize Minimap class
         if data_index==0:
             self.LoadMRI.minimap = Minimap(self.LoadMRI)
-
+        idx=0
         pan_distance = 0.4
         go_down_btn = getattr(self.ui, f"go_down_data3d{idx}")
         go_up_btn = getattr(self.ui, f"go_up_data3d{idx}")
@@ -194,6 +197,7 @@ class ButtonsGUI_3D:
         go_up_btn.clicked.connect(lambda _, v='coronal', i=0: self.LoadMRI.minimap.pan_arrows(view_name=v,diff_x=0,diff_y=pan_distance,data_index=idx,data_3d=True))
         go_right_btn.clicked.connect(lambda _, v='coronal', i=0: self.LoadMRI.minimap.pan_arrows(view_name=v,diff_x=pan_distance,diff_y=0,data_index=idx,data_3d=True))
         go_left_btn.clicked.connect(lambda _, v='coronal', i=0: self.LoadMRI.minimap.pan_arrows(view_name=v,diff_x=-pan_distance,diff_y=0,data_index=idx,data_3d=True))
+        idx=1
         go_down_btn = getattr(self.ui, f"go_down_data3d{idx}")
         go_up_btn = getattr(self.ui, f"go_up_data3d{idx}")
         go_right_btn = getattr(self.ui, f"go_right_data3d{idx}")
@@ -202,6 +206,7 @@ class ButtonsGUI_3D:
         go_up_btn.clicked.connect(lambda _, v='sagittal', i=1: self.LoadMRI.minimap.pan_arrows(view_name=v,diff_x=0,diff_y=pan_distance,data_index=idx,data_3d=True))
         go_right_btn.clicked.connect(lambda _, v='sagittal', i=1: self.LoadMRI.minimap.pan_arrows(view_name=v,diff_x=pan_distance,diff_y=0,data_index=idx,data_3d=True))
         go_left_btn.clicked.connect(lambda _, v='sagittal', i=1: self.LoadMRI.minimap.pan_arrows(view_name=v,diff_x=-pan_distance,diff_y=0,data_index=idx,data_3d=True))
+        idx=2
         go_down_btn = getattr(self.ui, f"go_down_data3d{idx}")
         go_up_btn = getattr(self.ui, f"go_up_data3d{idx}")
         go_right_btn = getattr(self.ui, f"go_right_data3d{idx}")
@@ -284,6 +289,22 @@ class ButtonsGUI_3D:
         self.ui.pushButton_registration.clicked.connect(
             lambda: setattr(self.LoadMRI, "Registration", Registration(self.LoadMRI,self,self.ui.comboBox_movingimg.currentIndex()))
         )
+
+    def initialize_segmentation(self):
+        """
+        Initialize segmenation workflow.
+        """
+        dock = QDockWidget("Segmentation", self.MW)
+        dock.setWidget(self.ui.groupBox_segmentation)
+        self.MW.addDockWidget(Qt.RightDockWidgetArea, dock)
+        #resize
+        min_w = self.MW.minimumWidth()
+        min_h = self.MW.minimumHeight()
+        self.MW.setMinimumSize(min_w+300,min_h)
+
+        #Connect paintbrush for segmentation and MRID-tags
+        self.LoadMRI.SegmentationGUI = SegmentationGUI(self.MW)
+        #self.LoadMRI.Segmentation = Segmentation(self.LoadMRI)
 
 
 
