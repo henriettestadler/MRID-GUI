@@ -77,7 +77,6 @@ class LoadMRI(QObject):
                     self.scale_bar[view_name] = Scale(self,self.vol_dim)
                 self.scale_bar[view_name].create_bar(renderer,view_name,length_cm=1.0)
 
-
         if first_time:
             #fit to window to make it look nice
             if vol_dim==4: #4d
@@ -323,22 +322,22 @@ class LoadMRI(QObject):
         pos[data_view] = camera.GetPosition()
 
         self.timestamp4D[image_index] = int(index)
-        self.volume[data_index][image_index] = self.volume4D[data_index][self.timestamp4D[image_index], :, :, :] #echo 8
+        self.volume[data_index][image_index] = self.volume4D[data_index][self.timestamp4D[image_index], :, :, :].copy() #echo 8
 
-        getattr(self, f"contrastClass_{data_index}").recompute_luttable(self.volume[data_index][image_index],image_index,data_index)
+        getattr(self, f"contrastClass_{data_index}").recompute_luttable(image_index,data_index)
 
         #Refresh views
-        z, y, x = self.slice_indices[data_index]
+        #z, y, x = self.slice_indices[data_index]
         #viewname -> maybe change for sagittal
-        if data_view=='sagittal':
-            self.setup_vtkdata(self.volume[data_index][image_index][z, :, :].T, self.vtk_widgets[image_index][data_view], data_view,image_index,data_index,cam_reset=False)
-        else:
-            self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], self.vtk_widgets[image_index][data_view], data_view,image_index,data_index,cam_reset=False)
+        #if data_view=='sagittal':
+        #    self.setup_vtkdata(self.volume[data_index][image_index][z, :, :].T, self.vtk_widgets[image_index][data_view], data_view,image_index,data_index,cam_reset=False)
+        #else:
+        #    self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], self.vtk_widgets[image_index][data_view], data_view,image_index,data_index,cam_reset=False)
 
         camera.SetParallelScale(scale[data_view])
         camera.SetFocalPoint(fp[data_view])
         camera.SetPosition(pos[data_view])
-        renderer.ResetCameraClippingRange()
+        #renderer.ResetCameraClippingRange()
 
         self.update_slices(image_index,data_index,data_view)
 

@@ -17,16 +17,24 @@ from PySide6.QtCore import QObject, Property, Signal, QByteArray
 
 
 def process_in_parallel(args):
-    mrid, mrid_dict, sessionpath, atlas, atlaslabelsdf, dwi, fixed_coordinates_path, moving_coordinates_path = args
+    mrid, mrid_dict, sessionpath, atlas, atlaslabelsdf, dwi_path,t2s_path,mask_path,fixed_coordinates_path, moving_coordinates_path, channel_separation, total_ch = args
 
     mrid = mrid.lower()
     savepath = os.path.join(sessionpath, 'analysed',mrid)
 
-    # Memory-mapped loading (CRITICAL)
+    # Memory-mapped loading
     fixed_coordinates = np.load(fixed_coordinates_path, mmap_mode="r")
     moving_coordinates = np.load(moving_coordinates_path, mmap_mode="r")
+    nii_dwi=nib.load(dwi_path)
+    dwi=np.asanyarray(nii_dwi.dataobj)
+    dwi=dwi[:,:,:,0]
+    nii_t2s=nib.load(t2s_path)
+    t2s=np.asanyarray(nii_t2s.dataobj)
+    nii_mask=nib.load(mask_path)
+    mask=np.asanyarray(nii_mask.dataobj)
 
-    fitted_points, regionNumbers = chmap.main(
+
+    fitted_points,regionNames,regionNumbers,df,barcode_r,barcode_d,CA1,dwi1Dsignal,pyrChIdx = chmap.main(
         mrid_dict,
         mrid,
         savepath,
@@ -34,11 +42,15 @@ def process_in_parallel(args):
         atlas,
         atlaslabelsdf,
         dwi,
+        t2s,
+        mask,
         fixed_coordinates,
-        moving_coordinates
+        moving_coordinates,
+        channel_separation,
+        total_ch
     )
 
-    return fitted_points,regionNumbers
+    return fitted_points,regionNames,regionNumbers,df,barcode_r,barcode_d, mrid,CA1,dwi1Dsignal,pyrChIdx
 
 class ElectrodeLoc:
     """
@@ -88,7 +100,6 @@ class ElectrodeLoc:
             for roi_name in roi_names:
                 heatmap_filename = ".".join((self.filename + "-" + roi_name + "-heatmap", "nii", "gz"))
                 heatmap_path = os.path.join(self.sessionpath, "anat", heatmap_filename)
-                print(heatmap_path)
                 if os.path.exists(heatmap_path):
                     #warps and resamples heatmaps
                     savepath = os.path.join(self.LoadMRI.session_path, 'analysed',roi_name,self.orientation)
@@ -105,91 +116,93 @@ class ElectrodeLoc:
 
         """
         roi_names = self.get_roinames(os.path.join(self.sessionpath, "anat", "labels.txt"))
-        pklfile_path,atlas,atlaslabelsdf,dwi,moving_coordinates_path, fixed_coordinates_path = self.get_atlas_points()
+        pklfile_path,atlas,atlaslabelsdf,dwi_path,t2s_path,mask_path,moving_coordinates_path, fixed_coordinates_path,channel_separation, total_ch = self.get_atlas_points()
 
         with open(pklfile_path, 'rb') as f:
             mrid_dict = pickle.load(f)
 
         totalregionNumbers = []
-
-
-        ## Parallelism takes 5:27min (2tags)
+        totalmrid = []
+        totaldf = []
+        totalbarcode_d = []
+        totalbarcode_r = []
         totalfitted_points = []
-        args_list = [
-            (mrid, mrid_dict, self.sessionpath, atlas, atlaslabelsdf,
-             dwi, fixed_coordinates_path, moving_coordinates_path)
-            for mrid in roi_names
-        ]
+        totalCA1 =  []
+        totaldwi1Dsignal = []
+        totalregionNames= []
+        totalpyrChIdx= []
 
-        with ProcessPoolExecutor() as executor:
-            futures = [executor.submit(process_in_parallel, args) for args in args_list]
+        ## Parallelism
+        #args_list = [
+        #    (mrid, mrid_dict, self.sessionpath, atlas, atlaslabelsdf,
+        #     dwi_path,t2s_path,mask_path,fixed_coordinates_path, moving_coordinates_path,
+        #     channel_separation, total_ch)
+        #    for mrid in roi_names
+        #]
 
-            for future in as_completed(futures):
-                fitted_points, regionNumbers = future.result()
-                totalregionNumbers.extend(regionNumbers)
-                totalfitted_points.extend(fitted_points)
+        #with ProcessPoolExecutor() as executor:
+        #    futures = [executor.submit(process_in_parallel, args) for args in args_list]
 
-        ## For loop takes 8:14min (2tags)
-        #fixed_coordinates = np.load(fixed_coordinates_path, mmap_mode="r")
-        #moving_coordinates = np.load(moving_coordinates_path, mmap_mode="r")
-        #for mrid in roi_names: ##different threads for each mrid?
-        #    mrid = mrid.lower()
-        #    savepath = os.path.join(self.sessionpath, 'analysed',mrid)
-        #    fitted_points, regionNumbers = chmap.main(mrid_dict,mrid, savepath, self.sessionpath,atlas,atlaslabelsdf,dwi, fixed_coordinates,moving_coordinates)
-        #    totalregionNumbers.extend(regionNumbers)
+        #    for future in as_completed(futures):
+        #        fitted_points,regionNames,regionNumbers,df,barcode_r,barcode_d,mrid,CA1,dwi1Dsignal,pyrChIdx = future.result()
+        #        totalregionNumbers.extend(regionNumbers)
+        #        totalfitted_points.append(fitted_points)
+        #        totaldf.append(df)
+        #        totalbarcode_r.append(barcode_r)
+        #        totalbarcode_d.append(barcode_d)
+        #        totalmrid.append(mrid)
+        #        totalCA1.append(CA1)
+        #        totaldwi1Dsignal.append(dwi1Dsignal)
+        #        totalregionNames.append(regionNames)
+        #        totalpyrChIdx.append(pyrChIdx)
 
-        print(totalregionNumbers)
+        ## For loop
+        fixed_coordinates = np.load(fixed_coordinates_path, mmap_mode="r")
+        moving_coordinates = np.load(moving_coordinates_path, mmap_mode="r")
+        nii_dwi=nib.load(dwi_path)
+        dwi=np.asanyarray(nii_dwi.dataobj)
+        dwi=dwi[:,:,:,0]
+        nii_t2s=nib.load(t2s_path)
+        t2s=np.asanyarray(nii_t2s.dataobj)
+        nii_mask=nib.load(mask_path)
+        mask=np.asanyarray(nii_mask.dataobj)
+
+        for mrid in roi_names: ##different threads for each mrid?
+            mrid = mrid.lower()
+            savepath = os.path.join(self.sessionpath, 'analysed',mrid)
+            fitted_points, regionNames,regionNumbers,df,barcode_r,barcode_d,CA1,dwi1Dsignal,pyrChIdx = chmap.main(mrid_dict,mrid, savepath, self.sessionpath,atlas,atlaslabelsdf,dwi, t2s,mask,fixed_coordinates,moving_coordinates,channel_separation,total_ch)
+            totalregionNumbers.extend(regionNumbers)
+            totalfitted_points.append(fitted_points)
+            totaldf.append(df)
+            totalbarcode_r.append(barcode_r)
+            totalbarcode_d.append(barcode_d)
+            totalmrid.append(mrid)
+            totalCA1.append(CA1)
+            totaldwi1Dsignal.append(dwi1Dsignal)
+            totalregionNames.append(regionNames)
+            totalpyrChIdx.append(pyrChIdx)
+
         totalregionNumbers = list(dict.fromkeys(totalregionNumbers))
         totalregionNumbers = list(map(int, totalregionNumbers))
 
-
         ## totalregionNumbers and atlas file: WHS_SD_rat_atlas_v4.nii.gz
         ## all regions in totalregionNumbers from WHS_SD_rat_atlas_v4.nii.gz = 1 else 0
-        img = sitk.ReadImage(self.atlas_path)
-        arr = sitk.GetArrayFromImage(img)
-        mask = np.isin(arr, totalregionNumbers)
-        arr_filtered = np.where(mask, arr, 0)
-        out = sitk.GetImageFromArray(arr_filtered)
-        out.CopyInformation(img)
-        save_path = os.path.join(self.sessionpath, "atlas_filtered.nii.gz")
-        sitk.WriteImage(out, save_path)
+        #img = sitk.ReadImage(self.atlas_path)
+        #arr = sitk.GetArrayFromImage(img)
+        #mask2 = np.isin(arr, totalregionNumbers)
+        #arr_filtered = np.where(mask2, arr, 0)
+        #out = sitk.GetImageFromArray(arr_filtered)
+        #out.CopyInformation(img)
+        #save_path = os.path.join(self.sessionpath, "atlas_filtered.nii.gz")
+        #sitk.WriteImage(out, save_path)
+
         ## somehow highlight fitted points
         ## visualize in 3D
         ## QtQuick3D
 
-
-
-
         #return
-        #for mrid in roi_names:
-        #    for data_index in range(len(self.LoadMRI.vtk_widgets[0])):
-        #        data_view = list(self.LoadMRI.vtk_widgets[0].keys())[data_index]
-        #        filename = self.LoadMRI.file_name[data_index][0:self.LoadMRI.file_name[data_index].find('.')] #[os.path.splitext(f)[0] for f in self.LoadMRI.file_name]
-        #        filename_4d_warped = ".".join((filename + "-resampled-warped", "nii", "gz"))
-        #        filename_4d_warped_path = os.path.join(self.savepath, filename_4d_warped)
-        #        img_4d= sitk.ReadImage(filename_4d_warped_path)
-        #        vol = sitk.GetArrayFromImage(img_4d)
-        #        if data_view=='sagittal':
-        #            img_slice = np.fliplr(vol[:,:,round(fitted_points[0][0])].T)
-        #            #spacing = []
-        #        else:
-        #            img_slice = vol[int(fitted_points[0][2]),:,:]
-        #        spacing = img_4d.GetSpacing() #xyz # #
-        #        print('fitted_points',fitted_points)
-        #        self.visualize_4Dwarpedslice(img_slice,spacing,data_index,data_view)
-        #        renderer = self.LoadMRI.renderers[3][data_view]
-        #        for idx in range(len(fitted_points)):
-        #            if data_view=='sagittal':
-        #                x = vol.shape[0]-1-fitted_points[idx][2]
-        #                y = fitted_points[idx][1]
-        #                spacing = np.array(spacing)
-        #                spacing[2] = spacing[0]
-        #            else:
-        #                x = fitted_points[idx][0]
-        #                y = fitted_points[idx][1]
-        #            self.add_point(renderer, x,y,spacing,vol)
 
-        return save_path
+        return roi_names,totaldf,totalbarcode_r,totalbarcode_d,totalmrid,totalCA1,totaldwi1Dsignal,totalregionNames,totalpyrChIdx,totalfitted_points
 
     def get_roinames(self,filename):
         """
@@ -221,7 +234,7 @@ class ElectrodeLoc:
 
 
 
-    def add_point(self,renderer, x, y,spacing,vol):
+    def add_point(self,renderer, x, y,spacing,vol,idx):
         """
         Add point of found electrode Gaussian center to 4D MRI slice.
         """
@@ -242,7 +255,6 @@ class ElectrodeLoc:
         actor.GetProperty().SetColor(1, 0, 0)  # red
 
         renderer.AddActor(actor)
-        renderer.GetRenderWindow().Render()
 
         return actor
 
@@ -270,15 +282,22 @@ class ElectrodeLoc:
         img_vtk.SetSpacing(spacing)
         img_vtk.GetPointData().SetScalars(vtk_data)
 
-        #create new renderer
-        renderer = vtk.vtkRenderer()
-        vtk_widget.GetRenderWindow().AddRenderer(renderer)
-        vtk_widget.GetRenderWindow().SetMultiSamples(16)
-        renderer.SetUseDepthPeeling(1)
-        renderer.SetMaximumNumberOfPeels(200)
-        renderer.SetOcclusionRatio(0.05)
+        if data_view not in self.LoadMRI.renderers[3]:
+            #create new renderer
+            renderer = vtk.vtkRenderer()
+            vtk_widget.GetRenderWindow().AddRenderer(renderer)
+            vtk_widget.GetRenderWindow().SetMultiSamples(16)
+            renderer.SetUseDepthPeeling(1)
+            renderer.SetMaximumNumberOfPeels(200)
+            renderer.SetOcclusionRatio(0.05)
 
-        self.LoadMRI.renderers[3][data_view]=renderer
+            self.LoadMRI.renderers[3][data_view]=renderer
+        else:
+            renderer = self.LoadMRI.renderers[3][data_view]
+            renderer.RemoveAllViewProps()
+
+        if hasattr(self,'actor_4Dwarped'):
+            renderer.RemoveActor(self.actor_4Dwarped)
 
         nonzero_y, nonzero_x = np.nonzero(img_slice)
         #spacing_x, spacing_y = spacing[1], spacing[0]  # careful: VTK x=cols, y=rows
@@ -312,10 +331,9 @@ class ElectrodeLoc:
         renderer.AddActor(actor)
 
         self.LoadMRI.heatmap = True
-        self.actor_heatmap = actor
+        self.actor_4Dwarped = actor
 
-
-        vtk_widget.GetRenderWindow().Render()
+        return
         #add minirender, interactor and other stuff
         #scale = camera.GetParallelScale()
 
@@ -347,14 +365,12 @@ class ElectrodeLoc:
             atlaslabelsdf=handlers.read_whs_labels(labels_path)
 
             dwi_path=os.path.join(root,"WHS_SD_rat_DWI_v1.01.nii.gz")
-            nii_dwi=nib.load(dwi_path)
-            dwi=np.asanyarray(nii_dwi.dataobj)
-            dwi=dwi[:,:,:,0]
+            t2s_path=os.path.join(root,"WHS_SD_rat_T2star_v1.01.nii.gz")
+            mask_path=os.path.join(root,"WHS_SD_v2_brainmask_bin.nii.gz")
 
-            #ch_coords = channel_mapper.map_electrodes_main(fitted_points, self.mrid_dict, channel_separation = channel_separation, total_ch = total_ch)
-            #dwi1Dsignal = channel_mapper.map_channels_to_atlas(ch_coords, moving_coordinates, fixed_coordinates, self.LoadMRI.session_path,atlas,atlaslabelsdf,dwi)
-            #np.save(os.path.join(self.sessionpath, "analysed", mrid, "dwi_1D_cross_section_pixel_values.npy"),dwi1Dsignal)
-            return pklfile,atlas,atlaslabelsdf,dwi,moving_coordinates_path, fixed_coordinates_path
+            return pklfile,atlas,atlaslabelsdf,dwi_path,t2s_path,mask_path,moving_coordinates_path, fixed_coordinates_path,channel_separation, total_ch
+
+        return None
 
 
 class ChannelVariablesInput(QtWidgets.QDialog):
@@ -460,7 +476,11 @@ class ChannelVariablesInput(QtWidgets.QDialog):
         """
         Opens File Dialog for user to choose labels.txt
         """
-        self.root = QFileDialog.getExistingDirectory(None, 'Select the folder, where Atlas data is saved:', self.MW.LoadMRI.session_path, QFileDialog.ShowDirsOnly)
+        self.root = QFileDialog.getExistingDirectory(
+            None,
+            'Select the folder, where Atlas data is saved:',
+            self.MW.LoadMRI.session_path,
+            QFileDialog.ShowDirsOnly)
         #User cancelled
         if not self.root:
             return
@@ -474,7 +494,7 @@ class ChannelVariablesInput(QtWidgets.QDialog):
         file_name, _ = QFileDialog.getOpenFileName(
             None,
             "Open NIfTI File",
-            "",
+            self.MW.LoadMRI.session_path,
             "NPY files (*.npy)"
         )
 
@@ -491,7 +511,7 @@ class ChannelVariablesInput(QtWidgets.QDialog):
         file_name, _ = QFileDialog.getOpenFileName(
             None,
             "Open NIfTI File",
-            "",
+            self.MW.LoadMRI.session_path,
             "NPY files (*.npy)"
         )
 
@@ -506,7 +526,7 @@ class ChannelVariablesInput(QtWidgets.QDialog):
         file_name, _ = QFileDialog.getOpenFileName(
             None,
             "Please select pkl file",
-            "",
+            self.MW.LoadMRI.session_path,
             "PKL files (*.pkl)"
         )
         #User cancelled

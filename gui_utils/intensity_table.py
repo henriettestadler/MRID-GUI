@@ -149,7 +149,7 @@ class IntensityTable:
         btn.setIcon(self.icon_visible)
         btn.setToolTip("Toggle visibility")
         btn.setAutoRaise(True)
-        btn.clicked.connect(lambda checked, r=self.index , b=btn: self.toggle_visibility(checked,r, b))
+        btn.clicked.connect(lambda checked, r=self.index , b=btn: self.toggle_visibility(checked,r, b,data_index))
         btn.setStyleSheet("""
             QToolButton {
                 border: none;
@@ -214,42 +214,116 @@ class IntensityTable:
 
         !!!At the moment, this function only works for 3D data!!!
         """
-        for vn in 'axial','coronal','sagittal':
-            if vn=='axial':
-                slice = self.intensity_volumes[row][self.MW.LoadMRI.slice_indices[data_index][0],:,:]
-            elif vn=='coronal':
-                slice = self.intensity_volumes[row][:,self.MW.LoadMRI.slice_indices[data_index][1],:]
-            elif vn=='sagittal': #different with .T flip; etc.
-                slice = np.fliplr(self.intensity_volumes[row][:,:,self.MW.LoadMRI.slice_indices[data_index][2]].T)
+        if self.MW.LoadMRI.vol_dim==3:
+            for vn in 'axial','coronal','sagittal':
+                if vn=='axial':
+                    slice = self.intensity_volumes[row][self.MW.LoadMRI.slice_indices[data_index][0],:,:]
+                elif vn=='coronal':
+                    slice = self.intensity_volumes[row][:,self.MW.LoadMRI.slice_indices[data_index][1],:]
+                elif vn=='sagittal': #different with .T flip; etc.
+                    slice = np.fliplr(self.intensity_volumes[row][:,:,self.MW.LoadMRI.slice_indices[data_index][2]].T)
 
-            renderer = self.MW.LoadMRI.renderers[data_index][vn]
-            actors = renderer.GetViewProps()
-            actors.InitTraversal()
+                renderer = self.MW.LoadMRI.renderers[data_index][vn]
+                actors = renderer.GetViewProps()
+                actors.InitTraversal()
 
-            for _ in range(actors.GetNumberOfItems()):
-                actor = actors.GetNextProp()
-                if actor.GetClassName()=="vtkOpenGLTextActor" or actor.GetClassName()=="vtkOpenGLActor" or actor.GetClassName()=="vtkActor2D":
-                    continue
+                for _ in range(actors.GetNumberOfItems()):
+                    actor = actors.GetNextProp()
+                    if actor.GetClassName()=="vtkOpenGLTextActor" or actor.GetClassName()=="vtkOpenGLActor" or actor.GetClassName()=="vtkActor2D":
+                        continue
 
-                image_data = actor.GetInput()
-                if image_data.GetNumberOfScalarComponents()==4:
-                    continue
-                vtk_array = numpy_support.vtk_to_numpy(image_data.GetPointData().GetScalars())
-                vtk_array = vtk_array.reshape(image_data.GetDimensions()[1], image_data.GetDimensions()[0])
-                if np.allclose(vtk_array, slice):
-                    selected_actor = actor
-
-                    if checked:
-                        btn.setIcon(self.icon_visible)
-                        selected_actor.SetVisibility(True)
-                        #should be image index!!
-                        self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
+                    image_data = actor.GetInput()
+                    vtk_array = numpy_support.vtk_to_numpy(image_data.GetPointData().GetScalars())
+                    h, w = image_data.GetDimensions()[1], image_data.GetDimensions()[0]
+                    if image_data.GetNumberOfScalarComponents() == 4:
+                        # RGBA image: reshape to (height, width, 4)
+                        vtk_array = vtk_array.reshape(h, w, 4)
+                        # if you only want the first channel (R), pick it:
+                        vtk_array = vtk_array[:, :, 0]
                     else:
-                        btn.setIcon(self.icon_hidden)
-                        selected_actor.SetVisibility(False)
-                        self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
-                        self.MW.LoadMRI.update_slices(0)
-                    break
+                        # single-component image: reshape to (height, width)
+                        vtk_array = vtk_array.reshape(h, w)
+
+                    #vtk_array = numpy_support.vtk_to_numpy(image_data.GetPointData().GetScalars())
+                    vtk_array = vtk_array.reshape(image_data.GetDimensions()[1], image_data.GetDimensions()[0])
+                    if np.allclose(vtk_array, slice):
+                        selected_actor = actor
+
+                        if checked:
+                            btn.setIcon(self.icon_visible)
+                            selected_actor.SetVisibility(True)
+                            #should be image index!!
+                            self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
+                        else:
+                            btn.setIcon(self.icon_hidden)
+                            selected_actor.SetVisibility(False)
+                            self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
+                            self.MW.LoadMRI.update_slices(0)
+                        break
+        else:
+            for vn in self.MW.LoadMRI.renderers[data_index].keys():
+                renderer = self.MW.LoadMRI.renderers[data_index][vn]
+                render_window = renderer.GetRenderWindow()
+                renderer_collection = render_window.GetRenderers()
+                renderer_collection.InitTraversal()  # start traversal
+                num_renderers = renderer_collection.GetNumberOfItems()  # get number of renderers
+                for r_idx in range(num_renderers):
+                    ren = renderer_collection.GetNextItem()
+
+                    actors = ren.GetViewProps()
+                    actors.InitTraversal()
+                    for a_idx in range(actors.GetNumberOfItems()):
+                        actor = actors.GetNextProp()
+                        slice = self.intensity_volumes[row][self.MW.LoadMRI.slice_indices[data_index][0],:,:]
+
+                        if actor.GetClassName()=="vtkOpenGLTextActor"or actor.GetClassName()=="vtkActor2D" or actor.GetClassName()=="vtkOpenGLActor":
+                            continue
+
+                        image_data = actor.GetInput()
+                        vtk_array = numpy_support.vtk_to_numpy(image_data.GetPointData().GetScalars())
+                        h, w = image_data.GetDimensions()[1], image_data.GetDimensions()[0]  # note: vtk dims are (x, y, z)
+
+                        if image_data.GetNumberOfScalarComponents() == 4:
+                            # RGBA image: reshape to (height, width, 4)
+                            vtk_array = vtk_array.reshape(h, w, 4)
+                            # if you only want the first channel (R), pick it:
+                            vtk_array = vtk_array[:, :, 0]
+                        else:
+                            # single-component image: reshape to (height, width)
+                            vtk_array = vtk_array.reshape(h, w)
+
+                        vtk_array = vtk_array.reshape(image_data.GetDimensions()[1], image_data.GetDimensions()[data_index])
+
+                        #anat
+                        if actor == self.MW.LoadMRI.paintbrush.overlay_actors[vn]:
+                            true_actor = self.MW.LoadMRI.paintbrush.overlay_actors[vn]
+                            if checked:
+                                btn.setIcon(self.icon_visible)
+                                true_actor.SetVisibility(True)
+                                #should be image index!!
+                                self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
+                            else:
+                                btn.setIcon(self.icon_hidden)
+                                true_actor.SetVisibility(False)
+                                self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
+                                self.MW.LoadMRI.update_slices(0)
+                            break
+
+                        if vtk_array.shape == slice.shape:
+                            if np.allclose(vtk_array, slice):
+                                selected_actor = actor
+                                if checked:
+                                    btn.setIcon(self.icon_visible)
+                                    selected_actor.SetVisibility(True)
+                                    #should be image index!!
+                                    self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
+                                else:
+                                    btn.setIcon(self.icon_hidden)
+                                    selected_actor.SetVisibility(False)
+                                    self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
+                                    self.MW.LoadMRI.update_slices(0)
+                                break
+
 
     def update_opacity(self,value,data_index):
         """
@@ -258,34 +332,87 @@ class IntensityTable:
         !!!At the moment, this function only works for 3D data!!!
         """
         row = self.table.currentRow()
-        for vn in 'axial','coronal','sagittal':
-            if vn=='axial':
-                slice = self.intensity_volumes[row][self.MW.LoadMRI.slice_indices[data_index][0],:,:]
-            elif vn=='coronal':
-                slice = self.intensity_volumes[row][:,self.MW.LoadMRI.slice_indices[data_index][1],:]
-            elif vn=='sagittal': #different with .T flip; etc.
-                slice = np.fliplr(self.intensity_volumes[row][:,:,self.MW.LoadMRI.slice_indices[data_index][2]].T)
+        if self.MW.LoadMRI.vol_dim==3:
+            for vn in 'axial','coronal','sagittal':
+                if vn=='axial':
+                    slice = self.intensity_volumes[row][self.MW.LoadMRI.slice_indices[data_index][0],:,:]
+                elif vn=='coronal':
+                    slice = self.intensity_volumes[row][:,self.MW.LoadMRI.slice_indices[data_index][1],:]
+                elif vn=='sagittal': #different with .T flip; etc.
+                    slice = np.fliplr(self.intensity_volumes[row][:,:,self.MW.LoadMRI.slice_indices[data_index][2]].T)
 
-            renderer = self.MW.LoadMRI.renderers[data_index][vn]
-            actors = renderer.GetViewProps()
-            actors.InitTraversal()
+                renderer = self.MW.LoadMRI.renderers[data_index][vn]
+                actors = renderer.GetViewProps()
+                actors.InitTraversal()
 
-            for _ in range(actors.GetNumberOfItems()):
-                actor = actors.GetNextProp()
-                if actor.GetClassName()=="vtkOpenGLTextActor" or actor.GetClassName()=="vtkOpenGLActor" or actor.GetClassName()=="vtkActor2D":
-                    continue
+                for _ in range(actors.GetNumberOfItems()):
+                    actor = actors.GetNextProp()
+                    if actor.GetClassName()=="vtkOpenGLTextActor" or actor.GetClassName()=="vtkOpenGLActor" or actor.GetClassName()=="vtkActor2D":
+                        continue
 
-                image_data = actor.GetInput()
-                if image_data.GetNumberOfScalarComponents()==4:
-                    continue
-                vtk_array = numpy_support.vtk_to_numpy(image_data.GetPointData().GetScalars())
-                vtk_array = vtk_array.reshape(image_data.GetDimensions()[1], image_data.GetDimensions()[data_index])
-                if np.allclose(vtk_array, slice):
-                    selected_actor = actor
-                    selected_actor.GetProperty().SetOpacity(value/100)
-                    self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
-                    self.MW.LoadMRI.update_slices(0,0,data_view='coronal')
-                    break
+                    image_data = actor.GetInput()
+                    vtk_array = numpy_support.vtk_to_numpy(image_data.GetPointData().GetScalars())
+                    h, w = image_data.GetDimensions()[1], image_data.GetDimensions()[0]
+                    if image_data.GetNumberOfScalarComponents() == 4:
+                        continue
+
+                    vtk_array = vtk_array.reshape(image_data.GetDimensions()[1], image_data.GetDimensions()[data_index])
+                    if np.allclose(vtk_array, slice):
+                        selected_actor = actor
+                        selected_actor.GetProperty().SetOpacity(value/100)
+                        self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
+                        self.MW.LoadMRI.update_slices(0,0,data_view='coronal')
+                        break
+        else:
+            for vn in self.MW.LoadMRI.renderers[data_index].keys():
+                renderer = self.MW.LoadMRI.renderers[data_index][vn]
+                render_window = renderer.GetRenderWindow()
+                renderer_collection = render_window.GetRenderers()
+                renderer_collection.InitTraversal()  # start traversal
+                num_renderers = renderer_collection.GetNumberOfItems()  # get number of renderers
+                for r_idx in range(num_renderers):
+                    ren = renderer_collection.GetNextItem()
+
+                    actors = ren.GetViewProps()
+                    actors.InitTraversal()
+                    for a_idx in range(actors.GetNumberOfItems()):
+                        actor = actors.GetNextProp()
+                        slice = self.intensity_volumes[row][self.MW.LoadMRI.slice_indices[data_index][0],:,:]
+
+                        if actor.GetClassName()=="vtkOpenGLTextActor"or actor.GetClassName()=="vtkActor2D" or actor.GetClassName()=="vtkOpenGLActor":
+                            continue
+
+                        image_data = actor.GetInput()
+                        vtk_array = numpy_support.vtk_to_numpy(image_data.GetPointData().GetScalars())
+                        h, w = image_data.GetDimensions()[1], image_data.GetDimensions()[0]  # note: vtk dims are (x, y, z)
+
+                        if image_data.GetNumberOfScalarComponents() == 4:
+                            # RGBA image: reshape to (height, width, 4)
+                            vtk_array = vtk_array.reshape(h, w, 4)
+                            # if you only want the first channel (R), pick it:
+                            vtk_array = vtk_array[:, :, 0]
+                        else:
+                            # single-component image: reshape to (height, width)
+                            vtk_array = vtk_array.reshape(h, w)
+
+                        vtk_array = vtk_array.reshape(image_data.GetDimensions()[1], image_data.GetDimensions()[data_index])
+
+                        #anat
+                        if actor == self.MW.LoadMRI.paintbrush.overlay_actors[vn]:
+                            true_actor = self.MW.LoadMRI.paintbrush.overlay_actors[vn]
+                            true_actor.GetProperty().SetOpacity(value/100)
+                            self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
+                            self.MW.LoadMRI.update_slices(0,0,data_view=vn)
+                            break
+
+                        if vtk_array.shape == slice.shape:
+                            if np.allclose(vtk_array, slice):
+                                selected_actor = actor
+                                selected_actor.GetProperty().SetOpacity(value/100)
+                                self.MW.LoadMRI.vtk_widgets[data_index][vn].GetRenderWindow().Render()
+                                self.MW.LoadMRI.update_slices(0,0,data_view=vn)
+                                break
+
 
 
     def save_layer(self,row):

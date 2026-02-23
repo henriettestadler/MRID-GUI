@@ -3,6 +3,7 @@
 import vtk
 import numpy as np
 from core.interactor_style import CustomInteractorStyle
+from utils.zoom import Zoom
 
 class Cursor:
     """
@@ -115,7 +116,6 @@ class Cursor:
         """
 
         if cursor_on: #Cursor is usable
-            print('Cursor init start cursor')
             self.create_cursor_lines(data_index,data_view)
             self.update_cursor_display(data_index)
             self.add_cursor_interaction(data_index)
@@ -125,10 +125,11 @@ class Cursor:
                 for view_name, vtk_widget in vtk_widget_image.items():
                     interactor = vtk_widget.GetRenderWindow().GetInteractor()
                     interactor.SetInteractorStyle(vtk.vtkInteractorStyleImage())
-            if hasattr(self.LoadMRI, 'vtk_widgets_heatmap'):
-                vtk_widget = self.LoadMRI.vtk_widgets_heatmap[view_name]
-                interactor = vtk_widget.GetRenderWindow().GetInteractor()
-                interactor.SetInteractorStyle(vtk.vtkInteractorStyleImage())
+                    print('image index cursor', image_index)
+                    #if hasattr(self.LoadMRI, 'vtk_widgets_heatmap'):
+                    #    vtk_widget = self.LoadMRI.vtk_widgets_heatmap[view_name]
+                    #    interactor = vtk_widget.GetRenderWindow().GetInteractor()
+                    #    interactor.SetInteractorStyle(vtk.vtkInteractorStyleImage())
 
 
     def create_cursor_lines(self,data_index,data_view):
@@ -207,8 +208,8 @@ class Cursor:
         """
         lm = self.LoadMRI
         for image_index,vtk_widget_image in lm.vtk_widgets.items():
-            if image_index==3:
-                continue
+            #if image_index==3:
+            #    continue
             for idx, (view_name, vtk_widget) in enumerate(vtk_widget_image.items()):
                 if idx == data_index or self.LoadMRI.vol_dim==3: #only change cursor of the corresponding view
                     line_h = self.cursor_lines[view_name][image_index]['horizontal']['source']
@@ -297,13 +298,15 @@ class Cursor:
         for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
             for idx, (view_name, vtk_widget) in enumerate(vtk_widget_image.items()):
                 if data_index==idx or self.LoadMRI.vol_dim==3:
+                    print(image_index)
                     interactor = vtk_widget.GetRenderWindow().GetInteractor()
                     interactor.SetInteractorStyle(CustomInteractorStyle(self,view_name,image_index,None,data_index))
 
-                    if hasattr(self.LoadMRI, 'vtk_widgets_heatmap'):
-                        vtk_widget = self.LoadMRI.vtk_widgets_heatmap[view_name]
-                        interactor = vtk_widget.GetRenderWindow().GetInteractor()
-                        interactor.SetInteractorStyle(CustomInteractorStyle(self, view_name,image_index,None,idx))
+                    #if hasattr(self.LoadMRI, 'vtk_widgets_heatmap'):
+                    #    print('ich bin hier, es gibt vtk heatmap ding')
+                    #    vtk_widget = self.LoadMRI.vtk_widgets_heatmap[view_name]
+                    #    interactor = vtk_widget.GetRenderWindow().GetInteractor()
+                    #    interactor.SetInteractorStyle(CustomInteractorStyle(self, view_name,image_index,None,idx))
 
     def update_cursor_from_interactor(self, interactor, view_name:str,data_index):
         """
@@ -559,6 +562,22 @@ class Cursor:
         else:
             self.LoadMRI.add_axes(renderer, img_vtk, view_name)
 
+        vtk_widget = self.LoadMRI.vtk_widgets[3][view_name]
+        interactor = vtk_widget.GetRenderWindow().GetInteractor()
+        interactor.SetInteractorStyle(CustomInteractorStyle(self, view_name,image_index,None,data_index))
 
-
-        #self.LoadMRI.minimap.add_minimap(view_name,img_vtk,image_index,vtk_widget,data_index)
+        #if cursor_on: #Cursor is usable
+        #    print('Cursor init start cursor')
+        #    self.create_cursor_lines(data_index,data_view)
+        #    self.update_cursor_display(data_index)
+        #    self.add_cursor_interaction(data_index)
+        #else:
+        #    # cursor visible but not changeable
+        #    for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
+        #        for view_name, vtk_widget in vtk_widget_image.items():
+        #            interactor = vtk_widget.GetRenderWindow().GetInteractor()
+        #            interactor.SetInteractorStyle(vtk.vtkInteractorStyleImage())
+        #    if hasattr(self.LoadMRI, 'vtk_widgets_heatmap'):
+        #        vtk_widget = self.LoadMRI.vtk_widgets_heatmap[view_name]
+        #        interactor = vtk_widget.GetRenderWindow().GetInteractor()
+        #        interactor.SetInteractorStyle(vtk.vtkInteractorStyleImage())

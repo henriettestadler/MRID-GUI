@@ -15,6 +15,7 @@ from gui_utils.segmentation_gui import SegmentationGUI
 # This Python file uses the following encoding: utf-8
 from PySide6.QtWidgets import QDockWidget,QDialog,QVBoxLayout
 from PySide6.QtCore import Qt
+import SimpleITK as sITK
 
 
 class PopupDialog(QDialog):
@@ -70,7 +71,7 @@ class ButtonsGUI_3D:
             "axial": self.ui.vtkWidget_data_axial,
         }
 
-        self.ui.actionAdd.triggered.connect(self.MW.add_another_file)
+        self.ui.actionAddViewImage.triggered.connect(self.MW.add_another_file)
 
 
         #initialize everything
@@ -258,19 +259,27 @@ class ButtonsGUI_3D:
         self.LoadMRI.Resample = ResampleData(self.LoadMRI)
         #get the current index of the combobox
         self.ui.pushButton_resample100um.clicked.connect(
-            lambda: self.LoadMRI.Resample.resampling100um(
+            lambda: self.resample100um(
                 self.ui.comboBox_resamplefiles.currentIndex()
             )
         )
 
         self.ui.pushButton_resample25um.clicked.connect(
-            lambda: self.LoadMRI.Resample.resampling25um(
+            lambda: self.resample25um(
                 self.ui.comboBox_resamplefiles.currentIndex()
             )
         )
         self.ui.pushButton_openfile.clicked.connect(lambda: self.LoadMRI.Resample.open_as_new_file(self,self.MW))
         self.ui.pushButton_done.clicked.connect(self.popup.close)
 
+
+    def resample100um(self,index):
+        file_name = self.LoadMRI.Resample.resampling100um(index)
+        self.ui.textEdit_resample100.setText(f"Resampling Done with saved as \n {file_name}")
+
+    def resample25um(self,index):
+        file_name = self.LoadMRI.Resample.resampling25um(index)
+        self.ui.textEdit_resample25.setText(f"Resampling Done with saved as \n {file_name}")
 
 
     def initialize_registration(self):
@@ -286,9 +295,57 @@ class ButtonsGUI_3D:
         self.popup.resize(300, 300)
         self.popup.show()
 
+        #pushButton_regCancel
+        #pushButton_registration
+        #textEdit_pixels
+
+        #
+        self.ui.comboBox_movingimg.currentIndexChanged.connect(lambda index: self.check_dimensions_movingimg(index))
+
+
+
         self.ui.pushButton_registration.clicked.connect(
             lambda: setattr(self.LoadMRI, "Registration", Registration(self.LoadMRI,self,self.ui.comboBox_movingimg.currentIndex()))
         )
+
+        self.ui.pushButton_regCancel.clicked.connect(self.cancel_reg)
+
+        if len(self.LoadMRI.movingimg_filename):
+            self.check_dimensions_movingimg(0)
+        else:
+            self.MW.ui.textEdit_pixels.setVisible(False)
+
+        self.LoadMRI.coarsest_index = 1 #comboBox_coarsest
+        self.LoadMRI.finest_index = 0 #comboBox_finest
+        self.ui.comboBox_coarest.setCurrentIndex(self.LoadMRI.coarsest_index)
+        self.ui.comboBox_coarest.currentIndexChanged.connect(
+            lambda idx: setattr(self.LoadMRI, "coarsest_index", idx)
+        )
+        self.ui.comboBox_finest.currentIndexChanged.connect(
+            lambda idx: setattr(self.LoadMRI, "finest_index", idx)
+        )
+
+
+    def cancel_reg(self):
+         self.popup.close()
+
+    def check_dimensions_movingimg(self,index):
+        #if
+        #self.pushButton_registration.setEnabled(False)
+        print('bin ich direkt hier?',index, )
+        image = sITK.ReadImage(self.LoadMRI.movingimg_filename[index])
+        volume = sITK.GetArrayFromImage(image)
+        print(volume.shape)
+        if volume.shape[1]<4 or volume.shape[2]<4 or volume.shape[3]<4:
+            print('here bin ich im shape zu klein?')
+            self.MW.ui.textEdit_pixels.setVisible(True)
+            self.MW.ui.pushButton_registration.setEnabled(False)
+        else:
+            self.MW.ui.pushButton_registration.setEnabled(True)
+            self.MW.ui.textEdit_pixels.setVisible(False)
+
+
+
 
     def initialize_segmentation(self):
         """

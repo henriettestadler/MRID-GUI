@@ -1,5 +1,5 @@
 import numpy as np
-import com
+from mrid_utils import com
 
 def gen_barcode_mrid(patternLengths, c2c_dists, barcode_length=4500):
     '''

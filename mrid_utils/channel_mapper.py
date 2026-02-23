@@ -2,6 +2,9 @@ import numpy as np
 from mrid_utils import com
 import os
 import nibabel as nib
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from mplwidget import MplWidget
 
 # TODO: HENRIETTE, BELOW MIGHT BE UNNECESSARY FOR YOU, JUST LOADING ATLAS IMAGES AND LABELS, just make sure you have the necessary variables loaded somewhere
 #root=""
@@ -103,14 +106,9 @@ def interpolate_channels(bottom_coord, top_coord, nchannels, offset, channel_sep
     return (ch_coords).astype('int'), unitvec
 
 
-def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savepath):
-    """
-    Maps channels to anatomical regions given ch_coord in MRI-space, moving_coordinates in MRI-space and fixed_coordinates in atlas space
-    """
-def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi):
+def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi,chMap=[]):
     # Coronal slice to be plotted selector
     # temp_y = 0
-
     # To find the minima, 16bit gray-scale pixels
     minPixVal = 2e16
 
@@ -119,9 +117,9 @@ def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savep
     pyrCh = 9999
     regionNames = []
     regionNumbers = []
-    # pyrChIdx = 0
-    #pyrLyExists = False
-
+    pyrChIdx = 0
+    pyrLyExists = False
+    print('savepath for channel_atlas_coordinates',savepath)
     with open(os.path.join(savepath, "channel_atlas_coordinates.txt"), 'w') as f:
 
         for idx, coord in enumerate(ch_coord):
@@ -148,11 +146,12 @@ def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savep
             currPixVal = dwi[x, y, z]
             dwi1Dsignal[idx] = currPixVal
             if anat_region == "Cornu ammonis 1":
-                #pyrLyExists = True
+                pyrLyExists = True
                 if currPixVal < minPixVal:
                     minPixVal = currPixVal
                     pyrCh = idx
-                    # pyrChIdx = idx
+                    pyrChIdx = idx
+                    chMap.append(idx)
 
             line = "CH:" + str(idx) + " in " + anat_region + ' Segment: ' + str(label) + " atlas coord: " + str(
                 atlasCoord) #str(chMap[idx])
@@ -166,37 +165,41 @@ def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savep
         f.write(line)
         f.write('\n')
 
-    # if pyrLyExists:
-    #     pixelValues = dwi1Dsignal
-    #     pixelValues = (pixelValues - np.min(pixelValues)) / (np.max(pixelValues) - np.min(pixelValues))
-    #     plt.figure(figsize=(25, 10))
-    #     # Get unique categories and assign each a color
-    #     unique_regions = list(set(regionNames))
-    #     colors = plt.cm.get_cmap("tab10", len(unique_regions))  # Color map
-    #
-    #     region_to_color = {region: colors(i) for i, region in enumerate(unique_regions)}
-    #
-    #     # Plot line segments with color depending on region
-    #     for i in range(len(pixelValues) - 1):
-    #         region = regionNames[i]
-    #         plt.plot([i, i + 1], [pixelValues[i], pixelValues[i + 1]],
-    #                  color=region_to_color[region], linewidth=2)
-    #
-    #     # Optional: Add legend
-    #     for region in unique_regions:
-    #         plt.plot([], [], color=region_to_color[region], label=region)
-    #
-    #     plt.axvline(x=pyrChIdx, color='red', linestyle='--', linewidth=2, label='Pyramidal Layer')
-    #     plt.xticks(ticks=np.linspace(0, num_channels - 1, num_channels), labels=chMap)
-    #     plt.legend(title="Anatomical Region")
-    #     plt.xlabel("Channel Index")
-    #     plt.ylabel("Pixel Value")
-    #     plt.title("Pixel Values by Region")
-    #     plt.grid(True)
-    #     plt.savefig(os.path.join(savepath, "dwi_1D_cross_section.pdf"), dpi=2000)
-    #     plt.show()
+    if pyrLyExists:
+        pixelValues = dwi1Dsignal
+        pixelValues = (pixelValues - np.min(pixelValues)) / (np.max(pixelValues) - np.min(pixelValues))
+        plot = MplWidget(dwi=True)
+        ax1 = plot.canvas.figure.add_subplot(111)
+        #plt.figure(figsize=(25, 10))
+        # Get unique categories and assign each a color
+        unique_regions = list(set(regionNames))
+        colors = plt.cm.get_cmap("tab10", len(unique_regions))  # Color map
 
-    return dwi1Dsignal
+        region_to_color = {region: colors(i) for i, region in enumerate(unique_regions)}
+        # Plot line segments with color depending on region
+        for i in range(len(pixelValues) - 1):
+            region = regionNames[i]
+            ax1.plot([i, i + 1], [pixelValues[i], pixelValues[i + 1]],
+                     color=region_to_color[region], linewidth=2)
+
+        # Optional: Add legend
+        for region in unique_regions:
+            ax1.plot([], [], color=region_to_color[region], label=region)
+
+        ax1.axvline(x=pyrChIdx, color='red', linestyle='--', linewidth=2, label='Pyramidal Layer')
+        ax1.set_xticks(np.linspace(0, num_channels - 1, num_channels))
+        ax1.tick_params(axis="x", labelrotation=45)
+        #ax1.set_xticklabels(chMap)
+        ax1.legend(title="Anatomical Region",fontsize=16,title_fontsize=16) #7
+        ax1.set_xlabel("Channel Index")
+        ax1.set_ylabel("Pixel Value")
+        ax1.set_title("Pixel Values by Region")
+        ax1.tick_params(axis='both', labelsize=16) #6
+        ax1.grid(True)
+        plot.canvas.draw()
+        plot.canvas.figure.savefig(os.path.join(savepath, "dwi_1D_cross_section.pdf"), dpi=2000)
+
+    return dwi1Dsignal,regionNames,regionNumbers,pyrLyExists,pyrChIdx
 
 
 def get_mapped_ch(chmap_path, anat_list, num_channels=64, filename="channel_atlas_coordinates.txt"):
@@ -229,17 +232,18 @@ def get_mapped_ch(chmap_path, anat_list, num_channels=64, filename="channel_atla
 
 
 
-def plot_channels_on_atlas(savefigname, path, ch_selected):
+def plot_channels_on_atlas(savefigname, path, ch_selected,dwi,t2s,mask):
     """
     Plots given set of channels on atlas images
     """
     # Plotting colormap settings
+    print('noch alles ok 1')
     my_cmap_gray = cm.get_cmap("gray").copy()
     my_cmap_gray.set_under('black', alpha=0)
     cmap_args_gray = dict(cmap=my_cmap_gray, vmin=1)
-
+    print('noch alles ok 2')
     y = np.median(ch_selected[:, 1]).astype(int)
-
+    print('noch alles ok 3')
     if "t2s" in savefigname:
         plt.imshow(t2s[:, y, :] * mask[:, y, :], **cmap_args_gray)
     elif "dwi" in savefigname:
@@ -252,5 +256,6 @@ def plot_channels_on_atlas(savefigname, path, ch_selected):
 
     plt.savefig(os.path.join(path, savefigname), dpi=1000)
     plt.show()
-    regionNumbers = list(dict.fromkeys(regionNumbers))
-    return dwi1Dsignal, regionNumbers
+    print('ok end')
+    #regionNumbers = list(dict.fromkeys(regionNumbers))
+    return #dwi1Dsignal, regionNumbers

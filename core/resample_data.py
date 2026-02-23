@@ -76,6 +76,8 @@ class ResampleData:
         file_name = self.save_as_niigz(resampled,filename_end,index)
         self.file_name100um = file_name
 
+        return file_name
+
 
     def resampling25um(self,index):
         """
@@ -254,7 +256,9 @@ class ResampleData:
         )
 
         filename_end = 'resampled.nii.gz'
-        self.save_as_niigz(resampled,filename_end,index)
+        save_path = self.save_as_niigz(resampled,filename_end,index)
+
+        return save_path
 
 
 
@@ -267,7 +271,7 @@ class ResampleData:
         default_name = f"{file_name}_{filename_end}" #"label_volume.nii.gz"
         save_path = os.path.join(self.LoadMRI.session_path, default_name)
         sITK.WriteImage(image, save_path)
-        return default_name
+        return save_path
 
 
     def open_as_new_file(self,buttons_gui3d,MW):

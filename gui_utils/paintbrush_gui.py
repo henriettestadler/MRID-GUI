@@ -136,6 +136,7 @@ class PaintbrushGUI:
 
 
         # Histogram
+        print('histogram zeugs paintbrush')
         self.LoadMRI.paintbrush.widget_histogram = self.ui.widget_histogram
 
         histo = self.ui.histogram_label

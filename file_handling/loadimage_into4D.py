@@ -66,6 +66,7 @@ class LoadImage4D:
         else:
             for i in 0,1,2:
                 self.LoadMRI.update_slices(i,idx,data_view)
+        self.LoadMRI.paintbrush.histogram()
 
 
     def load_segmentation(self,filename,data_view,idx):

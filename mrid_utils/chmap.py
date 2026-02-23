@@ -2,16 +2,15 @@ from mrid_utils import handlers
 import numpy as np
 import math
 from scipy.optimize import minimize
-import channel_mapper
-import barcode
-import com
+from mrid_utils import channel_mapper, gauss_aux, barcode, com
+import os
+import pandas as pd
 
 # TODO: Henriette, you can incorporate this main function into your pipeline as you wish. I am only putting it here to show you the flow
-def main(mrid, savepath, sessionpath, root, weighted_loss_f="density", bundle_start=0, map_channels_boolean=True, px_size=25):
-from mrid_utils import channel_mapper, gauss_aux
-import os
+#def main(mrid, savepath, sessionpath, root, weighted_loss_f="density", bundle_start=0, map_channels_boolean=True, px_size=25):
 
-def main(mrid_dict,mrid, savepath, sessionpath,atlas,atlaslabelsdf,dwi,fixed_coordinates,moving_coordinates, weighted_loss_f="density", bundle_start=0, map_channels_boolean=True):
+
+def main(mrid_dict,mrid, savepath, sessionpath,atlas,atlaslabelsdf,dwi,t2s,mask,fixed_coordinates,moving_coordinates,channel_separation, total_ch, weighted_loss_f="density", bundle_start=0, map_channels_boolean=True, px_size=25):
     """
     Localizes the electrode channels. Takes input;
     mrid_dict: from pkl file
@@ -36,6 +35,8 @@ def main(mrid_dict,mrid, savepath, sessionpath,atlas,atlaslabelsdf,dwi,fixed_coo
 
     fitted_points = register_bundle(gaussian_centers_3d, mrid_dict[mrid], bundle_start, weighted_loss_f=weighted_loss_f,
                                            visualization=True)
+    print('fp MAIN CHAMP',fitted_points)
+    print('GAUSSIAN CENTERS 3D',gaussian_centers_3d)
     if map_channels_boolean:
         # Mapping the channels to physical coordinate indeces (integers) in MRI space
         ch_coords = channel_mapper.map_electrodes_main(fitted_points, mrid_dict[mrid])
@@ -45,7 +46,7 @@ def main(mrid_dict,mrid, savepath, sessionpath,atlas,atlaslabelsdf,dwi,fixed_coo
         #fixed_coordinates = np.load(fixed_idx_path)
 
         # Mapping the channel coordinates to the Atlas space
-        dwi1Dsignal,regionNumbers = channel_mapper.map_channels_to_atlas(ch_coords, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi)
+        dwi1Dsignal,regionNames,regionNumbers,CA1,pyrChIdx = channel_mapper.map_channels_to_atlas(ch_coords, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi)
         np.save(os.path.join(savepath, "dwi_1D_cross_section_pixel_values.npy"), dwi1Dsignal)
 
     # TODO HENRIETTE: BELOW IS BARCODE RELATED
@@ -70,8 +71,24 @@ def main(mrid_dict,mrid, savepath, sessionpath,atlas,atlaslabelsdf,dwi,fixed_coo
     # Detecting the type of MRID
     mrid_detected = ref_barcodes[np.argmax(probs)]
 
-    return
-    return fitted_points,regionNumbers
+    barcode_r = [barcode_reconstructed, ticks, tickLabels]
+
+    c2c = gauss_aux.get_centomass(mrid_dict[mrid_detected]["dimensions"], mrid_dict[mrid_detected]["intersegment_distances"])[0]
+    barcode_design, ticks2, tickLabels2 = barcode.gen_barcode_mrid(mrid_dict[mrid_detected]["dimensions"][:,-1], c2c)
+    barcode_d = [barcode_design, ticks2, tickLabels2]
+
+    ##Barcode stuff
+    #savefigname = 'dwi_1D_cross_section.pdf'
+    #ch_selected = 1
+    #channel_mapper.plot_channels_on_atlas(savefigname, savepath, ch_selected,dwi, t2s,mask)
+
+    #ch_coords = channel_mapper.map_electrodes_main(fitted_points, mrid_dict[mrid_detected], channel_separation = channel_separation, total_ch = total_ch)
+    #map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi):
+    #dwi1Dsignal = channel_mapper.map_channels_to_atlas(ch_coords, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi)
+    #np.save(os.path.join(self.sessionpath, "analysed", mrid, "dwi_1D_cross_section_pixel_values.npy"),dwi1Dsignal)
+
+
+    return fitted_points,regionNames,regionNumbers,df,barcode_r,barcode_d,CA1,dwi1Dsignal,pyrChIdx
 
 
 def register_bundle(gaussian_centers_3d, mrid_dict, bundle_start, weighted_loss_f, visualization=False):

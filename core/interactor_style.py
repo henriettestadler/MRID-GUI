@@ -121,6 +121,7 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                         camera.SetPosition(pos[0],pos[1],pos[2])
                         widget.GetRenderWindow().Render()
             if len(self.LoadMRI.cursor.cursor_lines)==4:
+                print('bin ich hier im custom interactor?')
                 renderer = self.LoadMRI.renderers[3][self.interactor_view_name]
                 camera = renderer.GetActiveCamera()
                 camera.SetFocalPoint(fp[0],fp[1],fp[2])
@@ -169,17 +170,19 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
         elif self.zooming:
             renderer = interactor.GetRenderWindow().GetRenderers().GetFirstRenderer()
 
-            camera = renderer.GetActiveCamera()
-            scale = camera.GetParallelScale()
-            pos = camera.GetPosition()
-            fp = camera.GetFocalPoint()
-
+            camera_main = renderer.GetActiveCamera()
+            scale = camera_main.GetParallelScale()
+            pos = camera_main.GetPosition()
+            fp = camera_main.GetFocalPoint()
+            view_name = self.interactor_view_name
             for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
+                idx = 0
                 for vn, widget in vtk_widget_image.items():
                     renderer = widget.GetRenderWindow().GetRenderers().GetFirstRenderer()
                     camera = renderer.GetActiveCamera()
 
-                    if not (vn == self.interactor_view_name and image_index == self.image_index):
+                    if not (vn == self.interactor_view_name and image_index == self.image_index) and idx==self.interactor_data_index:
+                        print(idx,self.interactor_data_index)
                         camera.ParallelProjectionOn()
                         pos_xy = camera.GetPosition()
                         fp_xy = camera.GetFocalPoint()
@@ -188,6 +191,10 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                         camera.SetFocalPoint(fp_xy[0],fp_xy[1],fp[2])
                         widget.GetRenderWindow().Render()
                         renderer.ResetCameraClippingRange()
+                        camera = self.LoadMRI.renderers[0][vn].GetRenderWindow().GetRenderers().GetFirstRenderer().GetActiveCamera()
+                        self.LoadMRI.scale_bar[vn].update_bar(self.LoadMRI.renderers[0][vn],vn,length_cm=1.0)
+                        Zoom.update_bounds(vn, camera, self.LoadMRI.renderers[self.image_index][vn])
+                    idx +=1
 
             if len(self.LoadMRI.cursor.cursor_lines)==4:
                 renderer = self.LoadMRI.renderers[3][view_name]
@@ -202,10 +209,13 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
 
             if self.LoadMRI.vol_dim==3:
                 camera = self.LoadMRI.renderers[0]['axial'].GetRenderWindow().GetRenderers().GetFirstRenderer().GetActiveCamera()
+                self.LoadMRI.scale_bar['axial'].update_bar(self.LoadMRI.renderers[0]['axial'],'axial',length_cm=1.0)
                 Zoom.update_bounds('axial', camera, self.LoadMRI.renderers[self.image_index][self.interactor_view_name])
                 camera = self.LoadMRI.renderers[0]['coronal'].GetRenderWindow().GetRenderers().GetFirstRenderer().GetActiveCamera()
+                self.LoadMRI.scale_bar['coronal'].update_bar(self.LoadMRI.renderers[0]['coronal'],'coronal',length_cm=1.0)
                 Zoom.update_bounds('coronal', camera, self.LoadMRI.renderers[self.image_index][self.interactor_view_name])
                 camera = self.LoadMRI.renderers[0]['sagittal'].GetRenderWindow().GetRenderers().GetFirstRenderer().GetActiveCamera()
+                self.LoadMRI.scale_bar['sagittal'].update_bar(self.LoadMRI.renderers[0]['sagittal'],'sagittal',length_cm=1.0)
                 Zoom.update_bounds('sagittal', camera, self.LoadMRI.renderers[self.image_index][self.interactor_view_name])
 
             Zoom.global_zoom_factor = scale
@@ -291,6 +301,7 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
 
     def on_right_button_down(self, obj, event):
         """Start zooming when right mouse button is pressed."""
+        print('bin ich hier?')
         interactor = self.GetInteractor()
         x, y = interactor.GetEventPosition()
         renderer = self.LoadMRI.renderers[self.image_index][self.interactor_view_name].GetRenderWindow().GetRenderers().GetFirstRenderer()

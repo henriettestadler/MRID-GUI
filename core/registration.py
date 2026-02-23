@@ -42,8 +42,10 @@ class Registration:
         if len(self.moving_image.GetSize())==4:
             self.moving_image = self.get3Dimage(self.moving_image)
 
-        self.coarsest = 4 #comboBox_coarsest
-        self.finest = 1 #comboBox_finest
+        coarest_options = [8,4,2,1]
+        finest_options = [1,2,4]
+        self.coarsest = coarest_options[self.LoadMRI.coarsest_index] #comboBox_coarsest
+        self.finest = finest_options[self.LoadMRI.finest_index] #comboBox_finest
         self.rigid_transformation()
 
         buttonsgui_3d.popup.close()

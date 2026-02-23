@@ -104,7 +104,6 @@ class Paintbrush:
             if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):  # XY plane, spacing Z ignored
                 x0, x1 = max(0, x-half), min(nx - 1, x +half+ (0 if self.size % 2 == 0 else 1))
                 y0, y1 = max(0, y-half), min(ny - 1, y +half+ (0 if self.size % 2 == 0 else 1))
-                print('square',x0,x1,y0,y1,self.size,half)
                 # Only overwrite voxels with paintover_value
                 if paintover_value != 0:
                     mask = self.label_volume[data_index][z, y0:y1, x0:x1] == paintover_value-1

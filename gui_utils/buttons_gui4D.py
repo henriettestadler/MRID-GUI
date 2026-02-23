@@ -12,11 +12,36 @@ from core.electrode_localization import ElectrodeLoc
 from PySide6.QtWidgets import QMessageBox, QFileDialog, QDialog, QDockWidget,QVBoxLayout
 from PySide6.QtCore import Qt,QUrl
 import SimpleITK as sITK
+import numpy as np
 from gui_utils.visualization3D import Visualization3D
 from PySide6 import QtGui
+from mplwidget import MplWidget
 from PySide6.QtQuick import QQuickView
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import QUrl
+from PySide6.QtWidgets import (
+    QTableWidgetItem, QToolButton, QDoubleSpinBox, QMessageBox
+)
+
+class PlotPopup(QDialog):
+    def __init__(self, parent=None, title="Plot", figsize=(16, 5)):
+        super().__init__(parent)
+
+        self.setWindowTitle(title)
+        self.resize(1200, 500)
+
+        # Reuse your existing Matplotlib widget
+        self.plot = MplWidget(self)
+
+        # Optional: override default figure size for popup
+        self.plot.fig.set_size_inches(*figsize, forward=True)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.plot)
+
+    def get_axes(self):
+        self.plot.fig.clear()
+        return self.plot.fig.add_subplot(111)
 
 class PopupDialog(QDialog):
     """
@@ -90,9 +115,9 @@ class ButtonsGUI_4D:
         self.ui.actionGet_Coordinates.triggered.connect(self.electrode_localisation)
         self.ui.actionStart_MRIDlabels.triggered.connect(self.open_input_dialog)
         self.ui.actionContrast_Adjustments.triggered.connect(self.contrast_adjustments)
-        self.ui.actionAdd_Another_View.triggered.connect(self.add_other_view)
+        self.ui.actionAddViewImage.triggered.connect(self.add_other_view)
 
-        self.ui.actionGet_Position_in_HPC.triggered.connect(self.visualization_start)
+        #self.ui.actionGet_Position_in_HPC.triggered.connect(self.visualization_start)
 
         layout = self.ui.gridLayout_data0
         layout.setColumnStretch(0, 1)
@@ -270,9 +295,9 @@ class ButtonsGUI_4D:
                 'spin_x2': self.ui.spinBox_x_data2,
                 'spin_y2': self.ui.spinBox_y_data2,
                 'spin_z2': self.ui.spinBox_z_data2,
-                'intensity0': self.ui.tableintensity_data0.item(0, 2), #self.ui.intensity_main_Post,
-                'intensity1': self.ui.tableintensity_data1.item(0, 2), #self.ui.intensity_main_Post,
-                'intensity2': self.ui.tableintensity_data2.item(0, 2), #self.ui.intensity_main_Post,
+                'intensity0': self.ui.tableintensity_data0.item(0, 2),
+                'intensity1': self.ui.tableintensity_data1.item(0, 2),
+                'intensity2': self.ui.tableintensity_data2.item(0, 2),
                 'scroll_0': self.ui.Scroll_data0,
                 'scroll_1': self.ui.Scroll_data1,
                 'scroll_2': self.ui.Scroll_data2,
@@ -354,6 +379,13 @@ class ButtonsGUI_4D:
             spinbox.valueChanged.connect(lambda val, i=idx: self.timestamp4D_changed(val, i, data_index,data_view))
             combobox.valueChanged.connect(lambda val, i=idx: self.timestamp4D_changed(val, i, data_index,data_view))
 
+            groupBox = getattr(self.ui, f"groupBox_time{data_index}{idx}")
+            title = f"Timestamp t={self.LoadMRI.timestamp4D[idx]}"
+            groupBox.setTitle(title)
+            tabBox = getattr(self.ui, f"tabWidget_time{data_index}")
+            tabBox.setTabText(idx, title)
+
+
 
 
     def timestamp4D_changed(self,value:int, image_index: int, data_index:int,data_view:str):
@@ -387,7 +419,6 @@ class ButtonsGUI_4D:
         """
         Continue MRID-tag workflow by saving data and updating GUI navigation.
         """
-
         if self.ui.stackedWidget_4D.currentIndex() == 1:
             #self.update_zooming()
             self.ui.pushButton_segfile.clicked.connect(self.MW.add_another_file)
@@ -399,6 +430,8 @@ class ButtonsGUI_4D:
                 legend = getattr(self.ui,f"groupbox_legend{idx}")
                 legend.setVisible(True)
                 data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
+                #page_4Ddata0 or groupBox_data1
+
                 if idx==0:
                     self.LoadMRI.vtk_widgets[3] = {
                         data_view: getattr(self.ui, f"vtkWidget_data{idx}3"),
@@ -411,12 +444,30 @@ class ButtonsGUI_4D:
 
             self.ui.pushButton_segOK.clicked.connect(self.continue_mridtags)
             #resize
+            #for idx in range(len(self.LoadMRI.vtk_widgets[0])):
+            #    #data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
+            #    if idx==0:
+            #        layout = self.ui.gridLayout_data0
+            #        layout.setColumnStretch(0, 1)
+            #        layout.setColumnStretch(1, 1)
+            #        layout.setColumnStretch(2, 1)
+            #        layout.setColumnStretch(3, 0)
+            #        # layout.setColumnStretch(4, 1)
+            #    else:
+            #        box = getattr(self.ui, f"groupBox_data{idx}")
+            #        layout = box.layout()
+            #        layout.setColumnStretch(0, 1)
+            #        layout.setColumnStretch(1, 1)
+            #        layout.setColumnStretch(2, 1)
+            #        layout.setColumnStretch(3, 1)
 
         self.ui.stackedWidget_4D.setCurrentIndex(self.ui.stackedWidget_4D.currentIndex()+1)
         #save each niigz separate
         self.LoadMRI.mrid_tags.save_as_niigz()
         if self.ui.stackedWidget_4D.currentIndex() == 3:
             self.ui.pushButton_ElecLoc.clicked.connect(self.get_gaussian_analysis)
+
+
 
 
 
@@ -463,12 +514,12 @@ class ButtonsGUI_4D:
         lm = self.LoadMRI
         #disconnect old buttons
         for image_index,views in lm.vtk_widgets.items():
-            for view_name, widget in views.items():
-                zoom_in_btn = getattr(self.ui, f"zoom_in_{view_name}_{image_index}")
-                zoom_out_btn = getattr(self.ui, f"zoom_out_{view_name}_{image_index}")
+            for idx, (view_name, widget) in enumerate(views.items()):
+                zoom_in_btn = getattr(self.ui, f"zoom_in_data{idx}{image_index}")
+                zoom_out_btn = getattr(self.ui, f"zoom_out_data{idx}{image_index}")
                 zoom_in_btn.clicked.disconnect()
                 zoom_out_btn.clicked.disconnect()
-                fit_window_btn = getattr(self.ui, f"fit_to_zoom_{view_name}_{image_index}")
+                fit_window_btn = getattr(self.ui, f"fit_to_zoom_data{idx}{image_index}")
                 fit_window_btn.clicked.disconnect()
 
 
@@ -480,14 +531,25 @@ class ButtonsGUI_4D:
         self.ui.go_left_image4.clicked.connect(lambda: self.LoadMRI.minimap.pan_arrows(view_name='axial',diff_x=-pan_distance,diff_y=0))
 
         for image_index,views in lm.vtk_widgets.items():
-            for view_name, widget in views.items():
-                zoom_in_btn = getattr(self.ui, f"zoom_in_{view_name}_{image_index}")
-                zoom_out_btn = getattr(self.ui, f"zoom_out_{view_name}_{image_index}")
+            for idx, (view_name, widget) in enumerate(views.items()):
+                if image_index!=3:
+                    continue
+                go_down_btn = getattr(self.ui, f"go_down_data{idx}{image_index}")
+                go_up_btn = getattr(self.ui, f"go_up_data{idx}{image_index}")
+                go_right_btn = getattr(self.ui, f"go_right_data{idx}{image_index}")
+                go_left_btn = getattr(self.ui, f"go_left_data{idx}{image_index}")
+                go_down_btn.clicked.connect(lambda: self.LoadMRI.minimap.pan_arrows(view_name=view_name,diff_x=0,diff_y=-pan_distance,data_index=idx))
+                go_up_btn.clicked.connect(lambda: self.LoadMRI.minimap.pan_arrows(view_name=view_name,diff_x=0,diff_y=pan_distance,data_index=idx))
+                go_right_btn.clicked.connect(lambda: self.LoadMRI.minimap.pan_arrows(view_name=view_name,diff_x=pan_distance,diff_y=0,data_index=idx))
+                go_left_btn.clicked.connect(lambda: self.LoadMRI.minimap.pan_arrows(view_name=view_name,diff_x=-pan_distance,diff_y=0,data_index=idx))
 
+        for image_index,views in lm.vtk_widgets.items():
+            for view_name, widget in views.items():
+                zoom_in_btn = getattr(self.ui, f"zoom_in_data{idx}{image_index}")
+                zoom_out_btn = getattr(self.ui, f"zoom_out_data{idx}{image_index}")
                 zoom_in_btn.clicked.connect(lambda: Zoom.zoom(1.2, lm.scale_bar, lm.vtk_widgets))
                 zoom_out_btn.clicked.connect(lambda: Zoom.zoom(0.8, lm.scale_bar, lm.vtk_widgets))
-
-                fit_window_btn = getattr(self.ui, f"fit_to_zoom_{view_name}_{image_index}")
+                fit_window_btn = getattr(self.ui, f"fit_to_zoom_data{idx}{image_index}")
                 fit_window_btn.clicked.connect(lambda _, w=widget: Zoom.fit_to_window(w, lm.vtk_widgets.values(), lm.scale_bar, lm.vtk_widgets))
 
 
@@ -566,14 +628,18 @@ class ButtonsGUI_4D:
         for idx in range(len(self.LoadMRI.vtk_widgets[0])):
             data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
             self.LoadMRI.vtk_widgets[3][data_view]= getattr(self.ui,f"vtkWidget_data{idx}3")
+        roi_names,self.totaldf,self.totalbarcode_r,self.totalbarcode_d,self.totalmrid, self.totalCA1,self.totaldwi1Dsignal,self.totalregionNames,self.totalpyrChIdx,self.fitted_points = self.LoadMRI.ElectrodeLoc.getCoordinates()
+        #dwi1Dsignal,regionNames,regionNumbers,pyrLyExists,pyrChIdx
+
+        for idx in range(len(self.LoadMRI.vtk_widgets[0])):
             groupBox = getattr(self.ui, f"heatmap_data{idx}") #heatmap_data0
             title = "Electrode Localizations"
             groupBox.setTitle(title)
             groupBox.setVisible(True)
-        save_path = self.LoadMRI.ElectrodeLoc.getCoordinates()
+
         self.ui.stackedWidget_4D.setCurrentIndex(self.ui.stackedWidget_4D.currentIndex()+1)
         for idx in range(len(self.LoadMRI.vtk_widgets[0])):
-            data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
+            #data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
             if idx==0:
                 layout = self.ui.gridLayout_data0
             else:
@@ -584,7 +650,220 @@ class ButtonsGUI_4D:
             layout.setColumnStretch(2, 1)
             layout.setColumnStretch(3, 1)
 
-        self.visualisation_3D(save_path)
+        self.ui.groupBox_barcode.setVisible(True)
+
+        #save barcode figures
+        for index, (i) in enumerate(self.totalmrid):
+            #fill combobox
+            self.ui.comboBox_mridBarcodes.addItem(str(i))
+            df = self.totaldf[index]
+            barcode_r = self.totalbarcode_r[index]
+            barcode_d = self.totalbarcode_d[index]
+            mrid_tag = self.totalmrid[index]
+
+            # detected barcode
+            plot_d = MplWidget()
+            plot_d.canvas.figure.clear()
+            [barcode_design, ticks2, tickLabels2] = barcode_d
+            # Create an axes object
+            ax1 = plot_d.canvas.figure.add_subplot(111)
+            ax1.imshow(barcode_design, cmap='gray')
+            ax1.set_xticks(ticks2)
+            ax1.set_xticklabels(tickLabels2,rotation=45)
+            ax1.tick_params(axis='x', labelbottom=True)
+            y_max = barcode_design.max()
+            #ax1.set_yticks(range(0, int(y_max), 200))
+            #print(y_max)
+            ax1.figure.subplots_adjust(bottom=0.25)
+            ax1.tick_params(axis='both', labelsize=8)
+            # Refresh the canvas
+            plot_d.canvas.draw()
+
+            save_path = os.path.join(self.LoadMRI.session_path, 'analysed',mrid_tag)
+            figname = "mrid_barcode-detected.pdf"
+            plot_d.canvas.figure.savefig(os.path.join(save_path, figname),bbox_inches="tight",pad_inches=0.1)
+
+            # reconstructed barcode
+            plot_r = MplWidget()
+            plot_r.canvas.figure.clear()
+            [barcode_reconstructed, ticks, tickLabels] = barcode_r
+            # Create an axes object
+            ax1 = plot_r.canvas.figure.add_subplot(111)
+            ax1.imshow(barcode_reconstructed, cmap='gray')
+            ax1.set_xticks(ticks)
+            ax1.set_xticklabels(tickLabels,rotation=45)
+            #ax1.tight_layout()
+            ax1.tick_params(axis='x', labelbottom=True)
+            y_max = barcode_reconstructed.max()
+            #ax1.set_yticks(range(0, int(y_max), 200))
+            #print(y_max)
+            ax1.figure.subplots_adjust(bottom=0.25)
+            ax1.tick_params(axis='both', labelsize=8)
+            # Refresh the canvas
+            plot_r.canvas.draw()
+
+            figname = "mrid_barcode-reconstructed.pdf"
+            plot_r.canvas.figure.savefig(os.path.join(save_path, figname),bbox_inches="tight",pad_inches=0.1)
+
+            #create and save mrid_registered_coordinates.np
+            #fitted_points = pointset_register_main(gaussian_centers_3d, mrid_dict[mrid], bundle_start, weighted_loss_f, visualization=True)
+            #print("Registered 3D coordinates of MRID CoMs: ")
+            #print(fitted_points)
+            #np.save(os.path.join(save_path, "mrid_registered_coordinates.npy"), fitted_points)
+
+        #fill table and plot barcodes
+        self.ca1_popup = None
+        self.fill_table_and_plots(0)
+
+        #self.ui.comboBox_mridBarcodes.currentIndexChanged.connect(lambda val, i=idx: self.fill_table_and_plots(i))
+        self.ui.comboBox_mridBarcodes.currentIndexChanged.connect(lambda index: self.fill_table_and_plots(index))
+
+
+    def fill_table_and_plots(self,index):
+        #fill table and plot barcodes
+
+        df = self.totaldf[index]
+        barcode_r = self.totalbarcode_r[index]
+        barcode_d = self.totalbarcode_d[index]
+        #mrid_tag = self.totalmrid[index]
+
+
+        table = self.ui.tableWidget_barcode
+        mrid = df["mrid"]
+        probabilities = df["probabilities"]
+        similarities = df["similarities"]
+        for i in range(len(mrid)):
+            intensity_item = QTableWidgetItem(f"{probabilities[i]:.3e}")
+            intensity_item.setFlags(intensity_item.flags() & ~Qt.ItemIsEditable)
+            table.setItem(0,i, intensity_item)
+            intensity_item = QTableWidgetItem(f"{similarities[i]:.5f}")
+            intensity_item.setFlags(intensity_item.flags() & ~Qt.ItemIsEditable)
+            table.setItem(1,i, intensity_item)
+
+        table.resizeColumnsToContents()
+
+        # detected barcode
+        [barcode_design, ticks2, tickLabels2] = barcode_d
+        self.ui.widget_barcode_detected.canvas.figure.clear()
+        # Create an axes object
+        ax1 = self.ui.widget_barcode_detected.canvas.figure.add_subplot(111)
+        ax1.imshow(barcode_design, cmap='gray')
+        ax1.set_xticks(ticks2)
+        ax1.set_xticklabels(tickLabels2,rotation=45)
+        ax1.tick_params(axis='x', labelbottom=True)
+        y_max = barcode_design.max()
+        #ax1.set_yticks(range(0, int(y_max), 200))
+        #print(y_max)
+        ax1.figure.subplots_adjust(bottom=0.25)
+        ax1.tick_params(axis='both', labelsize=9)
+        # Refresh the canvas
+        self.ui.widget_barcode_detected.canvas.draw()
+
+        #save_path = os.path.join(self.LoadMRI.session_path, 'analysed',mrid_tag)
+        #figname = "mrid_barcode-detected.pdf"
+        #self.ui.widget_barcode_detected.canvas.figure.savefig(os.path.join(save_path, figname),bbox_inches="tight",pad_inches=0.1)
+
+        # reconstructed barcode
+        [barcode_reconstructed, ticks, tickLabels] = barcode_r
+        self.ui.widget_barcode_reconstructed.canvas.figure.clear()
+        # Create an axes object
+        ax1 = self.ui.widget_barcode_reconstructed.canvas.figure.add_subplot(111)
+        ax1.imshow(barcode_reconstructed, cmap='gray')
+        ax1.set_xticks(ticks)
+        ax1.set_xticklabels(tickLabels,rotation=45)
+        #ax1.tight_layout()
+        ax1.tick_params(axis='x', labelbottom=True)
+        y_max = barcode_reconstructed.max()
+        #ax1.set_yticks(range(0, int(y_max), 200))
+        #print(y_max)
+        ax1.figure.subplots_adjust(bottom=0.25)
+        ax1.tick_params(axis='both', labelsize=9)
+        # Refresh the canvas
+        self.ui.widget_barcode_reconstructed.canvas.draw()
+
+        #figname = "mrid_barcode-reconstructed.pdf"
+        #self.ui.widget_barcode_reconstructed.canvas.figure.savefig(os.path.join(save_path, figname),bbox_inches="tight",pad_inches=0.1)
+
+        if self.ca1_popup is not None:
+            self.ca1_popup.close()
+
+        if self.totalCA1[index]:
+            self.ca1_popup = PlotPopup(self.ui.centralwidget, title="CA1 Signal")
+            ax1 = self.ca1_popup.get_axes()
+            #popup = PlotPopup(self.MW, title="CA1 Signal")
+            #ax1 = self.ca1_popup.fig.add_subplot(111)
+            dwi1Dsignal = self.totaldwi1Dsignal[index]
+            regionNames = self.totalregionNames[index]
+            num_channels = dwi1Dsignal.shape[0]
+            #self.ui.groupbox_CA1.setVisible(True)
+            pixelValues = dwi1Dsignal
+            pixelValues = (pixelValues - np.min(pixelValues)) / (np.max(pixelValues) - np.min(pixelValues))
+            #plot = MplWidget()
+            #self.ui.widget_CA1.canvas.figure.clear()
+            #ax1 = self.ui.widget_CA1.canvas.figure.add_subplot(111)
+            region_to_color = self.ca1_popup.plot.get_region_colors(regionNames)
+            # Plot line segments with color depending on region
+            for i in range(len(pixelValues) - 1):
+                region = regionNames[i]
+                ax1.plot([i, i + 1], [pixelValues[i], pixelValues[i + 1]],
+                         color=region_to_color[region], linewidth=2)
+
+            # Optional: Add legend
+            unique_regions = list(set(regionNames))
+            for region in unique_regions:
+                ax1.plot([], [], color=region_to_color[region], label=region)
+
+            #ax1.axvline(x=dwi1Dsignal, color='red', linestyle='--', linewidth=2, label='Pyramidal Layer')
+            ax1.axvline(x=self.totalpyrChIdx[index], color='red', linestyle='--', linewidth=2, label='Pyramidal Layer')
+            ax1.set_xticks(np.linspace(0, num_channels - 1, num_channels))
+            #ax1.set_xticklabels(chMap)
+            ax1.legend(title="Anatomical Region",fontsize=7)
+            ax1.set_xlabel("Channel Index")
+            ax1.set_ylabel("Pixel Value")
+            ax1.set_title("Pixel Values by Region")
+            ax1.tick_params(axis='both', labelsize=7)
+            ax1.grid(True)
+            #self.ui.widget_CA1.canvas.draw()
+            self.ca1_popup.plot.canvas.draw()
+            self.ca1_popup.show()
+            self.ca1_popup.raise_()
+            self.ca1_popup.activateWindow()
+            #plot.canvas.figure.savefig(os.path.join(savepath, "dwi_1D_cross_section.pdf"), dpi=2000)
+
+        for data_index in range(len(self.LoadMRI.vtk_widgets[0])):
+            fitted_points = self.fitted_points[index]
+            data_view = list(self.LoadMRI.vtk_widgets[0].keys())[data_index]
+            filename = self.LoadMRI.file_name[data_index][0:self.LoadMRI.file_name[data_index].find('.')] #[os.path.splitext(f)[0] for f in self.LoadMRI.file_name]
+            filename_4d_warped = ".".join((filename + "-resampled-warped", "nii", "gz"))
+            filename_4d_warped_path = os.path.join(os.path.join(self.LoadMRI.session_path,"anat"), filename_4d_warped)
+            img_4d= sITK.ReadImage(filename_4d_warped_path)
+            vol = sITK.GetArrayFromImage(img_4d)
+            if data_view=='sagittal':
+                img_slice = np.fliplr(vol[:,:,round(fitted_points[0][0])].T)
+                #spacing = []
+            else:
+                img_slice = vol[int(fitted_points[0][2]),:,:]
+            spacing = img_4d.GetSpacing() #xyz # #
+            self.LoadMRI.ElectrodeLoc.visualize_4Dwarpedslice(img_slice,spacing,data_index,data_view)
+            #renderer.RemoveAllViewProps()
+            if hasattr(self,'self.actor_points'):
+                for i in range(len(self.actor_points)):
+                    self.LoadMRI.renderers[3][data_view].RemoveActor(self.actor_points[i])
+            self.actor_points = []
+            for idx in range(len(fitted_points)):
+                if data_view=='sagittal':
+                    x = vol.shape[0]-1-fitted_points[idx][2]
+                    y = fitted_points[idx][1]
+                    spacing = np.array(spacing)
+                    spacing[2] = spacing[0]
+                else:
+                    x = fitted_points[idx][0]
+                    y = fitted_points[idx][1]
+                actor = self.LoadMRI.ElectrodeLoc.add_point(self.LoadMRI.renderers[3][data_view], x,y,spacing,vol,idx)
+                self.actor_points.append(actor)
+            #print('actor_points ',self.LoadMRI.ElectrodeLoc.actor_points)
+            #print('actor_4Dwarped ', self.LoadMRI.ElectrodeLoc.actor_4Dwarped)
+            self.LoadMRI.renderers[3][data_view].GetRenderWindow().Render()
 
     def contrast_adjustments(self):
         """
@@ -600,9 +879,9 @@ class ButtonsGUI_4D:
         self.popup.show()
 
 
-    def visualization_start(self):
-        save_path = "C:/Users/shadowfax/Downloads/atlas_filtered.nii.gz"
-        self.visualization_3D(save_path)
+    #def visualization_start(self):
+    #    save_path = "C:/Users/shadowfax/Downloads/atlas_filtered.nii.gz"
+    #    self.visualization_3D(save_path)
 
     #def visualization_3D(self,save_path):
     #    ## Quick3D Visualization
@@ -622,37 +901,37 @@ class ButtonsGUI_4D:
     #    print("Absolute QML path:", os.path.abspath(qml_path))
     #    print("File exists:", os.path.exists(os.path.abspath(qml_path)))
 
-    def visualization_3D(self, save_path):
-        from PySide6.QtQuick import QQuickView
-        from PySide6.QtWidgets import QWidget
-        from PySide6.QtCore import QUrl
+    #def visualization_3D(self, save_path):
+    #    from PySide6.QtQuick import QQuickView
+    #    from PySide6.QtWidgets import QWidget
+    #    from PySide6.QtCore import QUrl
 
-        self.volume_provider = Visualization3D(save_path)
+    #    self.volume_provider = Visualization3D(save_path)
 
-        self.quick3d_view = QQuickView()
-        # Crucial: Set the color to transparent or a specific color to see if it renders
-        self.quick3d_view.setColor(QtGui.QColor("black"))
+    #    self.quick3d_view = QQuickView()
+    #    # Crucial: Set the color to transparent or a specific color to see if it renders
+    #    self.quick3d_view.setColor(QtGui.QColor("black"))
 
-        self.quick3d_view.rootContext().setContextProperty(
-            "Visualization3D", self.volume_provider
-        )
+    #    self.quick3d_view.rootContext().setContextProperty(
+    #        "Visualization3D", self.volume_provider
+    #    )
 
-        qml_path = os.path.abspath("gui_utils/volumer_viewer.qml")
-        self.quick3d_view.setSource(QUrl.fromLocalFile(qml_path))
+    #    qml_path = os.path.abspath("gui_utils/volumer_viewer.qml")
+    #    self.quick3d_view.setSource(QUrl.fromLocalFile(qml_path))
 
-        placeholder = self.ui.quickWidget_3D
-        parent_widget = placeholder.parentWidget()
-        layout = parent_widget.layout()
+    #    placeholder = self.ui.quickWidget_3D
+    #    parent_widget = placeholder.parentWidget()
+    #    layout = parent_widget.layout()
 
-        # Create the container
-        self.quick3d_container = QWidget.createWindowContainer(self.quick3d_view, parent_widget)
+    #    # Create the container
+    #    self.quick3d_container = QWidget.createWindowContainer(self.quick3d_view, parent_widget)
 
-        # Ensure the container takes up space
-        self.quick3d_container.setMinimumSize(placeholder.size())
+    #    # Ensure the container takes up space
+    #    self.quick3d_container.setMinimumSize(placeholder.size())
 
-        layout.replaceWidget(placeholder, self.quick3d_container)
-        placeholder.deleteLater()
+    #    layout.replaceWidget(placeholder, self.quick3d_container)
+    #    placeholder.deleteLater()
 
-        # FORCE UI UPDATE
-        self.quick3d_container.show()
-        self.ui.stackedWidget_heatmap.setCurrentIndex(1)
+    #    # FORCE UI UPDATE
+    #    self.quick3d_container.show()
+    #    self.ui.stackedWidget_heatmap.setCurrentIndex(1)

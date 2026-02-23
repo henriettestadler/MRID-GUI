@@ -39,6 +39,15 @@ class Minimap:
         """
         Adds or updates three minimaps (axial, coronal, sagittal) to the given vtk widgets.
         """
+        rectangle_new = False
+        if view_name in self.minimap_renderers[image_index]:
+            vtk_widget.GetRenderWindow().RemoveRenderer(self.minimap_renderers[image_index][view_name])
+            self.minimap_renderers[image_index].pop(view_name, None)
+            self.minimap_actors[image_index].pop(view_name, None)
+            self.zoom_rects[image_index].pop(view_name, None)
+            rectangle_new = True
+
+
         #Create or reuse the mini-map renderer
         if view_name not in self.minimap_renderers[image_index]:
             mm_renderer = vtk.vtkRenderer()
@@ -73,6 +82,9 @@ class Minimap:
         if not self.LoadMRI.zoom_tf[view_name]: # Hide at the beginning
             self.minimap_actors[image_index][view_name].SetVisibility(False)
             mm_renderer.SetDraw(False)
+
+        if rectangle_new:
+            self.pan_arrows(view_name,0,0,data_index)
 
     def create_small_rectangle(self,zoom_factor,vn: str=None,new_x: float=0,new_y: float=0,pan_arrow: bool=False):
         """

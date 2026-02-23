@@ -104,6 +104,7 @@ class MRID_tags(QObject):
         self.LoadMRI.paintbrush.labels_paintover.extend(label_names)
 
         #Histogram
+        print('histogram zeugs')
         self.LoadMRI.paintbrush.color_histogram = label_text
         self.LoadMRI.paintbrush.labels_histogram = label_names
 
@@ -329,6 +330,7 @@ class MRID_tags(QObject):
         h, w = img_slice.shape
         spacing = (self.LoadMRI.spacing[data_index][2], self.LoadMRI.spacing[data_index][1], 1)
 
+        #reset_camera = False
         if reset_camera:
             renderer,img_vtk = self.open_mainimage(vtk_widget,vtk_data, spacing,w,h,view_name)
 
@@ -357,15 +359,15 @@ class MRID_tags(QObject):
                 self.width[data_index] = (x_max - x_min) * spacing_x
                 self.height[data_index] = (y_max - y_min) * spacing_y
 
-            camera_base = self.LoadMRI.renderers[0][view_name].GetActiveCamera()
-            camera = renderer.GetActiveCamera()
-            fp = camera_base.GetFocalPoint()
-            pos = camera_base.GetPosition()
-            self.center_x[data_index] = fp[0]
-            self.center_y[data_index] = fp[1]
-            sca = camera.GetParallelScale()
-            self.width[data_index] = sca
-            self.height[data_index] = sca
+            ##camera_base = self.LoadMRI.renderers[0][view_name].GetActiveCamera()
+            ##camera = renderer.GetActiveCamera()
+            ##fp = camera_base.GetFocalPoint()
+            ##pos = camera_base.GetPosition()
+            ##self.center_x[data_index] = fp[0]
+            ##self.center_y[data_index] = fp[1]
+            ##sca = camera.GetParallelScale()
+            ##self.width[data_index] = sca
+            ##self.height[data_index] = sca
 
 
             #camera.SetFocalPoint(self.center_x[data_index], self.center_y[data_index], fp[2])

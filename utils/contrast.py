@@ -70,7 +70,7 @@ class Contrast:
             self.auto_buttons[image_index] = ui[f"auto{image_index}"]
             self.reset_buttons[image_index] = ui[f"reset{image_index}"]
 
-            #initialiye slider limits and values
+            #initialize slider limits and values
             self.window_sliders[image_index].setMinimum(1)
             self.window_sliders[image_index].setMaximum(int(self.LoadMRI.volume[data_index][image_index].max()))
             self.window_sliders[image_index].setValue(int(self.window[image_index]))
@@ -81,7 +81,6 @@ class Contrast:
             self.display_window_sliders[image_index].display(int(self.window[image_index]))
 
 
-
     def compute_lut(self,image_index:int,data_index):
         """
         Creates a grayscale VTK lookup table based on the volume’s min and max intensities
@@ -90,11 +89,16 @@ class Contrast:
             vmin, vmax = np.percentile(self.LoadMRI.volume[data_index][0], [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100])
         else:
             vmin, vmax = np.percentile(self.LoadMRI.volume[data_index][image_index], [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100])
-        self.lut_vtk[image_index] = vtk.vtkLookupTable()
-        self.lut_vtk[image_index].SetTableRange(vmin, vmax)
-        self.lut_vtk[image_index].SetValueRange(0.0, 1.0)
-        self.lut_vtk[image_index].SetSaturationRange(0.0, 0.0)
-        self.lut_vtk[image_index].Build()
+
+        if image_index not in self.lut_vtk:
+            self.lut_vtk[image_index] = vtk.vtkLookupTable()
+
+        lut = self.lut_vtk[image_index]
+        lut.SetTableRange(vmin, vmax)
+        lut.SetValueRange(0.0, 1.0)
+        lut.SetSaturationRange(0.0, 0.0)
+        lut.Build()
+        lut.Modified()
 
 
 
@@ -102,8 +106,10 @@ class Contrast:
         """
         Updates the LUT and re-renders all VTK actors using the current selected window (contrast) and level (brightness).
         """
+
         vmin = self.level[image_index] - self.window[image_index] / 2
         vmax = self.level[image_index] + self.window[image_index] / 2
+
 
         # Update the VTK LUT if table range has changed
         if not hasattr(self, "last_range") or self.last_range != (vmin, vmax):
@@ -148,7 +154,6 @@ class Contrast:
 
         self.update_lut_window_level(image_index)
 
-
     def reset(self,image_index:int):
         """
         Resets window and level to their initial values and updates the LUT and sliders.
@@ -180,17 +185,23 @@ class Contrast:
         self.update_lut_window_level(image_index)
 
 
-    def recompute_luttable(self, volume: np.ndarray,image_index:int,data_index:int):
+    def recompute_luttable(self,image_index:int,data_index:int):
         """
         Recompute LUT and window/level ranges when timestamp is changed
         """
-        vmin, vmax = np.percentile(volume, [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100]) #in percentage
+        vmin, vmax = np.percentile(self.LoadMRI.volume[data_index][image_index], [self.vminmax_perc[0]*100, self.vminmax_perc[1]*100]) #in percentage
         # Level and window for auto and reset
         self.initial_window[image_index] = vmax - vmin
         self.initial_level[image_index] = (vmax + vmin)/2
         vmin_auto, vmax_auto = np.percentile(self.LoadMRI.volume[data_index][image_index], [self.vminmax_auto[0]*100, self.vminmax_auto[1]*100]) #in percentage
         self.window_auto[image_index] = vmax_auto - vmin_auto
         self.level_auto[image_index] = (vmax_auto + vmin_auto)/2
+
+
+        ###    self.window[image_index] = self.initial_window[image_index]
+        ###    self.level[image_index] = self.initial_level[image_index]
+        ###    #apply initial lut
+        ###    self.compute_lut(image_index,data_index)
 
         self.window[image_index] = self.initial_window[image_index]
         self.level[image_index] = self.initial_level[image_index]
@@ -201,9 +212,9 @@ class Contrast:
         # Block signals while updating sliders
         self.block_signals(image_index,True)
 
-        self.window_sliders[image_index].setMaximum(int(volume.max()))
+        self.window_sliders[image_index].setMaximum(int(self.LoadMRI.volume[data_index][image_index].max()))
         self.window_sliders[image_index].setValue(int(self.window[image_index]))
-        self.level_sliders[image_index].setMaximum(int(volume.max()))
+        self.level_sliders[image_index].setMaximum(int(self.LoadMRI.volume[data_index][image_index].max()))
         self.level_sliders[image_index].setValue(int(self.level[image_index]))
         self.display_level_sliders[image_index].display(int(self.level[image_index]))
         self.display_window_sliders[image_index].display(int(self.window[image_index]))
