@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/Icons/nternet">
+        <file>Icons/Internet/measure.png</file>
+        <file>Icons/Internet/platz.png</file>
+        <file>Icons/Internet/scale.png</file>
+        <file>Icons/Internet/tag.png</file>
+        <file>Icons/Internet/paintbrush.png</file>
+    </qresource>
+    <qresource prefix="/Icons/TKSnap">
+        <file>Icons/ITKsnap/desktop.ini</file>
+        <file>Icons/ITKsnap/media-playback-pause-4.png</file>
+        <file>Icons/ITKsnap/snake.gif</file>
+        <file>Icons/ITKsnap/square_brush.png</file>
+        <file>Icons/ITKsnap/circle_brush.png</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>Icons/Internet/eye.png</file>
+        <file>Icons/Internet/hidden.png</file>
+        <file>Icons/Internet/view.png</file>
+    </qresource>
+</RCC>
