@@ -77,8 +77,8 @@ class Contrast:
             self.level_sliders[image_index].setMinimum(1)
             self.level_sliders[image_index].setMaximum(int(self.LoadMRI.volume[data_index][image_index].max()))
             self.level_sliders[image_index].setValue(int(self.level[image_index]))
-            self.display_level_sliders[image_index].display(int(self.level[image_index]))
-            self.display_window_sliders[image_index].display(int(self.window[image_index]))
+            self.display_level_sliders[image_index].setValue(int(self.level[image_index]))
+            self.display_window_sliders[image_index].setValue(int(self.window[image_index]))
 
 
     def compute_lut(self,image_index:int,data_index):
@@ -145,8 +145,8 @@ class Contrast:
         # Block signals while updating sliders
         self.block_signals(image_index,True)
 
-        self.display_level_sliders[image_index].display(int(self.level_auto[image_index]))
-        self.display_window_sliders[image_index].display(int(self.window_auto[image_index]))
+        self.display_level_sliders[image_index].setValue(int(self.level_auto[image_index]))
+        self.display_window_sliders[image_index].setValue(int(self.window_auto[image_index]))
         self.level_sliders[image_index].setValue(int(self.level_auto[image_index]))
         self.window_sliders[image_index].setValue(int(self.window_auto[image_index]))
         # Re-enable signals
@@ -163,8 +163,8 @@ class Contrast:
         # Block signals while updating sliders
         self.block_signals(image_index,True)
 
-        self.display_level_sliders[image_index].display(int(self.initial_level[image_index]))
-        self.display_window_sliders[image_index].display(int(self.initial_window[image_index]))
+        self.display_level_sliders[image_index].setValue(int(self.initial_level[image_index]))
+        self.display_window_sliders[image_index].setValue(int(self.initial_window[image_index]))
         self.level_sliders[image_index].setValue(int(self.initial_level[image_index]))
         self.window_sliders[image_index].setValue(int(self.initial_window[image_index]))
         # Re-enable signals
@@ -179,8 +179,8 @@ class Contrast:
         self.window[image_index] = self.window_sliders[image_index].value()
         self.level[image_index] = self.level_sliders[image_index].value()
 
-        self.display_level_sliders[image_index].display(int(self.level[image_index]))
-        self.display_window_sliders[image_index].display(int(self.window[image_index]))
+        self.display_level_sliders[image_index].setValue(int(self.level[image_index]))
+        self.display_window_sliders[image_index].setValue(int(self.window[image_index]))
 
         self.update_lut_window_level(image_index)
 
@@ -216,8 +216,8 @@ class Contrast:
         self.window_sliders[image_index].setValue(int(self.window[image_index]))
         self.level_sliders[image_index].setMaximum(int(self.LoadMRI.volume[data_index][image_index].max()))
         self.level_sliders[image_index].setValue(int(self.level[image_index]))
-        self.display_level_sliders[image_index].display(int(self.level[image_index]))
-        self.display_window_sliders[image_index].display(int(self.window[image_index]))
+        self.display_level_sliders[image_index].setValue(int(self.level[image_index]))
+        self.display_window_sliders[image_index].setValue(int(self.window[image_index]))
 
         # Re-enable signals
         self.block_signals(image_index,False)

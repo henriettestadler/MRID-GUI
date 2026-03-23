@@ -35,7 +35,7 @@ class Minimap:
 
 
 
-    def add_minimap(self,view_name:str,img_vtk:vtk.vtkImageData,image_index:int,vtk_widget,data_index):
+    def add_minimap(self,view_name:str,img_vtk:vtk.vtkImageData,image_index:int,vtk_widget,data_index,data_3d=False):
         """
         Adds or updates three minimaps (axial, coronal, sagittal) to the given vtk widgets.
         """
@@ -56,7 +56,7 @@ class Minimap:
             h = min(0.3,rw/rh*0.3)
             self.size_rectangle[image_index][view_name] = [w,h]
             mm_renderer.SetViewport(0.0, 0.0,w,h)  # bottom-left corner
-            mm_renderer.SetLayer(0)
+            mm_renderer.SetLayer(2)
             mm_renderer.SetBackground(1, 1, 1)
             vtk_widget.GetRenderWindow().SetNumberOfLayers(3)
             vtk_widget.GetRenderWindow().AddRenderer(mm_renderer)
@@ -79,12 +79,13 @@ class Minimap:
             self.minimap_actors[image_index][view_name] = actor
         mm_renderer.ResetCamera()
 
+
         if not self.LoadMRI.zoom_tf[view_name]: # Hide at the beginning
             self.minimap_actors[image_index][view_name].SetVisibility(False)
             mm_renderer.SetDraw(False)
 
         if rectangle_new:
-            self.pan_arrows(view_name,0,0,data_index)
+            self.pan_arrows(view_name,0,0,data_index,data_3d)
 
     def create_small_rectangle(self,zoom_factor,vn: str=None,new_x: float=0,new_y: float=0,pan_arrow: bool=False):
         """
@@ -327,7 +328,7 @@ class Minimap:
         fp_new = [fp[0]+diff_x, fp[1]+diff_y, fp[2]]
         pos = camera.GetPosition()
         pos_new = [pos[0]+diff_x, pos[1]+diff_y, pos[2]]
-
+        #return
         if data_3d:
             camera.ParallelProjectionOn()
             camera.SetParallelScale(scale)
