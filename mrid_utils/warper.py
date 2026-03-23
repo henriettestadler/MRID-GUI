@@ -63,7 +63,7 @@ def create_composite_transform(transformations, anatpath, verbose=False):
     composite = sitk.CompositeTransform(3)
 
     for i, transform_filename in enumerate(transformations):
-        transform_path = os.path.join(anatpath, transform_filename + ".txt")
+        transform_path = transform_filename #os.path.join(anatpath, transform_filename + ".txt")
 
         if verbose:
             print("Transform applied in " + str(i) + "th order: ")

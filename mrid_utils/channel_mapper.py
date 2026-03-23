@@ -5,7 +5,8 @@ import nibabel as nib
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from mplwidget import MplWidget
-
+from scipy.spatial import cKDTree
+import pandas as pd
 # TODO: HENRIETTE, BELOW MIGHT BE UNNECESSARY FOR YOU, JUST LOADING ATLAS IMAGES AND LABELS, just make sure you have the necessary variables loaded somewhere
 #root=""
 
@@ -82,9 +83,8 @@ def map_electrodes_main(fitted_points, mrid_dict, px_size = 25, channel_separati
         print(chs_mapped)
 
     ch_coords = np.vstack(ch_coords)
-    print("Mapped channel coordinates: ")
-    print(ch_coords)
-    # visualize_channelfit(ch_coords, fitted_points)
+    #print("Mapped channel coordinates: ")
+    #print(ch_coords)
     return ch_coords
 
 
@@ -106,7 +106,7 @@ def interpolate_channels(bottom_coord, top_coord, nchannels, offset, channel_sep
     return (ch_coords).astype('int'), unitvec
 
 
-def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi,chMap=[]):
+def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi,chMap=[]):
     # Coronal slice to be plotted selector
     # temp_y = 0
     # To find the minima, 16bit gray-scale pixels
@@ -119,51 +119,85 @@ def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savep
     regionNumbers = []
     pyrChIdx = 0
     pyrLyExists = False
-    print('savepath for channel_atlas_coordinates',savepath)
-    with open(os.path.join(savepath, "channel_atlas_coordinates.txt"), 'w') as f:
+    label_to_region = dict(zip(atlaslabelsdf["Labels"],atlaslabelsdf["Anatomical Regions"]))
+    tree = cKDTree(moving_coordinates)
+    rows = []
 
-        for idx, coord in enumerate(ch_coord):
-            #print(idx,coord, ch_coord)
-            atlasIdx = ((moving_coordinates[:, 0] == coord[0]) & (moving_coordinates[:, 1] == coord[1]) & (
-                        moving_coordinates[:, 2] == coord[2]))
-            if fixed_coordinates[atlasIdx].any():
-                print("Exact coordinate exists")
-            else:
-                print("no exact atlas coord")
-                atlasIdx = ((moving_coordinates[:, 0] >= coord[0] - 1) & (moving_coordinates[:, 0] <= coord[0] + 1) &
-                            (moving_coordinates[:, 1] >= coord[1] - 1) & (moving_coordinates[:, 1] <= coord[1] + 1) &
-                            (moving_coordinates[:, 2] >= coord[2] - 1) & (moving_coordinates[:, 2] <= coord[2] + 1)
-                            )
+    #with open(os.path.join(savepath, "channel_atlas_coordinates.txt"), 'w') as f:
 
-            atlasCoord = fixed_coordinates[atlasIdx][0]
-            x, y, z = atlasCoord.astype(int)
-            label = atlas[x, y, z]
-            print('label',label)
-            anat_region = atlaslabelsdf["Anatomical Regions"][atlaslabelsdf["Labels"] == label].values[0]
-            regionNames.append(anat_region)
-            regionNumbers.append(label)
+    for idx, coord in enumerate(ch_coord):
+        # Query nearest neighbor
+        dist, idx_nearest = tree.query(coord)
 
-            currPixVal = dwi[x, y, z]
-            dwi1Dsignal[idx] = currPixVal
-            if anat_region == "Cornu ammonis 1":
-                pyrLyExists = True
-                if currPixVal < minPixVal:
-                    minPixVal = currPixVal
-                    pyrCh = idx
-                    pyrChIdx = idx
-                    chMap.append(idx)
+        # Allow only neighbors within sqrt(3) (same as ±1 cube)
+        if dist <= np.sqrt(3):
+            atlasCoord = fixed_coordinates[idx_nearest]
+        else:
+            atlasCoord = fixed_coordinates[idx_nearest]
+            print("atlas coordinates found")
+        #else:
+        #    print("No nearby atlas coordinate found")
+        #    continue
+        #print(idx,coord, ch_coord)
+        #atlasIdx = ((moving_coordinates[:, 0] == coord[0]) & (moving_coordinates[:, 1] == coord[1]) & (
+        #            moving_coordinates[:, 2] == coord[2]))
+        #if fixed_coordinates[atlasIdx].any():
+        #    print("Exact coordinate exists")
+        #else:
+        #    print("no exact atlas coord")
+        #    atlasIdx = ((moving_coordinates[:, 0] >= coord[0] - 1) & (moving_coordinates[:, 0] <= coord[0] + 1) &
+        #                (moving_coordinates[:, 1] >= coord[1] - 1) & (moving_coordinates[:, 1] <= coord[1] + 1) &
+        #                (moving_coordinates[:, 2] >= coord[2] - 1) & (moving_coordinates[:, 2] <= coord[2] + 1)
+        #                )
 
-            line = "CH:" + str(idx) + " in " + anat_region + ' Segment: ' + str(label) + " atlas coord: " + str(
-                atlasCoord) #str(chMap[idx])
-            print(line)
-            f.write(line)
-            f.write('\n')
+        #atlasCoord = fixed_coordinates[atlasIdx][0]
 
-        # Writing the pyramidal channel
-        line = "CH:" + str(pyrCh) + " in pyramidal layer CA1"
-        print(line)
-        f.write(line)
-        f.write('\n')
+        x, y, z = atlasCoord.astype(int)
+        label = atlas[x, y, z]
+        anat_region = label_to_region[label]
+        regionNames.append(anat_region)
+        regionNumbers.append(label)
+        rows.append({
+            "Channel ID": idx,
+            "Channel": label,
+            "Channel Label": anat_region,
+            "Atlas x": atlasCoord[0],
+            "Atlas y": atlasCoord[1],
+            "Atlas z": atlasCoord[2],
+        })
+        #anat_region = atlaslabelsdf["Anatomical Regions"][atlaslabelsdf["Labels"] == label].values[0]
+
+        df = pd.DataFrame(rows)
+        excel_path = os.path.join(savepath, "channel_atlas_coordinates.xlsx")
+        df.to_excel(excel_path, index=False)
+
+
+        currPixVal = dwi[x, y, z]
+        dwi1Dsignal[idx] = currPixVal
+        if anat_region == "Cornu ammonis 1":
+            pyrLyExists = True
+            if currPixVal < minPixVal:
+                minPixVal = currPixVal
+                pyrCh = idx
+                pyrChIdx = idx
+                #chMap.append(idx)
+
+        #line = "CH:" + str(idx) + " in " + anat_region + ' Segment: ' + str(label) + " atlas coord: " + str(
+        #    atlasCoord) #str(chMap[idx])
+        #print(line)
+        #f.write(line)
+        #f.write('\n')
+    print(rows,savepath,flush=True)
+    # Writing the pyramidal channel
+    #line = "CH:" + str(pyrCh) + " in pyramidal layer CA1"
+    #print(line)
+    #f.write(line)
+    #f.write('\n')
+    atlasCoordinates_pkl = []
+    for idx, coord in enumerate(fitted_mrid_points):
+        dist, idx_nearest = tree.query(coord)
+        atlasCoord = fixed_coordinates[idx_nearest]
+        atlasCoordinates_pkl.append(atlasCoord)
 
     if pyrLyExists:
         pixelValues = dwi1Dsignal
@@ -189,7 +223,9 @@ def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savep
         ax1.axvline(x=pyrChIdx, color='red', linestyle='--', linewidth=2, label='Pyramidal Layer')
         ax1.set_xticks(np.linspace(0, num_channels - 1, num_channels))
         ax1.tick_params(axis="x", labelrotation=45)
-        #ax1.set_xticklabels(chMap)
+        if chMap:
+            print('chMap',chMap,flush=True)
+            ax1.set_xticklabels(chMap)
         ax1.legend(title="Anatomical Region",fontsize=16,title_fontsize=16) #7
         ax1.set_xlabel("Channel Index")
         ax1.set_ylabel("Pixel Value")
@@ -199,7 +235,7 @@ def map_channels_to_atlas(ch_coord, moving_coordinates, fixed_coordinates, savep
         plot.canvas.draw()
         plot.canvas.figure.savefig(os.path.join(savepath, "dwi_1D_cross_section.pdf"), dpi=2000)
 
-    return dwi1Dsignal,regionNames,regionNumbers,pyrLyExists,pyrChIdx
+    return dwi1Dsignal,regionNames,regionNumbers,pyrLyExists,pyrChIdx,atlasCoordinates_pkl
 
 
 def get_mapped_ch(chmap_path, anat_list, num_channels=64, filename="channel_atlas_coordinates.txt"):

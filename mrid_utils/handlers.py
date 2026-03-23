@@ -68,6 +68,7 @@ def read_data(path):
     nii: nii object
     data: mri volume as np array
     """
+    print(path,flush=True)
     nii = nib.load(path)
     data = np.asanyarray(nii.dataobj)
 
@@ -108,9 +109,7 @@ def find_resampled_img(ind, path):
     Finds the 25um isovoxel resampled whole-volume image
     """
     filename = find_ind_data(ind, path)
-    #print(ind, path, filename)
     filename = ".".join(((filename[0].split(".")[0]+"_resampled", "nii", "gz")))
-    #print("Fixed image for the warping: "+filename)
     return filename
 
 def find_ind_data(ind,path):
