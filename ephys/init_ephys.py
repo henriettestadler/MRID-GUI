@@ -1,10 +1,7 @@
 # This Python file uses the following encoding: utf-8
 from ephys.visualisation3D import Visualisation3D
 import os
-from PySide6.QtWidgets import QMessageBox
 from PySide6 import QtWidgets
-import sys
-from PySide6.QtWidgets import QHBoxLayout,QPushButton,QDialog
 import pandas as pd
 import pyvista as pv
 import numpy as np
@@ -12,22 +9,76 @@ import SimpleITK as sITK
 from neo.io import NeuroScopeIO
 from ephys.visualisationEphys import VisualisationEphys
 import xml.etree.ElementTree as ET
-import nibabel as nib
+from ephys.change_anatRegion import Change_AnatRegion
 from PySide6.QtGui import QBrush, QColor
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTableWidgetItem
+import numpy
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QComboBox, QDialogButtonBox, QLabel
+from PySide6.QtWidgets import QMessageBox, QFileDialog
+from ephys.videoplayer import VideoPlayer
 
 class InitEphys:
     def __init__(self, MW, filename):
         self.session_path = os.path.dirname(os.path.dirname(filename))
         self.MW = MW
-        MW.ui.pushButton_anatRegion.clicked.connect(self.change_anatRegion)
-        self.mrid = 'penta'
+        self.MW.ui.pushButton_anatRegion.clicked.connect(self.changeRegion)
+        self.first_time = True
+        self.filename = filename
 
-        self.Visualisation3D = Visualisation3D(self.session_path,self.MW,self.mrid)
-        reader = NeuroScopeIO(filename)
-        #print(xml_file.header() ,flush=True)
-        read_data = reader.read_segment(lazy=True)
-        self.VisEphys = VisualisationEphys(self.MW,self.Visualisation3D,read_data)
+        self.MW.ui.pushButton_changeTAG.clicked.connect(self.change_mridTAG)
+        self.MW.ui.pushButton_AddVideo.clicked.connect(self.add_video)
+
+
+    def get_mrid_tag(self,session_path):
+        mrid_tags = [f.name for f in os.scandir(os.path.join(session_path,"analysed")) if f.is_dir()]
+
+        self.coordinates = {}
+        for mrid in mrid_tags:
+            coordinates = numpy.load(os.path.join(session_path,"analysed",mrid,"gaussian_centers_3D.npy"))
+            self.coordinates[mrid]=coordinates[0][0]
+        #Atlas Coordinate System: RAS -> higher X = more Right
+        self.coordinates = dict(sorted(self.coordinates.items(), key=lambda item: item[1], reverse=True))
+
+        # get coordinates, set to 0 by default
+        self.mrid_idx_xml = 0
+        self.mrid = list(self.coordinates.keys())[self.mrid_idx_xml] #self.coordinates[0][0] #'trio' #A->0
+
+
+    def change_mridTAG(self): #,filename,new_tag_index
+        dialog = QDialog(self.MW)
+        dialog.setWindowTitle("Select new MRID TAG")
+        layout = QVBoxLayout()
+
+        label = QLabel("Choose:")
+        combo = QComboBox()
+        combo_items = []
+        for i, mrid in enumerate(self.coordinates):
+            text = f"{mrid} (Channel Group: {i})"
+            combo_items.append(text)
+
+        combo.addItems(combo_items)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+
+        layout.addWidget(QLabel("Please select in the Combobox the new Tag"))
+        layout.addWidget(label)
+        layout.addWidget(combo)
+        layout.addWidget(buttons)
+        dialog.setLayout(layout)
+
+        if dialog.exec_() == QDialog.Accepted:
+            selected = combo.currentIndex()
+
+
+        self.mrid_idx_xml = selected
+        self.mrid = list(self.coordinates.keys())[self.mrid_idx_xml] #self.coordinates[0][0] #'trio' #A->0
+
+        ##something like this?
+        print('NEUES TAG',flush=True)
+        del self.Visualisation3D.chMap
+        self.open_dat()
+
 
     ##TODO
     # read data and rhs file
@@ -35,34 +86,70 @@ class InitEphys:
     # class neo.io.NeuroScopeIO(filename) - extensions = ['xml', 'dat', 'lfp', 'eeg']
     ## ask if file open okay
 
-    def open_dat(self,filename):
-        channels, skipped_ch = self.open_xml_file(filename)
-        channels = np.arange(0,20)
-        self.VisEphys.visualize_data(channels)
+    def open_dat(self):
+        all_channels,channels, skipped_ch = self.open_xml_file(self.filename)
 
-        self.Visualisation3D.manually_pick_point(point=[],idx=0)
+        reader = NeuroScopeIO(self.filename)
+        read_data = reader.read_segment(lazy=True)
+        if self.first_time:
+            self.get_mrid_tag(self.session_path)
+            self.Visualisation3D = Visualisation3D(self.session_path,self.MW,self.mrid,chMap=all_channels[self.mrid_idx_xml])
+            self.Visualisation3D.initialize_mridTag(self.mrid,chMap=all_channels[self.mrid_idx_xml])
+            self.VisEphys = VisualisationEphys(self.MW,self.Visualisation3D,read_data,all_channels[self.mrid_idx_xml],skipped_ch[self.mrid_idx_xml])
+        else:
+            print(self.mrid)
+            self.Visualisation3D.spinbox.blockSignals(True)
+            self.Visualisation3D.initialize_mridTag(self.mrid,chMap=all_channels[self.mrid_idx_xml])
+            self.Visualisation3D.spinbox.blockSignals(False)
+            self.Visualisation3D.fill_table(all_channels[self.mrid_idx_xml],skipped_ch[self.mrid_idx_xml])
+
+        self.VisEphys.all_channels = all_channels[self.mrid_idx_xml]
+        self.MW.ui.widget_pgEphys.init_PgWidget_class(self.VisEphys,self.MW)
+
+        self.VisEphys.visualize_data(channels[self.mrid_idx_xml])
+        self.Visualisation3D.manually_pick_point(point=[],idx=all_channels[self.mrid_idx_xml].index(channels[self.mrid_idx_xml][0]))
+        if self.first_time:
+            self.Visualisation3D.spinbox.valueChanged.connect(self.Visualisation3D.channel_changed)
+            self.first_time = False
         self.Visualisation3D.plotter.enable_parallel_projection()
+        self.Visualisation3D.skipped_ch = skipped_ch[self.mrid_idx_xml]
 
 
     def open_xml_file(self,filename):
-        xml_path = filename.replace('.dat', '.xml')
-        tree = ET.parse(xml_path)
+        self.xml_path = filename.replace('.dat', '.xml')
+        tree = ET.parse(self.xml_path)
         root = tree.getroot()
-        channels = {}
+        active_channels = {}
         skipped = {}
+        all_channels= {}
 
         for group_idx, group in enumerate(root.findall('.//group')):
-            channels[group_idx] = []
+            active_channels[group_idx] = []
             skipped[group_idx] = []
+            all_channels[group_idx] = []
             for ch in group.findall('channel'):
                 ch_id = int(ch.text)
                 skip  = int(ch.get('skip', 0))
                 if skip == 0:
-                    channels[group_idx].append(ch_id)
+                    active_channels[group_idx].append(ch_id)
                 else:
                     skipped[group_idx].append(ch_id)
+                all_channels[group_idx].append(ch_id)
+        return all_channels, active_channels, skipped
 
-        return channels, skipped
+    def change_xml_file(self,channel_idx:int,skip):
+        tree = ET.parse(self.xml_path)
+        root = tree.getroot()
+
+        for idx, group in enumerate(root.findall('.//group')):
+            if idx == self.mrid_idx_xml:
+                for ch in group.findall('channel'):
+                    print('CH',int(ch.text),channel_idx,skip,flush=True)
+                    if int(ch.text) == int(channel_idx):
+                        ch.set('skip', str(skip))
+                        break
+
+        tree.write(self.xml_path, xml_declaration=True, encoding="utf-8")
 
         #os.path.join(filename[:-4] + '.xml')
         #print(reader.read_params,flush=True)
@@ -75,36 +162,48 @@ class InitEphys:
         #- dead channels (if skip=1), aber option haben
 
 
+    def add_video(self):
+        file_name, _ = QFileDialog.getOpenFileName(
+            None,
+            "Open Video File",
+            "",
+            "Video files (*.avi)"
+        )
 
+        #User cancelled
+        if not file_name:
+            return
 
-
-
-
-
-
-
-
-
-
-    def change_anatRegion(self):
+        #pop up asking for the view if 4D data used
         msg_box = QMessageBox()
-        msg_box.setWindowTitle("Change Anat Region")
-        msg_box.setText("Are you sure to change the anat region of the selected channel")
+        msg_box.setWindowTitle("Open Main File")
+        msg_box.setText(f"Do you want to open the file \n {file_name}?")
         msg_box.addButton("Yes", QMessageBox.ActionRole)
+        btn_no = msg_box.addButton("No, other Video", QMessageBox.ActionRole)
         btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
         msg_box.exec()
         if msg_box.clickedButton()==btn_cancel:
             return
-        dlg = CHANGE_AnatRegion(self.MW)
+        if msg_box.clickedButton()==btn_no:
+            self.add_video()
+
+        ## initiate video class
+        self.Video = VideoPlayer(self.MW,file_name)
+
+
+    def changeRegion(self):
+        dlg = Change_AnatRegion(self.MW)
         if dlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
-            self.MW.ui.comboBox_anatRegion.setCurrentIndex(self.MW.ui.comboBox_anatRegion.findText(self.MW.ui.comboBox_ChangeanatRegion.currentText()))
+            self.MW.ui.comboBox_anatRegion.setCurrentIndex(self.MW.ui.comboBox_anatRegion.findText(self.MW.ui.comboBox_ChangeanatRegion.currentText().split('(')[0].strip()))
             points_electrodes_path = os.path.join(os.path.join(self.session_path,"analysed"),self.mrid,'channel_atlas_coordinates.xlsx')
             self.points_data = pd.read_excel(points_electrodes_path,header=0)
-            #self.Visualisation3D
+
             new_index = self.MW.ui.comboBox_anatRegion.currentIndex()
             new_label = self.Visualisation3D.atlaslabelsdf['LABEL'].values[new_index]
             new_idx = self.Visualisation3D.atlaslabelsdf['IDX'].values[new_index]
-            channel_numb = self.MW.ui.spinBox_channelID.value()
+
+            channel_numb = self.Visualisation3D.chMap.index(self.MW.ui.spinBox_channelID.value())
+
             self.points_data.loc[channel_numb,'Channel Label'] = new_label
             self.points_data.loc[channel_numb,'Channel'] = new_idx
             #save back in excel
@@ -114,7 +213,31 @@ class InitEphys:
 
             #change atlas incase new label was added
             if self.check_newlabel(new_idx):
-                self.Visualisation3D.delete_volumes(self.mrid)
+                self.Visualisation3D.delete_volumes(self.mrid,new_idx,channel_numb)
+
+            #update table with new label and new color table
+            max_idx = self.Visualisation3D.atlaslabelsdf['IDX'].max()
+            rgba = self.Visualisation3D.cmap(new_idx / max_idx)
+            r, g, b,a = rgba
+            color = QColor(r*255, g*255, b*255)
+            item = QTableWidgetItem(str(new_label))
+            self.MW.ui.tableWidget_ephys.setItem(channel_numb, 2, item)
+            item = self.MW.ui.tableWidget_ephys.item(channel_numb, 1)
+            item.setForeground(QBrush(color))
+            item = self.MW.ui.tableWidget_ephys.item(channel_numb, 2)
+            item.setForeground(QBrush(color))
+            item = self.MW.ui.tableWidget_ephys.item(channel_numb, 3)
+            item.setForeground(QBrush(color))
+
+
+            # update plot color
+            line = self.VisEphys.ephys_lines[channel_numb]
+            current_pen = line.opts['pen']
+            current_pen.setColor(QColor(int(r*255), int(g*255), int(b*255), int(a*255)))
+            #pen = pg.mkPen(color=(int(r*255), int(g*255), int(b*255),int(a*255)), width=0.5)
+            line.setPen(current_pen)
+
+
 
 
     def check_newlabel(self,new_idx):
@@ -139,112 +262,4 @@ class InitEphys:
 
 
 
-class CHANGE_AnatRegion(QDialog):
-    def __init__(self, MW,parent=None):
-        super().__init__(parent)
-        self.MW = MW
-
-        self.setWindowTitle("Change Anat Region")
-
-        main_layout = QtWidgets.QVBoxLayout(self)
-
-        text = QtWidgets.QLineEdit("Please select the correct anatomical region.")
-        text.setReadOnly(True)
-
-        main_layout.addWidget(text)
-        self.group_box = self.MW.ui.groupBox_ChangeanatRegion
-        self.original_parent = self.group_box.parent()
-        main_layout.addWidget(self.group_box)
-        self.MW.Ephys.old_index_anatregion = self.MW.ui.comboBox_anatRegion.currentIndex()
-        #self.MW.ui.comboBox_ChangeanatRegion.setCurrentIndex(self.MW.ui.comboBox_anatRegion.currentIndex())
-        self.MW.ui.spinBox_ChangechannelID.setValue(self.MW.ui.spinBox_channelID.value())
-
-        # Buttons
-        button_layout = QHBoxLayout()
-        button_layout.addStretch()
-        btn_ok = QPushButton("OK")
-        btn_cancel = QPushButton("Cancel")
-
-        btn_ok.clicked.connect(self.accept)
-        btn_cancel.clicked.connect(self.reject)
-
-        button_layout.addWidget(btn_ok)
-        button_layout.addWidget(btn_cancel)
-        main_layout.addLayout(button_layout)
-
-        self.fill_combobox()
-
-
-    def done(self,result):
-        """Return group_box to its original parent before dialog closes."""
-        self.original_parent.layout().addWidget(self.group_box)  # restore to GUI to be reopened later
-        super().done(result)
-
-
-    def fill_combobox(self):
-        ##please wait a moment until combobox is loaded
-        self.MW.ui.comboBox_ChangeanatRegion.clear()
-
-        x0 = self.MW.Ephys.Visualisation3D.coord_x.value()-1
-        y0 = self.MW.Ephys.Visualisation3D.coord_y.value()-1
-        z0 = self.MW.Ephys.Visualisation3D.coord_z.value()-1
-        point_voxel = [x0,y0,z0]
-        background_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),"Files", 'Atlas', 'WHS_SD_rat_atlas_v4.nii.gz')
-        img = nib.load(background_path)
-        data = img.get_fdata()
-        affine = img.affine
-        labels = self.MW.Ephys.Visualisation3D.atlaslabelsdf['LABEL'].values #np.unique(data)
-        labels = labels[labels != 0]
-
-        voxel_sizes = np.sqrt((affine[:3, :3] ** 2).sum(axis=0))
-        atlas_labels = np.unique(self.MW.Ephys.Visualisation3D.points_data.iloc[:, 1].values)
-
-        ##limit to 5mm (sqrt(3²*3)=5.2mm)
-        radius_mm = 3.0
-        radius_vox = np.ceil(radius_mm / voxel_sizes).astype(int)
-        x_min = max(point_voxel[0] - radius_vox[0], 0)
-        x_max = min(point_voxel[0] + radius_vox[0] + 1, data.shape[0])
-        y_min = max(point_voxel[1] - radius_vox[1], 0)
-        y_max = min(point_voxel[1] + radius_vox[1] + 1, data.shape[1])
-        z_min = max(point_voxel[2] - radius_vox[2], 0)
-        z_max = min(point_voxel[2] + radius_vox[2] + 1, data.shape[2])
-        # Sub-volume
-        sub_data = data[x_min:x_max, y_min:y_max, z_min:z_max]
-        mask = np.ones_like(sub_data, dtype=bool)
-        coords = np.argwhere(mask) #sub_data>0
-        coords += np.array([x_min, y_min, z_min])
-
-        dists = np.linalg.norm((coords - point_voxel) * voxel_sizes, axis=1)
-        labels_flat = data[coords[:, 0], coords[:, 1], coords[:, 2]]
-        distances = {}
-        for index,(label) in enumerate(np.unique(labels_flat)):
-            distances[label] = dists[labels_flat == label].min()
-
-        idx = 0
-        for label, dist in sorted(distances.items(), key=lambda x: x[1]):
-            index = self.MW.Ephys.Visualisation3D.atlaslabelsdf.index[self.MW.Ephys.Visualisation3D.atlaslabelsdf['IDX'] == label][0]
-            label_name = self.MW.Ephys.Visualisation3D.atlaslabelsdf['LABEL'].values[index]
-            text = str(f"{label_name} ({dist:.2f} mm)")
-            if label in np.unique(self.MW.Ephys.Visualisation3D.points_data.iloc[:, 1].values):
-                self.MW.ui.comboBox_ChangeanatRegion.insertItem(int(idx),str(text))
-                self.MW.ui.comboBox_ChangeanatRegion.setItemData(idx, QBrush(QColor("red")), Qt.ForegroundRole) ##Change color
-                idx += 1
-            else:
-                self.MW.ui.comboBox_ChangeanatRegion.addItem(text)
-        #labels futher away than 5mm
-        rest_of_labels = np.setdiff1d(self.MW.Ephys.Visualisation3D.atlaslabelsdf['IDX'].values,np.unique(labels_flat))
-
-        self.MW.ui.comboBox_ChangeanatRegion.setCurrentIndex(0)
-        for label in rest_of_labels:
-            index = self.MW.Ephys.Visualisation3D.atlaslabelsdf.index[self.MW.Ephys.Visualisation3D.atlaslabelsdf['IDX'] == label][0]
-            label_name = self.MW.Ephys.Visualisation3D.atlaslabelsdf['LABEL'].values[index]
-            text = str(f"{label_name} (>5mm)")
-            self.MW.ui.comboBox_ChangeanatRegion.addItem(text)
-
-
-
-if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    dlg = CHANGE_AnatRegion()
-    #if dlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
 
