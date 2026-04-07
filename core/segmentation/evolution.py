@@ -5,7 +5,7 @@ import vtk
 from vtk.util import numpy_support
 import math
 #import SimpleITK as sitk
-import itk
+#import itk
 from PySide6.QtWidgets import QStyle
 
 

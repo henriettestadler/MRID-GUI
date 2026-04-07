@@ -18,7 +18,7 @@ class PaintbrushGUI:
         - Post-surgery paintbrush activation/deactivation
         - UI connections between brush controls and MRI data
     """
-    def __init__(self,MW,state:bool):
+    def __init__(self,MW,state:bool,label=True):
         """
             Initialize the PaintbrushGUI class.
 
@@ -26,9 +26,9 @@ class PaintbrushGUI:
                 MW: MainWindow object containing UI and MRI data.
                 state (bool): Whether the brush should be active initially.
         """
-        self.initialize_class(MW,state)
+        self.initialize_class(MW,state,label)
 
-    def initialize_class(self,MW,state):
+    def initialize_class(self,MW,state,label):
         """
             Initialize the PaintbrushGUI class.
         """
@@ -42,7 +42,8 @@ class PaintbrushGUI:
         else:
             paint_over = self.paintbrush_function_4D()
             self.paintbrush_gui(paint_over)
-            self.brush_4D(state)
+            self.brush_4D(state,label)
+            self.activate_labels('anat')
 
 
     def paintbrush_function_3D(self):
@@ -55,7 +56,7 @@ class PaintbrushGUI:
         tag_data = []
         regions = [('Label 1', 1), ('Label 2', 1), ('Label 3', 1),('Label 4', 1), ('Label 5', 1),('Label 6', 1)]
         num_regions = 6
-        self.LoadMRI.mrid_tags = MRID_tags(self,num_tags, tag_data,num_regions,regions)
+        self.LoadMRI.mrid_tags = MRID_tags(self, tag_data,num_regions,regions)
         self.LoadMRI.mrid_tags.create_labels()
 
         #pushButtons Type of Brush
@@ -108,9 +109,12 @@ class PaintbrushGUI:
         self.LoadMRI.brush['label_occ'].setRange(0,1)
         self.LoadMRI.brush['label_occ'].valueChanged.connect(self.LoadMRI.paintbrush.set_label_occupancy)
         self.LoadMRI.brush['label_occ_slider'].setValue(self.LoadMRI.paintbrush.label_occ*100)
+        print(self.LoadMRI.brush['label_occ_slider'].value(),flush=True)
         self.LoadMRI.brush['label_occ_slider'].setRange(0,100)
         self.LoadMRI.brush['label_occ_slider'].valueChanged.connect(self.LoadMRI.paintbrush.set_label_occupancy)
 
+        print('self.LoadMRI.paintbrush.label_occ',self.LoadMRI.paintbrush.label_occ,flush=True)
+        print(self.LoadMRI.brush['label_occ_slider'].value(),flush=True)
 
         # Fill Combobox with Colors
         self.label_table()
@@ -122,6 +126,7 @@ class PaintbrushGUI:
             pixmap.fill(QColor(color_name))
             icon = QIcon(pixmap)
             paint_over.addItem(icon, self.LoadMRI.paintbrush.labels_paintover[i])
+
         paint_over.setIconSize(QSize(20, 20))
         paint_over.show()
         paint_over.setCurrentIndex(1) #set clear labels as default
@@ -134,22 +139,28 @@ class PaintbrushGUI:
         self.ui.checkBox_Brush_MRID.stateChanged.connect(self.brush_4D)
         self.ui.checkBox_Brush.stateChanged.connect(self.brush_3D)
 
-
         # Histogram
-        print('histogram zeugs paintbrush')
         self.LoadMRI.paintbrush.widget_histogram = self.ui.widget_histogram
 
         histo = self.ui.histogram_label
         histo.clear()
+
+        pixmap = QPixmap(20, 20)
+        pixmap.fill(QColor('white'))
+        icon = QIcon(pixmap)
+        histo.addItem(icon, 'All anat Regions')
 
         for i, color_name in enumerate(self.LoadMRI.paintbrush.color_histogram):
             pixmap = QPixmap(20, 20)
             pixmap.fill(QColor(color_name))
             icon = QIcon(pixmap)
             histo.addItem(icon, self.LoadMRI.paintbrush.labels_histogram[i])
+
+        self.LoadMRI.paintbrush.color_histogram.insert(0,'all anat')
+
         histo.setIconSize(QSize(20, 20))
-        self.ui.widget_histogram.setLabel("left", "Intensity")
-        self.ui.widget_histogram.setLabel("bottom", "Number of Voxels")
+        self.ui.widget_histogram.setLabel("left", "Number of Voxels")
+        self.ui.widget_histogram.setLabel("bottom", "Intensity")
         histo.show()
         histo.setCurrentIndex(0) #set red as default
         self.ui.histogram_label.currentIndexChanged.connect(
@@ -164,6 +175,57 @@ class PaintbrushGUI:
             lambda index: (setattr(self.LoadMRI.paintbrush, "label_volume_index", index),
                             self.LoadMRI.paintbrush.histogram())
         )
+
+    def activate_labels(self,mrid_stage):
+        if mrid_stage == 'anat':
+            for i, color_name in enumerate(self.LoadMRI.paintbrush.color_paintover):
+                index_item = self.table_lab.item(i, 0)
+                icon_item = self.table_lab.item(i, 1)
+                label_item = self.table_lab.item(i, 2)
+                model = self.ui.comboBox_paintOver_Post.model()
+                item = model.item(i)
+                if i > self.LoadMRI.mrid_tags.num_regions+1:
+                    item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
+                    if index_item is not None:
+                        index_item.setFlags(index_item.flags() & ~Qt.ItemIsEnabled)
+                        icon_item.setFlags(icon_item.flags() & ~Qt.ItemIsEnabled)
+                        label_item.setFlags(label_item.flags() & ~Qt.ItemIsEnabled)
+                else:
+                    item.setFlags(item.flags() | Qt.ItemIsEnabled)
+                    if i > self.LoadMRI.mrid_tags.num_regions:
+                        if index_item is not None:
+                            index_item.setFlags(index_item.flags() & ~Qt.ItemIsEnabled)
+                            icon_item.setFlags(icon_item.flags() & ~Qt.ItemIsEnabled)
+                            label_item.setFlags(label_item.flags() & ~Qt.ItemIsEnabled)
+                    else:
+                        if index_item is not None:
+                            index_item.setFlags(index_item.flags() | Qt.ItemIsEnabled)
+                            icon_item.setFlags(icon_item.flags() | Qt.ItemIsEnabled)
+                            label_item.setFlags(label_item.flags()| Qt.ItemIsEnabled)
+        elif mrid_stage == 'segmentation':
+            for i, color_name in enumerate(self.LoadMRI.paintbrush.color_paintover):
+                index_item = self.table_lab.item(i, 0)
+                icon_item = self.table_lab.item(i, 1)
+                label_item = self.table_lab.item(i, 2)
+                model = self.ui.comboBox_paintOver_Post.model()
+                item = model.item(i)
+                item.setFlags(item.flags() | Qt.ItemIsEnabled) #paint over all labels
+                if i ==0 or i > self.LoadMRI.mrid_tags.num_regions+1:
+                    if index_item is not None:
+                        index_item.setFlags(index_item.flags() | Qt.ItemIsEnabled)
+                        icon_item.setFlags(icon_item.flags() | Qt.ItemIsEnabled)
+                        label_item.setFlags(label_item.flags()| Qt.ItemIsEnabled)
+                else:
+                    if i > self.LoadMRI.mrid_tags.num_regions:
+                        if index_item is not None:
+                            index_item.setFlags(index_item.flags() | Qt.ItemIsEnabled)
+                            icon_item.setFlags(icon_item.flags() | Qt.ItemIsEnabled)
+                            label_item.setFlags(label_item.flags()| Qt.ItemIsEnabled)
+                    else:
+                        if index_item is not None:
+                            index_item.setFlags(index_item.flags() & ~Qt.ItemIsEnabled)
+                            icon_item.setFlags(icon_item.flags() & ~Qt.ItemIsEnabled)
+                            label_item.setFlags(label_item.flags() & ~Qt.ItemIsEnabled)
 
     def brush_3D(self,state:bool):
         """
@@ -188,18 +250,20 @@ class PaintbrushGUI:
             self.LoadMRI.paintbrush.paint_actors[view_name] = None
 
 
-    def brush_4D(self,state:bool):
+    def brush_4D(self,state:bool,label=True):
         """
         Enable or disable the paintbrush in 4D data GUI.
         """
         self.LoadMRI.brush_on = state
+        print('brush_4D brush_4D brush_4D brush_4D brush_4D am i not here?',flush=True)
         if state:
             self.ui.checkBox_Brush_MRID.setText("Brush ON")
             if not self.LoadMRI.paint:
                 self.LoadMRI.paint = True
                 for idx in range(len(self.LoadMRI.vtk_widgets[0])):
                     table = getattr(self.LoadMRI, f"intensity_table{idx}")
-                    table.update_table("Label",self.LoadMRI.paintbrush.label_volume[idx],idx,visibility_enabled=False)
+                    if label:
+                        table.update_table("Label",self.LoadMRI.paintbrush.label_volume[idx],idx,visibility_enabled=False)
             self.LoadMRI.paintbrush.start_paintbrush()
         else:
             self.ui.checkBox_Brush_MRID.setText("Brush OFF")
@@ -257,6 +321,7 @@ class PaintbrushGUI:
             label_item = QTableWidgetItem(self.LoadMRI.paintbrush.labels_combobox[idx])
             label_item.setFlags(label_item.flags() & ~Qt.ItemIsEditable)  # read-only
             self.table_lab.setItem(idx, 2, label_item)
+
         self.table_lab.setFocus()
         self.table_lab.selectRow(1)
         self.table_lab.itemSelectionChanged.connect(

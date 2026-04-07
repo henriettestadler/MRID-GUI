@@ -27,7 +27,6 @@ def heatmap_warp(filename, mrid, savepath, sessionpath, fixed_ind, tx):
     warp(segmentation_path, fixed_path, tx, segmentation_newpath, segmentation=True)
 
     #Warping 3d volume of 4dvolume
-
     vol4d_filename = ".".join((filename, "nii", "gz"))
     vol4d_path = os.path.join(sessionpath, "anat", vol4d_filename)
     warp_4dslice_name = ".".join((filename + "-resampled-warped", "nii", "gz"))

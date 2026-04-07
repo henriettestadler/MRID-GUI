@@ -21,6 +21,7 @@ class ResampleData:
             Resample the main MRI image to a z-spacing of 100um).
             Applies padding at the end to avoid black slices after resampling.
         """
+        self.progressbar.setValue(20)
         file_name = self.LoadMRI.file_name[index]
         img = sITK.ReadImage(file_name)
         old_size = img.GetSize()
@@ -53,14 +54,14 @@ class ResampleData:
         replicated_stack.SetSpacing((old_spacing[0], old_spacing[1], old_spacing[2]))
         replicated_stack.SetOrigin((origin[0], origin[1], origin[2] + old_spacing[2]*old_size[2]))
         replicated_stack.SetDirection(img.GetDirection())
-
+        self.progressbar.setValue(40)
         image_padded = sITK.Paste(
             sITK.ConstantPad(img, [0, 0, 0], [0, 0, pad_slices], 0),
             replicated_stack,
             replicated_stack.GetSize(),
             destinationIndex=[0, 0, img.GetSize()[2]]
         )
-
+        self.progressbar.setValue(60)
         resampled = sITK.Resample(
             image_padded,
             new_size,
@@ -72,6 +73,7 @@ class ResampleData:
             edge_value,
             image_padded.GetPixelID()
         )
+        self.progressbar.setValue(100)
         filename_end = 'resampled100um.nii.gz'
         file_name = self.save_as_niigz(resampled,filename_end,index)
         self.file_name100um = file_name
@@ -84,6 +86,7 @@ class ResampleData:
             Resample the main MRI image sequentially in z, y, and x directions
             to achieve a final voxel size of 25 µm isotropic.
         """
+        self.progressbar.setValue(20)
         file_name = self.LoadMRI.file_name[index]
         img = sITK.ReadImage(file_name)
         old_spacing = self.LoadMRI.spacing[index][::-1] #x,y,z
@@ -136,7 +139,7 @@ class ResampleData:
             edge_value,
             image_padded.GetPixelID()
         )
-
+        self.progressbar.setValue(40)
         # resample in y
         old_spacing = resampled_z.GetSpacing()
         old_size = resampled_z.GetSize()
@@ -195,6 +198,7 @@ class ResampleData:
             edge_value,
             image_padded.GetPixelID()
         )
+        self.progressbar.setValue(60)
 
         # resample in x
         old_spacing = resampled_zy.GetSpacing()
@@ -255,8 +259,12 @@ class ResampleData:
             image_padded_x.GetPixelID()
         )
 
+        self.progressbar.setValue(90)
+
         filename_end = 'resampled.nii.gz'
         save_path = self.save_as_niigz(resampled,filename_end,index)
+
+        self.progressbar.setValue(100)
 
         return save_path
 
@@ -297,9 +305,12 @@ class ResampleData:
 
 
         #delete measurement actors
-        for view_name, line_actor,line_slice_index,text_actor in self.LoadMRI.measurement_lines:
+        for view_name, line_actor,line_slice_index,text_actor,line,dashed_lines,points in self.LoadMRI.measurement_lines:
             renderer = self.LoadMRI.measurement_renderer[view_name]
             renderer.RemoveActor(line_actor)
+            renderer.RemoveActor(dashed_lines[1])
+            renderer.RemoveActor(dashed_lines[3])
+            renderer.RemoveActor(points[2])
             text_actor.SetVisibility(0)
         self.LoadMRI.measurement_lines = []
 

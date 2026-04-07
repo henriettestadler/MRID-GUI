@@ -27,8 +27,8 @@ class LoadImage4D:
         elif "-anat" in filename:
             self.load_anat(filename,data_view,idx)
         elif filename.endswith(".txt"):
-            self.get_label_names(filename)
-            return None
+            tag_data,num_regions,regions = self.get_label_names(filename)
+            return tag_data,num_regions,regions
         else:
             print('not yet implemented')
 
@@ -105,7 +105,6 @@ class LoadImage4D:
                 self.LoadMRI.update_slices(i,idx,data_view)
         #directly generating supervised heatmap!
         roi_indices = np.unique(vol)
-        print(vol)
         self.LoadMRI.mrid_tags.update_heatmap(data_view,idx,roi_indices)
 
 
@@ -130,8 +129,6 @@ class LoadImage4D:
         labels.pop(0)
         num_regions = 0
         regions = []
-        num_tags = 0
-        tag_num =0
         tag_data = []
         pure_labels = [l.rstrip("0123456789") for l in labels]
         counts = Counter(pure_labels)
@@ -141,7 +138,6 @@ class LoadImage4D:
 
         for i, label in enumerate(labels):
             if label.endswith("1"):
-                tag_num += counts_dict[pure_labels[i]]
                 tag_data.append((pure_labels[i],counts_dict[pure_labels[i]]))
                 tag_labels = True
             elif not tag_labels:
@@ -149,31 +145,31 @@ class LoadImage4D:
                 regions.append([label,1])
 
         if not hasattr(self.LoadMRI, "mrid_tags"):
-            self.LoadMRI.mrid_tags = MRID_tags(self.MW,num_tags, tag_data,num_regions,regions)
+            self.LoadMRI.mrid_tags = MRID_tags(self.MW, tag_data,num_regions,regions)
         else:
-            self.LoadMRI.mrid_tags.num_tags = num_tags
             self.LoadMRI.mrid_tags.tag_data = tag_data
             self.LoadMRI.mrid_tags.num_regions = num_regions
             self.LoadMRI.mrid_tags.region_data = regions
-        print(self.LoadMRI.mrid_tags.region_data, self.LoadMRI.mrid_tags.tag_data)
-        self.LoadMRI.mrid_tags.create_labels()
+
+
+        return tag_data,num_regions,regions
+        #self.LoadMRI.mrid_tags.create_labels()
 
         #add actors
-        self.MW.ui.checkBox_Brush_MRID.setEnabled(True)
-        self.LoadMRI.paint = True
+        #self.LoadMRI.paint = True
 
-        if not hasattr(self.LoadMRI.paintbrush,"size"):
-            self.LoadMRI.PaintbrushGUI = PaintbrushGUI(self.MW,False)
-        else:
-            self.LoadMRI.PaintbrushGUI.paintbrush_gui(self.MW.ui.comboBox_paintOver_Post)
-        self.LoadMRI.paintbrush.start_paintbrush()
+        #if not hasattr(self.LoadMRI.paintbrush,"size"):
+        #    self.LoadMRI.PaintbrushGUI = PaintbrushGUI(self.MW,False)
+        #else:
+        #    self.LoadMRI.PaintbrushGUI.paintbrush_gui(self.MW.ui.comboBox_paintOver_Post)
+        #self.LoadMRI.paintbrush.start_paintbrush()
 
         #Save file
-        self.LoadMRI.tag_file = True
-        self.LoadMRI.mrid_tags.heatmap_unsuper= True
-        self.MW.ui.pushButton_anatOK.clicked.connect(self.MW.ButtonsGUI_4D.continue_mridtags)
+        #self.LoadMRI.tag_file = True
+        #self.LoadMRI.mrid_tags.heatmap_unsuper= True
+        #self.MW.ui.pushButton_anatOK.clicked.connect(self.MW.ButtonsGUI_4D.continue_mridtags)
 
         #change tab
-        self.MW.ui.stackedWidget_4D.setCurrentIndex(1)
+        #self.MW.ui.stackedWidget_4D.setCurrentIndex(1)
 
-        self.label_file_imported = True
+        #self.label_file_imported = True

@@ -119,18 +119,13 @@ class Cursor:
             self.create_cursor_lines(data_index,data_view)
             self.update_cursor_display(data_index)
             self.add_cursor_interaction(data_index)
+            print('am i here in CURSORRRRR',flush=True)
         else:
             # cursor visible but not changeable
             for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
                 for view_name, vtk_widget in vtk_widget_image.items():
                     interactor = vtk_widget.GetRenderWindow().GetInteractor()
                     interactor.SetInteractorStyle(vtk.vtkInteractorStyleImage())
-                    print('image index cursor', image_index)
-                    #if hasattr(self.LoadMRI, 'vtk_widgets_heatmap'):
-                    #    vtk_widget = self.LoadMRI.vtk_widgets_heatmap[view_name]
-                    #    interactor = vtk_widget.GetRenderWindow().GetInteractor()
-                    #    interactor.SetInteractorStyle(vtk.vtkInteractorStyleImage())
-
 
     def create_cursor_lines(self,data_index,data_view):
         """
@@ -208,10 +203,10 @@ class Cursor:
         """
         lm = self.LoadMRI
         for image_index,vtk_widget_image in lm.vtk_widgets.items():
-            #if image_index==3:
-            #    continue
             for idx, (view_name, vtk_widget) in enumerate(vtk_widget_image.items()):
                 if idx == data_index or self.LoadMRI.vol_dim==3: #only change cursor of the corresponding view
+                    if image_index not in self.cursor_lines[view_name]:
+                        continue
                     line_h = self.cursor_lines[view_name][image_index]['horizontal']['source']
                     line_v = self.cursor_lines[view_name][image_index]['vertical']['source']
                     line_h,line_v = self.set_line_points(view_name, line_h, line_v,data_index)

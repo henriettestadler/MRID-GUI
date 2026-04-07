@@ -24,7 +24,7 @@ class Paintbrush:
         self.brush_type= 'square'
         self.brush_color = "red"
         self.paintover_color = "white"
-        self.histogram_color = "red"
+        self.histogram_color = "all anat"
         self.paint_actors = {}
         self.paint_actors_fixed = {
             'coronal': [],
@@ -280,6 +280,7 @@ class Paintbrush:
             rgb = (qcolor.redF(), qcolor.greenF(), qcolor.blueF())
             actor.GetProperty().SetColor(rgb)
             actor.GetProperty().SetLineWidth(2.0)
+            #actor.GetProperty().SetInterpolationTypeToNearest()
 
             actor.GetProperty().SetRepresentationToWireframe()
             actor.GetProperty().SetOpacity(1.0)
@@ -447,6 +448,7 @@ class Paintbrush:
 
             actor.GetProperty().SetRepresentationToWireframe()
             actor.GetProperty().SetOpacity(1.0)
+            #actor.GetProperty().SetInterpolationTypeToNearest()
 
             actor.GetProperty().SetRepresentationToWireframe()
             actor.GetProperty().SetOpacity(1.0)
@@ -490,11 +492,13 @@ class Paintbrush:
             img_vtk.GetPointData().SetScalars(vtk_array)
             img_vtk.Modified()
             self.color_mappers[view_name].Update()
-            self.overlay_actors[view_name].GetMapper().Update()
-
-            self.lookup.SetRange(0, len(self.color_combobox)-1)
-            actor = self.overlay_actors.get(view_name)
-            self.overlay_actors[view_name] = actor
+            for idx in range(len(self.LoadMRI.renderers)):
+                if idx==3:
+                    continue
+                self.overlay_actors[view_name][idx].GetMapper().Update()
+                self.lookup.SetRange(0, len(self.color_combobox)-1)
+                actor = self.overlay_actors[view_name][idx]
+                self.overlay_actors[view_name][idx] = actor
 
         for _,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
             for view_name, widget in vtk_widget_image.items():
@@ -521,16 +525,18 @@ class Paintbrush:
         img_vtk.SetDimensions(w, h, 1)  # VTK expects width x height x depth
 
         # Correct spacing per view
-        if view_name == "axial" or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):      #x,y
+        if view_name == "axial" or self.LoadMRI.vol_dim==4:     #x,y
             spacing = (self.LoadMRI.spacing[data_index][2], self.LoadMRI.spacing[data_index][1], 1)
         elif view_name == "coronal":  #
             spacing = (self.LoadMRI.spacing[data_index][2], self.LoadMRI.spacing[data_index][0], 1)
         elif view_name == "sagittal": #y,z
             spacing = (self.LoadMRI.spacing[data_index][0], self.LoadMRI.spacing[data_index][1], 1)
 
+
         # Prepare your VTK image
         img_vtk.SetSpacing(spacing)
         img_vtk.GetPointData().SetScalars(vtk_data)
+
 
         # Create the actor
         #if view_name not in self.overlay_actors:
@@ -552,26 +558,28 @@ class Paintbrush:
         color_mapper.Update()
         self.color_mappers[view_name] = color_mapper
 
-        actor = vtk.vtkImageActor()
-        actor.GetMapper().SetInputConnection(color_mapper.GetOutputPort())
-        #actor.GetProperty().SetColorWindow(len(self.color_combobox) - 1)
-        #actor.GetProperty().SetColorLevel((len(self.color_combobox) - 1)/2)
-        actor.GetProperty().SetOpacity(self.label_occ)
-
-        # Add to renderer
-        for i in range(len(self.LoadMRI.renderers)):
-            if i==3: #heatmap
+        # Add to renderer; in Ubuntu separate actor need to be created
+        for idx in range(len(self.LoadMRI.renderers)):
+            if idx==3: #heatmap
                 continue
-            renderer = self.LoadMRI.renderers[i][view_name]
-            if view_name in self.overlay_actors:
-                renderer.RemoveActor(self.overlay_actors[view_name])
-            renderer.AddActor(actor)
+            actor = vtk.vtkImageActor()
+            actor.GetProperty().SetInterpolationTypeToNearest()
+            actor.GetMapper().SetInputConnection(color_mapper.GetOutputPort())
+            actor.GetProperty().SetOpacity(self.label_occ)
 
+            renderer = self.LoadMRI.renderers[idx][view_name]
+            if view_name in self.overlay_actors:
+                if idx in self.overlay_actors[view_name]:
+                    renderer.RemoveActor(self.overlay_actors[view_name][idx])
+            renderer.AddActor(actor)
             renderer.GetActiveCamera().SetParallelProjection(True)
-            self.LoadMRI.vtk_widgets[i][view_name].GetRenderWindow().Render() ## FOR ALL IMAGES
+            #self.LoadMRI.vtk_widgets[i][view_name].GetRenderWindow().Render() ## FOR ALL IMAGES´
+            if view_name not in self.overlay_actors:
+                self.overlay_actors[view_name] = {}
+            self.overlay_actors[view_name][idx] = actor
 
         self.vtk_label_images[view_name] = img_vtk
-        self.overlay_actors[view_name] = actor
+
 
 
 
@@ -580,21 +588,51 @@ class Paintbrush:
         Update the histogram for the current label selection in the GUI.
         """
         # assume `image_data` is your MRI slice and `labels` is label array
-        histog_label = self.color_combobox.index(self.histogram_color)
-        mask = self.label_volume[self.label_volume_index] == histog_label
-        intensities = self.LoadMRI.volume[0][0][mask] ## FOR ALL IMAGES
 
         # Clear previous plot
         self.widget_histogram.clear()
+
+        if self.histogram_color == 'all anat':
+            histog_label=0
+        else:
+            histog_label = self.color_combobox.index(self.histogram_color)
+
+        if self.LoadMRI.vol_dim ==4:
+            if histog_label==0:
+                mask = np.zeros_like(self.label_volume[self.label_volume_index], dtype=bool)
+                for i in range(1, self.LoadMRI.mrid_tags.num_regions+1):
+                    mask = self.label_volume[self.label_volume_index] == i
+                    intensities = self.LoadMRI.volume[0][0][mask]
+                    # Compute histogram
+                    counts, bin_edges = np.histogram(intensities, bins=50)
+
+                    brush = QColor(self.color_combobox[i])
+                    brush.setAlpha(100)
+
+                    # Plot directly in your GUI widget
+                    self.widget_histogram.plot(
+                        bin_edges,counts, stepMode=True, fillLevel=0, brush=brush
+                    )
+                return
+            else:
+                mask = self.label_volume[self.label_volume_index] == histog_label
+        else:
+            mask = self.label_volume[self.label_volume_index] == histog_label
+        intensities = self.LoadMRI.volume[0][0][mask] ## FOR ALL IMAGES
+
+
         if intensities.size == 0:
             return
 
         # Compute histogram
-        y, x = np.histogram(intensities, bins=50)
+        counts, bin_edges = np.histogram(intensities, bins=50)
+
+        brush = QColor(self.color_combobox[histog_label])
+        brush.setAlpha(150)
 
         # Plot directly in your GUI widget
         self.widget_histogram.plot(
-            x, y, stepMode=True, fillLevel=0, brush=(0,0,255,150)
+            bin_edges,counts, stepMode=True, fillLevel=0, brush=brush
         )
 
     def set_label_occupancy(self,var:float):
@@ -604,16 +642,18 @@ class Paintbrush:
         if var > 1:
             var /= 100
         self.label_occ = var
-        self.LoadMRI.brush['label_occ_slider'].setEnabled(False)
-        self.LoadMRI.brush['label_occ'].setEnabled(False)
+        self.LoadMRI.brush['label_occ_slider'].blockSignals(True)
+        self.LoadMRI.brush['label_occ'].blockSignals(True)
         self.LoadMRI.brush['label_occ'].setValue(self.label_occ)
         self.LoadMRI.brush['label_occ_slider'].setValue(self.label_occ*100)
-        self.LoadMRI.brush['label_occ'].setEnabled(True)
-        self.LoadMRI.brush['label_occ_slider'].setEnabled(True)
+        self.LoadMRI.brush['label_occ'].blockSignals(False)
+        self.LoadMRI.brush['label_occ_slider'].blockSignals(False)
 
-        for actor in self.overlay_actors.values():
-            if actor is not None:
-                actor.GetProperty().SetOpacity(self.label_occ)
+        for view_name in self.overlay_actors.keys():
+            for idx in self.overlay_actors[view_name]:
+                if self.overlay_actors[view_name][idx] is not None:
+                    self.overlay_actors[view_name][idx].GetProperty().SetOpacity(self.label_occ)
+
         # re-render
         for i in range(len(self.LoadMRI.renderers)):
             if i==3: #heatmap

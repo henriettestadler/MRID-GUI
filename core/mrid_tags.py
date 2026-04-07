@@ -16,13 +16,12 @@ class MRID_tags(QObject):
     """
     fileSaved = Signal(str)  # define the signal — emits the saved file path
 
-    def __init__(self,MainWindow:object,num_tags:int, tag_data: list[tuple[str, int]],num_regions:int,regions: list[tuple[str, int]]):
+    def __init__(self,MainWindow:object, tag_data: list[tuple[str, int]],num_regions:int,regions: list[tuple[str, int]]):
         """
             Initialize MRID_tags instance.
 
             Args:
                 MainWindow (object): Main application window instance.
-                num_tags (int): Number of MRI tags.
                 tag_data (list[tuple[str,int]]): Tag names and counts.
                 num_regions (int): Number of anatomical regions.
                 regions (list[tuple[str,int]]): Region names and counts.
@@ -31,7 +30,6 @@ class MRID_tags(QObject):
         self.MW = MainWindow
         self.LoadMRI = MainWindow.LoadMRI
         self.tag_data = tag_data
-        self.num_tags = num_tags
         self.num_regions = num_regions
         self.region_data = regions
         self.heatmap_sim = {}
@@ -50,8 +48,6 @@ class MRID_tags(QObject):
         self.file_name = {}
 
 
-
-
     def create_labels(self):
         """
             Generate labels for anatomical regions and tags.
@@ -60,7 +56,9 @@ class MRID_tags(QObject):
         #predefined colors
         colors_predefined = ["red", "lime", "blue", "yellow", "aqua", "magenta", "orange", "DarkGreen", "Peru", "DarkMagenta",
                             "Maroon", "navy", "olive", "MediumBlue", "PapazaWhip","gold","violet","coral","Tan"]
-        total_islands = sum([self.tag_data[i][1] for i in range(self.num_tags)])
+
+        #num_islands = sum([self.tag_data[i] for i in range(len(self.tag_data))])
+        total_islands = sum([self.tag_data[i][1] for i in range(len(self.tag_data))])
 
         if total_islands > len(colors_predefined):
             #more colors have to be defined
@@ -104,7 +102,6 @@ class MRID_tags(QObject):
         self.LoadMRI.paintbrush.labels_paintover.extend(label_names)
 
         #Histogram
-        print('histogram zeugs')
         self.LoadMRI.paintbrush.color_histogram = label_text
         self.LoadMRI.paintbrush.labels_histogram = label_names
 
@@ -119,12 +116,12 @@ class MRID_tags(QObject):
                 qcolor = QColor(color)
                 self.LoadMRI.paintbrush.RGBA[i] = qcolor.getRgb()
                 r, g, b, a = qcolor.getRgb()
-                self.LoadMRI.paintbrush.RGB_table.append([r/255,g/255,b/255,0.3]) #self.LoadMRI.paintbrush.labelOccupancy
+                self.LoadMRI.paintbrush.RGB_table.append([r/255,g/255,b/255,1]) #self.LoadMRI.paintbrush.labelOccupancy
             else:
                 qcolor = QColor(color)
                 r, g, b, a = qcolor.getRgb()
                 self.LoadMRI.paintbrush.RGBA[i] = qcolor.getRgb()
-                self.LoadMRI.paintbrush.RGB_table.append((r/255,g/255,b/255,0.3)) #self.LoadMRI.paintbrush.labelOccupancy
+                self.LoadMRI.paintbrush.RGB_table.append((r/255,g/255,b/255,1)) #self.LoadMRI.paintbrush.labelOccupancy
 
 
     def generate_textfile(self):
@@ -169,8 +166,8 @@ class MRID_tags(QObject):
         for data_index in range(len(self.LoadMRI.vtk_widgets[0])):
             data_view = list(self.LoadMRI.vtk_widgets[0].keys())[data_index]
             if self.LoadMRI.tag_file:
-                self.actor_heatmap = {}
-                self.LoadMRI.renderers[3] = {}
+                val = self.progress.value()
+                self.progress.setValue(val+10)
                 if data_view=='sagittal':
                     label_image = sITK.GetImageFromArray(np.swapaxes(self.LoadMRI.paintbrush.label_volume[data_index], 1, 2))
                 else:
@@ -198,6 +195,7 @@ class MRID_tags(QObject):
             if self.LoadMRI.tag_file:
                 file_name = self.LoadMRI.file_name[data_index][:-7]
                 default_name = f"{file_name}-anat.nii.gz"
+                self.progress.setValue(60)
             else:
                 file_name = self.LoadMRI.file_name[data_index][:-7]
                 default_name = f"{file_name}-segmentation.nii.gz"
@@ -215,10 +213,12 @@ class MRID_tags(QObject):
 
             self.fileSaved.emit(save_path)  # emit the signal
             self.file_name[data_index] = file_name
-
+        print('DEFFFFAULT NAME DEFFFFAULT NAME DEFFFFAULT NAME DEFFFFAULT NAME DEFFFFAULT NAME',default_name,self.LoadMRI.tag_file)
+        if self.heatmap_unsuper:
+            self.LoadMRI.tag_file=True
+        else:
+            self.LoadMRI.tag_file=False
         self.start_heatmap()
-
-
 
 
     def start_heatmap(self):
@@ -242,15 +242,16 @@ class MRID_tags(QObject):
             basestructs = self.region_names
             slice_orientation = data_view
             if self.LoadMRI.tag_file:
+                print('why am i here?',self.LoadMRI.tag_file,flush=True)
                 if self.heatmap_unsuper:
                     _, self.heatmap_nii[data_index], _ = heatmap.get_relaxation_unsupervised(file_name, sessionpath, basestructs, slice_orientation)
-                scale = self.visualize_heatmap(self.heatmap_nii[data_index][:,:,self.LoadMRI.slice_indices[data_index][0]],True,data_view,data_index)
+                self.visualize_heatmap(self.heatmap_nii[data_index][:,:,self.LoadMRI.slice_indices[data_index][0]],True,data_view,data_index)
                 #add to intensity table
                 table_class = getattr(self.MW.LoadMRI, f"intensity_table{data_index}")
                 table_class.update_table('Heatmap', self.heatmap_nii[data_index].T,data_index,visibility_enabled=False)
             else:
+                print('wieso bin ich nichz hier????',flush=True)
                 heatmaps, self.heatmap_nii[data_index], slice_idx = heatmap.get_relaxation(os.path.basename(file_name), self.mrid_names, sessionpath, basestructs, slice_orientation)
-                #scale = self.visualize_heatmap(self.heatmap_nii[data_index][:,:,self.LoadMRI.slice_indices[data_index][0]],True,data_view,data_index)
                 #change volume in intensity table
                 table_class = getattr(self.MW.LoadMRI, f"intensity_table{data_index}")
                 for i in range(table_class.table.rowCount()):
@@ -295,9 +296,10 @@ class MRID_tags(QObject):
             file_name = self.file_name[data_index]
 
             heatmap_sim, _, slice_idx = heatmap.get_relaxation_simultaneously(file_name, roi_index, sessionpath, basestructs, slice_orientation, segmentation)
-            self.heatmap_sim[data_index][:, :, slice_idx] = self.heatmap_sim[data_index][:, :, slice_idx] + heatmap_sim
+            #self.heatmap_sim[data_index][:, :, slice_idx] = heatmap_sim #self.heatmap_sim[data_index][:, :, slice_idx] +
+            mask = heatmap_sim != 0
+            self.heatmap_sim[data_index][:, :, slice_idx][mask] = heatmap_sim[mask]
             self.heatmap_slice[data_index] = self.heatmap_sim[data_index]
-
             self.visualize_heatmap(self.heatmap_sim[data_index][:,:,self.LoadMRI.slice_indices[data_index][0]],False,view_name,data_index) #heatmap_nii, z coordinate
 
             #change volume in intensity table
@@ -330,9 +332,11 @@ class MRID_tags(QObject):
         h, w = img_slice.shape
         spacing = (self.LoadMRI.spacing[data_index][2], self.LoadMRI.spacing[data_index][1], 1)
 
-        #reset_camera = False
+        if len(self.LoadMRI.renderers)<4:
+            reset_camera = True
+
         if reset_camera:
-            renderer,img_vtk = self.open_mainimage(vtk_widget,vtk_data, spacing,w,h,view_name)
+            renderer,img_vtk = self.open_mainimage(vtk_widget,vtk_data, spacing,w,h,view_name,data_index)
 
             nonzero_y, nonzero_x = np.nonzero(img_slice)
             spacing_x, spacing_y = spacing[1], spacing[0]  # careful: VTK x=cols, y=rows
@@ -349,7 +353,7 @@ class MRID_tags(QObject):
                 self.height[data_index] = (y_max - y_min) * spacing_y
 
             else:
-                # Get pixel bounds
+                # Get pixel bound
                 x_min, x_max = nonzero_x.min()-1, nonzero_x.max()+1
                 y_min, y_max = nonzero_y.min()-1, nonzero_y.max()+1
 
@@ -358,22 +362,6 @@ class MRID_tags(QObject):
                 self.center_y[data_index] = (y_min + y_max) / 2 * spacing_y
                 self.width[data_index] = (x_max - x_min) * spacing_x
                 self.height[data_index] = (y_max - y_min) * spacing_y
-
-            ##camera_base = self.LoadMRI.renderers[0][view_name].GetActiveCamera()
-            ##camera = renderer.GetActiveCamera()
-            ##fp = camera_base.GetFocalPoint()
-            ##pos = camera_base.GetPosition()
-            ##self.center_x[data_index] = fp[0]
-            ##self.center_y[data_index] = fp[1]
-            ##sca = camera.GetParallelScale()
-            ##self.width[data_index] = sca
-            ##self.height[data_index] = sca
-
-
-            #camera.SetFocalPoint(self.center_x[data_index], self.center_y[data_index], fp[2])
-            #camera.SetPosition(self.center_x[data_index], self.center_y[data_index], pos[2])  # small offset in z
-            #camera.ParallelProjectionOn()
-            #camera.SetParallelScale(max(self.width[data_index], self.height[data_index])) #/2)
 
             # Add image to actor to then be added to renderer
             actor = vtk.vtkImageActor()
@@ -418,7 +406,11 @@ class MRID_tags(QObject):
             self.actor_heatmap[data_index] = actor
         else:
             if not self.heatmap_unsuper:
-                _,img_vtk = self.open_mainimage(vtk_widget,vtk_data, spacing,w,h)
+                #_,img_vtk = self.open_mainimage(vtk_widget,vtk_data, spacing,w,h,data_index)
+                img_vtk = vtk.vtkImageData()
+                img_vtk.SetDimensions(w, h, 1)  # VTK expects width x height x depth
+                img_vtk.SetSpacing(spacing)
+                img_vtk.GetPointData().SetScalars(vtk_data)
                 scalar = img_vtk.GetScalarRange()
                 # use a standard heat colormap (blue→green→yellow→red)
                 lut = vtk.vtkLookupTable()
@@ -455,16 +447,6 @@ class MRID_tags(QObject):
             self.actor_heatmap[data_index].SetInputData(img_vtk)
             self.actor_heatmap[data_index].Modified()
 
-            #camera_base = self.LoadMRI.renderers[0][view_name].GetActiveCamera()
-            #fp = camera_base.GetFocalPoint()
-            #pos = camera_base.GetPosition()
-
-            #camera = renderer.GetActiveCamera()
-            #camera.SetFocalPoint(self.center_x[data_index], self.center_y[data_index], fp[2])
-            #camera.SetPosition(self.center_x[data_index], self.center_y[data_index], pos[2])  # small offset in z
-            #camera.ParallelProjectionOn()
-            #camera.SetParallelScale(max(self.width[data_index], self.height[data_index])/2)
-
         vtk_widget.GetRenderWindow().Render()
         self.add_legend(img_slice,reset_camera,data_index)
 
@@ -480,16 +462,16 @@ class MRID_tags(QObject):
                         camera.SetParallelScale(max(self.width[data_index], self.height[data_index]))
             scale = camera.GetParallelScale()
             self.LoadMRI.cursor.add_cursor4image(view_name,data_index, scale,img_vtk) #index = 0 at start
-            return scale
+        #    return scale
 
-    def open_mainimage(self,vtk_widget,vtk_data:vtk.vtkDataArray, spacing:tuple,w:int,h:int,view_name):
+    def open_mainimage(self,vtk_widget,vtk_data:vtk.vtkDataArray, spacing:tuple,w:int,h:int,view_name,data_index):
         """
             Open a new VTK renderer for a main image slice.
         """
-        img_vtk = vtk.vtkImageData()
-        img_vtk.SetDimensions(w, h, 1)  # VTK expects width x height x depth
-        img_vtk.SetSpacing(spacing)
-        img_vtk.GetPointData().SetScalars(vtk_data)
+        heatmapimg_vtk = vtk.vtkImageData()
+        heatmapimg_vtk.SetDimensions(w, h, 1)  # VTK expects width x height x depth
+        heatmapimg_vtk.SetSpacing(spacing)
+        heatmapimg_vtk.GetPointData().SetScalars(vtk_data)
 
         #create new renderer
         renderer = vtk.vtkRenderer()
@@ -499,10 +481,53 @@ class MRID_tags(QObject):
         renderer.SetMaximumNumberOfPeels(200)
         renderer.SetOcclusionRatio(0.05)
 
-        actor = self.LoadMRI.actors[0][view_name]
-        renderer.AddActor(actor)
+        z = self.LoadMRI.slice_indices[data_index][0]
+        image_index = 3
+        if view_name=='axial' or view_name=='coronal':
+            slice_img = self.LoadMRI.volume[data_index][0][z, :, :]
+        elif view_name=='sagittal':
+            slice_img = self.LoadMRI.volume[data_index][0][z, :, :].T
 
-        return renderer,img_vtk
+        vtk_data = numpy_support.numpy_to_vtk(slice_img.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
+        img_vtk = vtk.vtkImageData()
+        h, w = slice_img.shape
+        img_vtk.SetDimensions(w, h, 1)  # VTK expects width x height x depth
+
+        img_vtk.SetSpacing(spacing)
+        img_vtk.GetPointData().SetScalars(vtk_data)
+
+        # High-quality smoothing for better visual clarity
+        reslice = vtk.vtkImageReslice()
+        reslice.SetInputData(img_vtk)
+        reslice.SetInterpolationModeToNearestNeighbor() #Cubic()  # Options: Nearest, Linear, Cubic
+        reslice.Update()
+
+        # Add image to actor to then be added to renderer
+        actor = vtk.vtkImageActor()
+        actor.SetInputData(reslice.GetOutput())
+        actor.GetProperty().SetInterpolationTypeToNearest() #Linear()
+
+        # Attach LUT for contrast and brightness
+        prop = actor.GetProperty()
+        contrast_class = getattr(self.LoadMRI, f"contrastClass_{data_index}")
+        prop.SetLookupTable(contrast_class.lut_vtk[0])
+        prop.UseLookupTableScalarRangeOn()  # force LUT range
+
+        renderer.AddActor(actor)
+        prop = actor.GetProperty()
+        renderer.SetUseDepthPeeling(0)
+
+        # Save actor, renderer, img_vtks to later be used again
+        self.LoadMRI.actors[3]={}
+        self.actor_heatmap = {}
+        self.LoadMRI.renderers[3]={}
+        self.LoadMRI.img_vtks[3]={}
+
+        self.LoadMRI.actors[3][view_name] = actor
+        self.LoadMRI.renderers[3][view_name] = renderer
+        self.LoadMRI.img_vtks[3][view_name] = img_vtk
+
+        return renderer,heatmapimg_vtk
 
     def add_legend(self,heatmap,reset_camera:bool,data_index):
         """

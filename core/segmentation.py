@@ -5,12 +5,10 @@ from vtk.util import numpy_support
 from vtkmodules.vtkFiltersSources import vtkRegularPolygonSource
 from vtkmodules.vtkRenderingCore import vtkActor,vtkPolyDataMapper
 from PySide6.QtGui import QStandardItemModel,QFont,QStandardItem
-
 import math
 #import SimpleITK as sitk
-import itk
+#import itk
 from PySide6.QtWidgets import QStyle
-
 import SimpleITK as sITK
 import os
 import nibabel as nib

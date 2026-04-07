@@ -2,6 +2,7 @@
 import vtk
 from utils.zoom import Zoom
 from utils.zoom import zoom_notifier
+import numpy as np
 
 class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
     """
@@ -27,6 +28,8 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
         self.zooming = False
         self.pos_last = []
         self.LoadMRI.brush_on = False
+        self.changing_measurement_localisation = False
+        self.changing_meas_point = False
 
         # Add Observers
         self.AddObserver("LeftButtonPressEvent", self.on_left_button_down)
@@ -59,6 +62,28 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
             self.dragging = True
             # add measurement point if Measurement instance exists
             if self.measurement is not None:
+                for idx, (view_name, line_actor, line_slice_index, text_actor, _,_,points) in enumerate(self.LoadMRI.measurement_lines):
+                    renderer_me = self.LoadMRI.measurement_renderer[view_name]
+                    if renderer_me.HasViewProp(line_actor):
+                        if picker.Pick(x, y, 0, renderer_me):
+                            actor = picker.GetViewProp()  # returns the picked actor (or None)
+                            if actor and actor == text_actor:
+                                self.changing_measurement_localisation = True
+                                self.changing_index = idx
+                                return
+                            elif actor and actor == points[2]:
+                                picker = vtk.vtkPointPicker()
+                                picker.PickFromListOn()
+                                picker.AddPickList(points[2])
+                                # pick at mouse (x, y) in renderer coordinates
+                                if picker.Pick(x, y, 0, renderer):
+                                    actor = picker.GetViewProp()   # the actor picked
+                                    point_id = picker.GetPointId()
+                                    if point_id != -1:
+                                        self.changing_meas_point = True
+                                        self.changing_index = idx
+                                        self.measurement_point_idx = point_id
+                                        return
                 if picker.Pick(x, y, 0, renderer):
                     pos = picker.GetPickPosition()
                     voxel = [
@@ -83,9 +108,11 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
 
         if self.is_in_minimap_rect(x, y):
             self.dragging_minimap = False
-        else:
-            if self.measurement is None:
-                self.dragging = False
+        elif self.measurement is None:
+            self.dragging = False
+
+        self.changing_measurement_localisation = False
+        self.changing_meas_point = False
 
     def on_mouse_move(self, obj, event):
         """
@@ -105,6 +132,81 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
             self.LoadMRI.minimap.create_small_rectangle(zoom_factor=Zoom.global_zoom_factor,vn=self.interactor_view_name,new_x=new_x,new_y=new_y)
             self.last_pos = [x,y]
             interactor.GetRenderWindow().Render()
+        elif self.changing_measurement_localisation:
+            view_name, line_actor,line_slice_index,text_actor,line,dashed_lines,_= self.LoadMRI.measurement_lines[self.changing_index]
+            midpoint = text_actor.GetPosition()
+            picker = vtk.vtkPropPicker()
+            renderer = interactor.GetRenderWindow().GetRenderers().GetFirstRenderer()
+            self.paintbrush_pos = None
+            if picker.Pick(x, y, 0, renderer):
+                pos = picker.GetPickPosition()
+                new_point = [pos[0],pos[1],midpoint[2]]
+                diff = np.array(new_point)-np.array(midpoint)
+                text_actor.SetPosition(new_point)
+                new_start = np.array(line.GetPoint1())+diff
+                new_end = np.array(line.GetPoint2())+diff
+                line.SetPoint1(new_start)
+                line.SetPoint2(new_end)
+                line.Modified()
+                line_actor.GetMapper().Update()
+                dashed_lines[0].SetPoint2(new_start)
+                dashed_lines[0].Modified()
+                dashed_lines[1].GetMapper().Update()
+                dashed_lines[2].SetPoint2(new_end)
+                dashed_lines[2].Modified()
+                dashed_lines[3].GetMapper().Update()
+
+                self.LoadMRI.measurement_renderer[self.interactor_view_name].GetRenderWindow().Render()
+        elif self.changing_meas_point:
+            view_name, line_actor,line_slice_index,text_actor,line,dashed_lines,points= self.LoadMRI.measurement_lines[self.changing_index]
+            picker = vtk.vtkPropPicker()
+            renderer = interactor.GetRenderWindow().GetRenderers().GetFirstRenderer()
+            self.paintbrush_pos = None
+            if picker.Pick(x, y, 0, renderer):
+                old_pos = points[0].GetPoint(self.measurement_point_idx)
+                pos = picker.GetPickPosition()
+                new_point = [pos[0],pos[1],old_pos[2]]
+                points[0].SetPoint(self.measurement_point_idx, new_point)
+                points[0].Modified()
+                points[1].Modified()
+                #calculate distance
+                #change start / end point
+                if self.measurement_point_idx==0:
+                    line.SetPoint1(new_point)
+                    line.Modified()
+                    dashed_lines[2].SetPoint2(dashed_lines[2].GetPoint1())
+                    line.SetPoint2(dashed_lines[2].GetPoint1())
+                    line_actor.GetMapper().Update()
+                    dashed_lines[0].SetPoint1(new_point)
+                    dashed_lines[0].SetPoint2(new_point)
+                    dashed_lines[0].Modified()
+                    dashed_lines[1].GetMapper().Update()
+                    midpoint = (np.array(line.GetPoint1()) + np.array(line.GetPoint2())) / 2
+                    distance = round(np.linalg.norm(np.array(line.GetPoint2())-new_point),3)
+                    text_actor.SetInput(f"{distance:.3f} mm")
+                    text_actor.SetPosition(midpoint)
+                else:
+                    line.SetPoint2(new_point)
+                    line.Modified()
+                    dashed_lines[0].SetPoint2(dashed_lines[0].GetPoint1())
+                    line.SetPoint1(dashed_lines[0].GetPoint1())
+                    line_actor.GetMapper().Update()
+                    #dashed_lines[0].SetPoint1(points[1].GetPoint(0))
+                    #dashed_lines[0].SetPoint1(line_actor.GetPoint1())
+                    #dashed_lines[0].SetPoint2(line_actor.GetPoint1())
+                    dashed_lines[2].SetPoint1(new_point)
+                    dashed_lines[2].SetPoint2(new_point)
+                    dashed_lines[2].Modified()
+                    dashed_lines[3].GetMapper().Update()
+                    midpoint = (np.array(line.GetPoint1()) + np.array(line.GetPoint2())) / 2
+                    distance = round(np.linalg.norm(new_point-np.array(line.GetPoint1())),3)
+                    text_actor.SetPosition(midpoint)
+                    text_actor.SetInput(f"{distance:.3f} mm")
+                self.LoadMRI.measurement_renderer[self.interactor_view_name].GetRenderWindow().Render()
+
+
+
+
         elif self.panning:
             #make sure all images are zoomed in the same
             renderer = interactor.GetRenderWindow().GetRenderers().GetFirstRenderer()
@@ -121,7 +223,6 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                         camera.SetPosition(pos[0],pos[1],pos[2])
                         widget.GetRenderWindow().Render()
             if len(self.LoadMRI.cursor.cursor_lines)==4:
-                print('bin ich hier im custom interactor?')
                 renderer = self.LoadMRI.renderers[3][self.interactor_view_name]
                 camera = renderer.GetActiveCamera()
                 camera.SetFocalPoint(fp[0],fp[1],fp[2])
@@ -182,7 +283,6 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                     camera = renderer.GetActiveCamera()
 
                     if not (vn == self.interactor_view_name and image_index == self.image_index) and idx==self.interactor_data_index:
-                        print(idx,self.interactor_data_index)
                         camera.ParallelProjectionOn()
                         pos_xy = camera.GetPosition()
                         fp_xy = camera.GetFocalPoint()
@@ -265,6 +365,14 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
 
     def on_right_button_up(self, obj, event):
         """Stop zooming when right mouse button is released."""
+        if self.measurement is not None:
+            if self.measurement.start_voxel is not None:
+                self.measurement.temp_line_actor = None
+                self.measurement.temp_text_actor = None
+                self.measurement.start_voxel = None
+                self.measurement.end_voxel = None
+                return
+
         self.zooming = False
         #make sure all images are zoomed in the same
         renderer = self.LoadMRI.renderers[self.image_index][self.interactor_view_name].GetRenderWindow().GetRenderers().GetFirstRenderer()
@@ -301,19 +409,29 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
 
     def on_right_button_down(self, obj, event):
         """Start zooming when right mouse button is pressed."""
-        print('bin ich hier?')
-        interactor = self.GetInteractor()
-        x, y = interactor.GetEventPosition()
-        renderer = self.LoadMRI.renderers[self.image_index][self.interactor_view_name].GetRenderWindow().GetRenderers().GetFirstRenderer()
-        interactor.GetInteractorStyle().SetDefaultRenderer(renderer)
-        camera = renderer.GetActiveCamera()
-        self.scale_pre = camera.GetParallelScale()
+        if self.measurement is not None:
+            if self.measurement.start_voxel is not None:
+                #Delete previous text and line if temporary
+                print('ich bin hier',flush=True)
+                self.LoadMRI.measurement_renderer[self.interactor_view_name].RemoveActor(self.measurement.temp_line_actor)
+                self.LoadMRI.measurement_renderer[self.interactor_view_name].RemoveActor(self.measurement.temp_text_actor)
+                self.LoadMRI.measurement_renderer[self.interactor_view_name].GetRenderWindow().Render()
+                return
+        else:
+            interactor = self.GetInteractor()
+            x, y = interactor.GetEventPosition()
+            renderer = self.LoadMRI.renderers[self.image_index][self.interactor_view_name].GetRenderWindow().GetRenderers().GetFirstRenderer()
+            interactor.GetInteractorStyle().SetDefaultRenderer(renderer)
+            camera = renderer.GetActiveCamera()
+            self.scale_pre = camera.GetParallelScale()
 
-        if not self.is_in_minimap_rect(x, y): # and self.dragging_minimap:
-            self.zooming = True
-            self.pos_last = [x,y]
 
-        super().OnRightButtonDown()
+            if not self.is_in_minimap_rect(x, y): # and self.dragging_minimap:
+                self.zooming = True
+                self.pos_last = [x,y]
+
+
+            super().OnRightButtonDown()
 
 
     def is_in_minimap_rect(self, x, y) -> bool:

@@ -42,6 +42,7 @@ class Registration:
         if len(self.moving_image.GetSize())==4:
             self.moving_image = self.get3Dimage(self.moving_image)
 
+        self.LoadMRI.progressbar_registration.setValue(20)
         coarest_options = [8,4,2,1]
         finest_options = [1,2,4]
         self.coarsest = coarest_options[self.LoadMRI.coarsest_index] #comboBox_coarsest
@@ -49,6 +50,8 @@ class Registration:
         self.rigid_transformation()
 
         buttonsgui_3d.popup.close()
+
+        self.LoadMRI.progressbar_registration.setValue(100)
 
 
 
@@ -88,6 +91,8 @@ class Registration:
         # Join with 'x' to make Greedy string
         n_string = "x".join(iter_list)
 
+        self.LoadMRI.progressbar_registration.setValue(40)
+
         fixed = self.fixed_image
         moving = self.moving_image
 
@@ -98,7 +103,7 @@ class Registration:
                   '-o my_ncc',
                   my_fixed = fixed, my_moving = moving,
                   my_ncc=None)
-
+        self.LoadMRI.progressbar_registration.setValue(60)
         g.execute(
             '-i my_fixed my_moving '
             '-a -dof 6 -m MI '
@@ -110,7 +115,7 @@ class Registration:
             my_moving=moving,
             my_rigid=None
         )
-
+        self.LoadMRI.progressbar_registration.setValue(80)
         mat_rigid = g['my_rigid']
 
         transform_filename = f"transformation_ind_{self.moving_ind}-to-ind_{self.fixed_ind}.txt"

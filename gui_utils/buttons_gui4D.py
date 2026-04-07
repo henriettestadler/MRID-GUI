@@ -6,42 +6,16 @@ from utils.contrast import Contrast
 from utils.zoom import Zoom
 from utils.minimap_handler import Minimap
 from gui_utils.paintbrush_gui import PaintbrushGUI
-from utils.mrid_inputdialog import MRID_InputDialog
+from utils.mrid_inputdialog import MRID_InputDialog, ANAT_InputDialog,TRANSFORM_InputDialog
 from PySide6 import QtWidgets
 from core.electrode_localization import ElectrodeLoc
-from PySide6.QtWidgets import QMessageBox, QFileDialog, QDialog, QDockWidget,QVBoxLayout
-from PySide6.QtCore import Qt,QUrl
+from PySide6.QtWidgets import QMessageBox, QFileDialog, QDialog, QDockWidget,QVBoxLayout,QWidget,QTableWidgetItem,QApplication
+from PySide6.QtCore import Qt
 import SimpleITK as sITK
 import numpy as np
-from gui_utils.visualization3D import Visualization3D
-from PySide6 import QtGui
 from mplwidget import MplWidget
-from PySide6.QtQuick import QQuickView
-from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import QUrl
-from PySide6.QtWidgets import (
-    QTableWidgetItem, QToolButton, QDoubleSpinBox, QMessageBox
-)
-
-class PlotPopup(QDialog):
-    def __init__(self, parent=None, title="Plot", figsize=(16, 5)):
-        super().__init__(parent)
-
-        self.setWindowTitle(title)
-        self.resize(1200, 500)
-
-        # Reuse your existing Matplotlib widget
-        self.plot = MplWidget(self)
-
-        # Optional: override default figure size for popup
-        self.plot.fig.set_size_inches(*figsize, forward=True)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.plot)
-
-    def get_axes(self):
-        self.plot.fig.clear()
-        return self.plot.fig.add_subplot(111)
+from file_handling.loadimage_into4D import LoadImage4D
+from ephys.visualisation3D import Visualisation3D
 
 class PopupDialog(QDialog):
     """
@@ -89,7 +63,7 @@ class ButtonsGUI_4D:
         target.setPlainText("File loaded " + data_view.upper() + ": " + os.path.basename(file_name))
         #target.setPlainText(os.path.basename(file_name))
         target.setReadOnly(True)
-        target.setStyleSheet("color: green; font-size: 8pt;")
+        target.setStyleSheet("color: white; font-size: 8pt;")
 
         lm = self.LoadMRI
         lm.vtk_widgets = {}
@@ -116,8 +90,6 @@ class ButtonsGUI_4D:
         self.ui.actionStart_MRIDlabels.triggered.connect(self.open_input_dialog)
         self.ui.actionContrast_Adjustments.triggered.connect(self.contrast_adjustments)
         self.ui.actionAddViewImage.triggered.connect(self.add_other_view)
-
-        #self.ui.actionGet_Position_in_HPC.triggered.connect(self.visualization_start)
 
         layout = self.ui.gridLayout_data0
         layout.setColumnStretch(0, 1)
@@ -420,18 +392,16 @@ class ButtonsGUI_4D:
         Continue MRID-tag workflow by saving data and updating GUI navigation.
         """
         if self.ui.stackedWidget_4D.currentIndex() == 1:
-            #self.update_zooming()
-            self.ui.pushButton_segfile.clicked.connect(self.MW.add_another_file)
-            self.ui.stackedWidget_MRIDfiles.setCurrentIndex(1)
+            # create a dock widget
+            self.ui.groupBox_progressGUI.setVisible(True)
+
+            self.ui.textEdit_progress.setPlainText("Creating unsupervised Heatmap...")
+            self.LoadMRI.mrid_tags.progress = self.ui.progressBar
+            self.LoadMRI.mrid_tags.progress.setValue(10)
+
             self.LoadMRI.vtk_widgets_legend = {}
             for idx in range(len(self.LoadMRI.vtk_widgets[0])):
-                heatmap = getattr(self.ui,f"heatmap_data{idx}")
-                heatmap.setVisible(True)
-                legend = getattr(self.ui,f"groupbox_legend{idx}")
-                legend.setVisible(True)
                 data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
-                #page_4Ddata0 or groupBox_data1
-
                 if idx==0:
                     self.LoadMRI.vtk_widgets[3] = {
                         data_view: getattr(self.ui, f"vtkWidget_data{idx}3"),
@@ -441,35 +411,62 @@ class ButtonsGUI_4D:
                         data_view: getattr(self.ui, f"vtkWidget_data{idx}3"),
                     })
                 self.LoadMRI.vtk_widgets_legend[idx] = getattr(self.ui, f"vtkWidget_legend{idx}")
-
+            self.LoadMRI.mrid_tags.heatmap_unsuper = True
             self.ui.pushButton_segOK.clicked.connect(self.continue_mridtags)
-            #resize
-            #for idx in range(len(self.LoadMRI.vtk_widgets[0])):
-            #    #data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
-            #    if idx==0:
-            #        layout = self.ui.gridLayout_data0
-            #        layout.setColumnStretch(0, 1)
-            #        layout.setColumnStretch(1, 1)
-            #        layout.setColumnStretch(2, 1)
-            #        layout.setColumnStretch(3, 0)
-            #        # layout.setColumnStretch(4, 1)
-            #    else:
-            #        box = getattr(self.ui, f"groupBox_data{idx}")
-            #        layout = box.layout()
-            #        layout.setColumnStretch(0, 1)
-            #        layout.setColumnStretch(1, 1)
-            #        layout.setColumnStretch(2, 1)
-            #        layout.setColumnStretch(3, 1)
+            self.LoadMRI.PaintbrushGUI.activate_labels('segmentation')
+            self.LoadMRI.mrid_tags.progress.setValue(30)
+        else:
+            self.LoadMRI.mrid_tags.heatmap_unsuper = False
 
-        self.ui.stackedWidget_4D.setCurrentIndex(self.ui.stackedWidget_4D.currentIndex()+1)
         #save each niigz separate
         self.LoadMRI.mrid_tags.save_as_niigz()
-        if self.ui.stackedWidget_4D.currentIndex() == 3:
-            self.ui.pushButton_ElecLoc.clicked.connect(self.get_gaussian_analysis)
 
+        if self.ui.stackedWidget_4D.currentIndex() == 1:
+            for idx in range(len(self.LoadMRI.vtk_widgets[0])):
+                heatmap = getattr(self.ui,f"heatmap_data{idx}")
+                heatmap.setVisible(True)
+                legend = getattr(self.ui,f"groupbox_legend{idx}")
+                legend.setVisible(True)
 
+            self.ui.groupBox_progressGUI.setVisible(False)
+            dlg_anat = ANAT_InputDialog(self.MW,1)
+            if dlg_anat.exec() == QtWidgets.QDialog.DialogCode.Accepted:
+                filename_seg = dlg_anat.get_values()
+                for i in range(len(filename_seg)):
+                    if filename_seg[i][0] is not None:
+                        file_name = filename_seg[i][0]
+                        data_view = filename_seg[i][1]
+                        if not  hasattr(self.LoadMRI,"LoadImage4D"):
+                            self.LoadMRI.LoadImage4D = LoadImage4D(self, file_name)
+                        self.LoadMRI.mrid_tags.file_name[i] = self.LoadMRI.file_name[i][:-7]
+                        vol = self.LoadMRI.LoadImage4D.open_file(file_name,data_view)
+                        if vol is not None:
+                            #add to intensity table
+                            keys = list(self.LoadMRI.vtk_widgets[0].keys())
+                            idx = keys.index(data_view)
+                            tabclass = getattr(self.LoadMRI, f"intensity_table{idx}")
+                            tabclass.update_table(os.path.basename(file_name), vol,idx)
+                            self.ui.contrast_data.setItemEnabled(idx, False)
+                        self.LoadMRI.mrid_tags.heatmap_unsuper = False
 
+        if self.ui.stackedWidget_4D.currentIndex() == 1:
+            self.LoadMRI.PaintbrushGUI.brush_4D(True,label=False)
 
+        if self.ui.stackedWidget_4D.currentIndex() == 2:
+            self.LoadMRI.PaintbrushGUI.brush_4D(False,label=False) #cursor on
+            #close all paintbrush tings
+            self.dock.close()
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle("Heatmap Generation Finsihed")
+            msg_box.setText('MRID tags and anatomical regions were successfully identified. Segmentation, Anat and heatmap files were saved. \n Press START if you want to start with the Electrode Localization. \n Press Cancel to not directly start it. You can later do this through the Menu 4D Tools/Electrode Localization.')
+            msg_box.addButton("START", QMessageBox.ActionRole)
+            btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
+            msg_box.exec()
+            if msg_box.clickedButton()==btn_cancel:
+                return
+            self.get_gaussian_analysis()
+
+        self.ui.stackedWidget_4D.setCurrentIndex(self.ui.stackedWidget_4D.currentIndex()+1)
 
 
     def open_input_dialog(self):
@@ -478,31 +475,61 @@ class ButtonsGUI_4D:
 
         dlg = MRID_InputDialog(self.MW)
         if dlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
-            self.LoadMRI.tag_file = True
-            num_tags, tag_data, num_regions, regions = dlg.get_values()
-            dock = QDockWidget("Paintbrush", self.MW)
-            dock.setWidget(self.ui.groupBox_paintbrush)     # use your existing widget from Designer
-            self.MW.addDockWidget(Qt.RightDockWidgetArea, dock)
-            self.dock = dock
-            if tag_data[0][0] == '' and regions[0][0] == '': #Label.txt was imported
-                self.LoadMRI.mrid_tags.heatmap_unsuper= True
-                self.ui.checkBox_Brush_MRID.setEnabled(True)
-                self.ui.stackedWidget_4D.setCurrentIndex(1)
-            else:
-                self.LoadMRI.mrid_tags = MRID_tags(self,num_tags, tag_data,num_regions,regions)
-                self.LoadMRI.mrid_tags.create_labels()
-                self.LoadMRI.PaintbrushGUI = PaintbrushGUI(self.MW,False)
-                self.LoadMRI.mrid_tags.generate_textfile()
+            dlg_anat = ANAT_InputDialog(self.MW,0)
+            if dlg_anat.exec() == QtWidgets.QDialog.DialogCode.Accepted:
+                num_tags, tag_data, num_regions, regions = dlg.get_values()
+                filename_anat = dlg_anat.get_values()
+                self.LoadMRI.tag_file = True
 
-                #Save file
-                self.ui.pushButton_anatOK.clicked.connect(self.continue_mridtags)
-                self.ui.checkBox_Brush_MRID.setEnabled(True)
-                self.ui.stackedWidget_4D.setCurrentIndex(1)
-            #resize for heatmap and dock
-            min_w = self.MW.minimumWidth()
-            min_h = self.MW.minimumHeight()
-            self.MW.setMinimumSize(min_w+400,min_h)
-            self.ui.pushButton_anatfile.clicked.connect(self.MW.add_another_file)
+                # give the dock a unique object name
+                dock_name = "dock_paintbrush4d"
+
+                # check if it exists already
+                dock = self.MW.findChild(QDockWidget, dock_name)
+                if dock is None:
+                    dock = QDockWidget("Paintbrush", self.MW)
+                    dock.setObjectName(dock_name)
+                    dock.setWidget(self.ui.groupBox_paintbrush)
+                    self.MW.addDockWidget(Qt.BottomDockWidgetArea, dock)
+                    dock.visibilityChanged.connect(lambda visible: setattr(self.LoadMRI, 'brush_on', False) if not visible else None)
+                    self.dock = dock
+                    if tag_data[0][0] == '' and regions[0][0] == '': #Label.txt was imported
+                        self.ui.checkBox_Brush_MRID.setEnabled(True)
+                        self.ui.stackedWidget_4D.setCurrentIndex(1)
+                    else:
+                        self.LoadMRI.mrid_tags = MRID_tags(self, tag_data,num_regions,regions)
+                        self.LoadMRI.mrid_tags.create_labels()
+                        self.LoadMRI.mrid_tags.generate_textfile()
+
+                        #Save file
+                        self.ui.pushButton_anatOK.clicked.connect(self.continue_mridtags)
+                        self.ui.checkBox_Brush_MRID.setEnabled(True)
+                        self.ui.stackedWidget_4D.setCurrentIndex(1)
+                else:
+                    print('bin ich hier?',flush=True)
+                    dock.show()
+                    dock.raise_()
+
+                if len(filename_anat)>0:
+                    self.LoadMRI.PaintbrushGUI = PaintbrushGUI(self.MW,True,label=False)
+                else:
+                    self.LoadMRI.PaintbrushGUI = PaintbrushGUI(self.MW,True,label=True)
+
+                for i in range(len(filename_anat)):
+                    #self.file_name[data_index] = [None,data_view]
+                    if filename_anat[i][0] is not None:
+                        file_name = filename_anat[i][0]
+                        data_view = filename_anat[i][1]
+                        if not hasattr(self.LoadMRI,"LoadImage4D"):
+                            self.LoadMRI.LoadImage4D = LoadImage4D(self, file_name)
+                        vol = self.LoadMRI.LoadImage4D.open_file(file_name,data_view)
+                        if vol is not None:
+                            #add to intensity table
+                            keys = list(self.LoadMRI.vtk_widgets[0].keys())
+                            idx = keys.index(data_view)
+                            tabclass = getattr(self.LoadMRI, f"intensity_table{idx}")
+                            tabclass.update_table(os.path.basename(file_name), vol,idx)
+                            self.ui.contrast_data.setItemEnabled(idx, False)
 
 
     def update_zooming(self):
@@ -559,61 +586,31 @@ class ButtonsGUI_4D:
             1. Warping and Gaussian Centres Extraction
             2. Final localisation
         """
-        self.ui.stackedWidget_4D.setCurrentIndex(4)
-        if not hasattr(self.LoadMRI,'PaintbrushGUI'):
-            dock = QDockWidget("Electrode Localization", self.MW)
-            dock.setWidget(self.ui.groupBox_paintbrush)     # use your existing widget from Designer
-            self.MW.addDockWidget(Qt.RightDockWidgetArea, dock)
-            self.ui.stackedWidget_MRIDfiles.setVisible(False)
-            #resize for heatmap and dock
-            min_w = self.MW.minimumWidth()
-            min_h = self.MW.minimumHeight()
-            self.MW.setMinimumSize(min_w+400,min_h)
-        else:
-            self.dock.setWindowTitle("Electrode Localization")
-        self.ui.groupBox_paintbrush.setTitle("Electrode Localization")
+        dlg_transform = TRANSFORM_InputDialog(self.MW)
+        if dlg_transform.exec() == QtWidgets.QDialog.DialogCode.Accepted:
+            self.transformation_files = dlg_transform.get_values()
+            self.LoadMRI.ElectrodeLoc = ElectrodeLoc(self.LoadMRI,self.MW)
 
-        self.ui.stackedWidget_mrid.setCurrentIndex(1)
-        self.ui.groupBox_trans0.setVisible(False)
-        self.ui.groupBox_trans1.setVisible(False)
-        self.ui.groupBox_trans2.setVisible(False)
-        self.transformation_files = {}
-        for idx in range(len(self.LoadMRI.vtk_widgets[0])):
-            data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
-            getattr(self.ui,f"groupBox_trans{idx}").setVisible(True)
-            getattr(self.ui,f"groupBox_trans{idx}").setTitle(data_view)
-            getattr(self.ui,f"pushButton_trans{idx}").clicked.connect(lambda val,i=idx: self.get_transformation_files(val,i))
+            self.ui.groupBox_progressGUI.setVisible(True)
+            self.LoadMRI.ElectrodeLoc.groupBox_progressGUI = self.ui.groupBox_progressGUI
+            self.ui.textEdit_progress.setPlainText("Finding Gaussian Centers...")
+            #self.ui.textEdit_progress.setPlainText("Finding Gaussian Centers...")
+            self.LoadMRI.ElectrodeLoc.progress = self.ui.progressBar
+            self.LoadMRI.ElectrodeLoc.progress.setValue(10)
 
-        self.ui.pushButton_Next.clicked.connect(self.start_localisation)
+            self.LoadMRI.ElectrodeLoc.get_gaussian_centers(self.transformation_files)
+            #dock.close()
+            #POPUP
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle("Electrode Localization")
+            msg_box.setText("All Files warped and Gaussian Centers Warped. \n Press CONTINUE to receive final Electrode Localization.")
+            msg_box.addButton("CONTINUE", QMessageBox.ActionRole)
+            btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
+            msg_box.exec()
+            if msg_box.clickedButton()==btn_cancel:
+                return
 
-    def start_localisation(self):
-        """
-        Warping and Gaussian Centres Extraction
-        """
-        self.LoadMRI.ElectrodeLoc = ElectrodeLoc(self.LoadMRI,self.MW)
-        self.LoadMRI.ElectrodeLoc.get_gaussian_centers(self.transformation_files)
-        self.ui.stackedWidget_4D.setCurrentIndex(self.ui.stackedWidget_4D.currentIndex()+1)
-        self.ui.pushButton_Gaussian.clicked.connect(self.electrode_localisation)
-
-
-    def get_transformation_files(self,val,idx):
-        """
-        Open FileDialog for User to select transformation matrix files.
-        """
-        files, _ = QFileDialog.getOpenFileNames(
-            None,
-            "Please select all transformation files for selected data_view",
-            "",
-            "Text files (*.txt)"
-        )
-        if len(files)==1:
-            transformation_files = [os.path.splitext(f)[0] for f in files]
-            self.transformation_files[idx] = transformation_files[0]
-        elif files:
-            self.transformation_files[idx] = [os.path.splitext(f)[0] for f in files]
-        text = "The following files were selected:\n" + "\n".join(files)
-        textedit = getattr(self.ui, f"textEdit_trans{idx}")
-        textedit.setText(text)
+            self.electrode_localisation()
 
 
     def electrode_localisation(self):
@@ -622,41 +619,41 @@ class ButtonsGUI_4D:
             Takes the Coordinates and finds the best-fit to the real-life tag geometry.
         """
         self.LoadMRI.vtk_widgets[3] = {}
+
         if not hasattr(self.LoadMRI,'ElectrodeLoc'):
             self.LoadMRI.ElectrodeLoc = ElectrodeLoc(self.LoadMRI,self.MW)
 
         for idx in range(len(self.LoadMRI.vtk_widgets[0])):
             data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
             self.LoadMRI.vtk_widgets[3][data_view]= getattr(self.ui,f"vtkWidget_data{idx}3")
-        roi_names,self.totaldf,self.totalbarcode_r,self.totalbarcode_d,self.totalmrid, self.totalCA1,self.totaldwi1Dsignal,self.totalregionNames,self.totalpyrChIdx,self.fitted_points = self.LoadMRI.ElectrodeLoc.getCoordinates()
-        #dwi1Dsignal,regionNames,regionNumbers,pyrLyExists,pyrChIdx
+
+        self.LoadMRI.ElectrodeLoc.groupBox_progressGUI = self.ui.groupBox_progressGUI
+        self.ui.textEdit_progress.setPlainText("Finding Final Localisation. Might take a few minutes...")
+        self.LoadMRI.ElectrodeLoc.progress = self.ui.progressBar
+        self.LoadMRI.ElectrodeLoc.progress.setValue(10)
+
+        result = self.LoadMRI.ElectrodeLoc.getCoordinates()
+
+        if result is None:
+            return
+        else:
+            roi_names,self.totaldf,self.totalbarcode_r,self.totalbarcode_d,self.totalmrid, self.totalCA1,self.totaldwi1Dsignal,self.totalregionNames,self.totalpyrChIdx,self.fitted_points,self.chMap,self.totalatlasCoordinates_pkl = result
 
         for idx in range(len(self.LoadMRI.vtk_widgets[0])):
-            groupBox = getattr(self.ui, f"heatmap_data{idx}") #heatmap_data0
-            title = "Electrode Localizations"
-            groupBox.setTitle(title)
-            groupBox.setVisible(True)
+            getattr(self.ui, f"groupBox_time{idx}1").setVisible(False)
+            getattr(self.ui, f"groupBox_time{idx}2").setVisible(False)
+            getattr(self.ui, f"heatmap_data{idx}").setVisible(False) #heatmap_data0
+            getattr(self.ui, f"tabWidget_time{idx}").setCurrentIndex(0)
+            getattr(self.ui, f"tabWidget_time{idx}").tabBar().setVisible(False)
+            getattr(self.ui, f"gridLayout_data{idx}").addWidget(getattr(self.ui, f"groupBox_time{idx}0"), 0, 0, 1, 3)
 
         self.ui.stackedWidget_4D.setCurrentIndex(self.ui.stackedWidget_4D.currentIndex()+1)
-        for idx in range(len(self.LoadMRI.vtk_widgets[0])):
-            #data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
-            if idx==0:
-                layout = self.ui.gridLayout_data0
-            else:
-                box = getattr(self.ui, f"groupBox_data{idx}")
-                layout = box.layout()
-            layout.setColumnStretch(0, 1)
-            layout.setColumnStretch(1, 1)
-            layout.setColumnStretch(2, 1)
-            layout.setColumnStretch(3, 1)
 
-        self.ui.groupBox_barcode.setVisible(True)
-
+        self.ui.groupBox_barcode.setVisible(True)#
         #save barcode figures
         for index, (i) in enumerate(self.totalmrid):
             #fill combobox
             self.ui.comboBox_mridBarcodes.addItem(str(i))
-            df = self.totaldf[index]
             barcode_r = self.totalbarcode_r[index]
             barcode_d = self.totalbarcode_d[index]
             mrid_tag = self.totalmrid[index]
@@ -705,18 +702,13 @@ class ButtonsGUI_4D:
             figname = "mrid_barcode-reconstructed.pdf"
             plot_r.canvas.figure.savefig(os.path.join(save_path, figname),bbox_inches="tight",pad_inches=0.1)
 
-            #create and save mrid_registered_coordinates.np
-            #fitted_points = pointset_register_main(gaussian_centers_3d, mrid_dict[mrid], bundle_start, weighted_loss_f, visualization=True)
-            #print("Registered 3D coordinates of MRID CoMs: ")
-            #print(fitted_points)
-            #np.save(os.path.join(save_path, "mrid_registered_coordinates.npy"), fitted_points)
-
         #fill table and plot barcodes
         self.ca1_popup = None
         self.fill_table_and_plots(0)
 
-        #self.ui.comboBox_mridBarcodes.currentIndexChanged.connect(lambda val, i=idx: self.fill_table_and_plots(i))
         self.ui.comboBox_mridBarcodes.currentIndexChanged.connect(lambda index: self.fill_table_and_plots(index))
+
+        self.ui.groupBox_progressGUI.setVisible(False)
 
 
     def fill_table_and_plots(self,index):
@@ -741,6 +733,7 @@ class ButtonsGUI_4D:
             table.setItem(1,i, intensity_item)
 
         table.resizeColumnsToContents()
+        table.resizeRowsToContents()
 
         # detected barcode
         [barcode_design, ticks2, tickLabels2] = barcode_d
@@ -788,8 +781,11 @@ class ButtonsGUI_4D:
             self.ca1_popup.close()
 
         if self.totalCA1[index]:
-            self.ca1_popup = PlotPopup(self.ui.centralwidget, title="CA1 Signal")
-            ax1 = self.ca1_popup.get_axes()
+            self.ui.ca1_signal_widget.canvas.figure.clear()
+            #self.ca1_popup = self.ui.ca1_signal_widget #PlotPopup(self.ui.centralwidget, title="CA1 Signal")
+            self.ui.ca1_signal_widget.fig.clear()
+            ax1 = self.ui.ca1_signal_widget.fig.add_subplot(111)
+
             #popup = PlotPopup(self.MW, title="CA1 Signal")
             #ax1 = self.ca1_popup.fig.add_subplot(111)
             dwi1Dsignal = self.totaldwi1Dsignal[index]
@@ -801,7 +797,7 @@ class ButtonsGUI_4D:
             #plot = MplWidget()
             #self.ui.widget_CA1.canvas.figure.clear()
             #ax1 = self.ui.widget_CA1.canvas.figure.add_subplot(111)
-            region_to_color = self.ca1_popup.plot.get_region_colors(regionNames)
+            region_to_color = self.ui.ca1_signal_widget.get_region_colors(regionNames)
             # Plot line segments with color depending on region
             for i in range(len(pixelValues) - 1):
                 region = regionNames[i]
@@ -816,54 +812,27 @@ class ButtonsGUI_4D:
             #ax1.axvline(x=dwi1Dsignal, color='red', linestyle='--', linewidth=2, label='Pyramidal Layer')
             ax1.axvline(x=self.totalpyrChIdx[index], color='red', linestyle='--', linewidth=2, label='Pyramidal Layer')
             ax1.set_xticks(np.linspace(0, num_channels - 1, num_channels))
-            #ax1.set_xticklabels(chMap)
+            ax1.set_xticklabels(self.chMap[index])
             ax1.legend(title="Anatomical Region",fontsize=7)
             ax1.set_xlabel("Channel Index")
             ax1.set_ylabel("Pixel Value")
             ax1.set_title("Pixel Values by Region")
             ax1.tick_params(axis='both', labelsize=7)
             ax1.grid(True)
-            #self.ui.widget_CA1.canvas.draw()
-            self.ca1_popup.plot.canvas.draw()
-            self.ca1_popup.show()
-            self.ca1_popup.raise_()
-            self.ca1_popup.activateWindow()
-            #plot.canvas.figure.savefig(os.path.join(savepath, "dwi_1D_cross_section.pdf"), dpi=2000)
+            self.ui.ca1_signal_widget.canvas.draw()
 
-        for data_index in range(len(self.LoadMRI.vtk_widgets[0])):
-            fitted_points = self.fitted_points[index]
-            data_view = list(self.LoadMRI.vtk_widgets[0].keys())[data_index]
-            filename = self.LoadMRI.file_name[data_index][0:self.LoadMRI.file_name[data_index].find('.')] #[os.path.splitext(f)[0] for f in self.LoadMRI.file_name]
-            filename_4d_warped = ".".join((filename + "-resampled-warped", "nii", "gz"))
-            filename_4d_warped_path = os.path.join(os.path.join(self.LoadMRI.session_path,"anat"), filename_4d_warped)
-            img_4d= sITK.ReadImage(filename_4d_warped_path)
-            vol = sITK.GetArrayFromImage(img_4d)
-            if data_view=='sagittal':
-                img_slice = np.fliplr(vol[:,:,round(fitted_points[0][0])].T)
-                #spacing = []
-            else:
-                img_slice = vol[int(fitted_points[0][2]),:,:]
-            spacing = img_4d.GetSpacing() #xyz # #
-            self.LoadMRI.ElectrodeLoc.visualize_4Dwarpedslice(img_slice,spacing,data_index,data_view)
-            #renderer.RemoveAllViewProps()
-            if hasattr(self,'self.actor_points'):
-                for i in range(len(self.actor_points)):
-                    self.LoadMRI.renderers[3][data_view].RemoveActor(self.actor_points[i])
-            self.actor_points = []
-            for idx in range(len(fitted_points)):
-                if data_view=='sagittal':
-                    x = vol.shape[0]-1-fitted_points[idx][2]
-                    y = fitted_points[idx][1]
-                    spacing = np.array(spacing)
-                    spacing[2] = spacing[0]
-                else:
-                    x = fitted_points[idx][0]
-                    y = fitted_points[idx][1]
-                actor = self.LoadMRI.ElectrodeLoc.add_point(self.LoadMRI.renderers[3][data_view], x,y,spacing,vol,idx)
-                self.actor_points.append(actor)
-            #print('actor_points ',self.LoadMRI.ElectrodeLoc.actor_points)
-            #print('actor_4Dwarped ', self.LoadMRI.ElectrodeLoc.actor_4Dwarped)
-            self.LoadMRI.renderers[3][data_view].GetRenderWindow().Render()
+        if hasattr(self.LoadMRI,'Visualisation3D'):
+            self.LoadMRI.Visualisation3D.index = index
+            self.session_path = self.LoadMRI.session_path
+            #table and combobox
+            index = self.LoadMRI.Visualisation3D.comboBox_mrid.findText(self.totalmrid[index])
+            if index != -1:
+                self.LoadMRI.Visualisation3D.comboBox_mrid.setCurrentIndex(index)
+            del self.LoadMRI.Visualisation3D.chMap
+            self.LoadMRI.Visualisation3D.delete_volumes(self.totalmrid[index],0, 0) #new_label_idx?
+        else:
+            self.LoadMRI.Visualisation3D = Visualisation3D(self.LoadMRI.session_path,self.MW,self.totalmrid[index],electrode_localisation=True,index=index)
+            self.LoadMRI.Visualisation3D.initialize_mridTag(self.totalmrid[index],chMap=self.chMap[index])
 
     def contrast_adjustments(self):
         """
@@ -877,61 +846,3 @@ class ButtonsGUI_4D:
         self.popup = PopupDialog(parent=self.MW,ui_widget=w)
         self.popup.resize(300, 300)
         self.popup.show()
-
-
-    #def visualization_start(self):
-    #    save_path = "C:/Users/shadowfax/Downloads/atlas_filtered.nii.gz"
-    #    self.visualization_3D(save_path)
-
-    #def visualization_3D(self,save_path):
-    #    ## Quick3D Visualization
-    #    print('here bin ich')
-    #    self.volume_provider = Visualization3D(save_path)
-    #    self.ui.quickWidget_3D.engine().rootContext().setContextProperty("Visualization3D", self.volume_provider)
-#
-    #    qml_path = os.path.abspath("gui_utils/volumer_viewer.qml")
-    #    self.ui.quickWidget_3D.setSource(QUrl.fromLocalFile(qml_path))
-    #    self.ui.heatmap_data0.setVisible(True)
-    #    self.ui.stackedWidget_heatmap.setCurrentIndex(1)
-#
-    #    print('fertig bin ich')
-    #    self.ui.quickWidget_3D.setStyleSheet("background-color: magenta;")
-    #    print("quickWidget geometry:", self.ui.quickWidget_3D.geometry())
-    #    print("quickWidget visible:", self.ui.quickWidget_3D.isVisible())
-    #    print("Absolute QML path:", os.path.abspath(qml_path))
-    #    print("File exists:", os.path.exists(os.path.abspath(qml_path)))
-
-    #def visualization_3D(self, save_path):
-    #    from PySide6.QtQuick import QQuickView
-    #    from PySide6.QtWidgets import QWidget
-    #    from PySide6.QtCore import QUrl
-
-    #    self.volume_provider = Visualization3D(save_path)
-
-    #    self.quick3d_view = QQuickView()
-    #    # Crucial: Set the color to transparent or a specific color to see if it renders
-    #    self.quick3d_view.setColor(QtGui.QColor("black"))
-
-    #    self.quick3d_view.rootContext().setContextProperty(
-    #        "Visualization3D", self.volume_provider
-    #    )
-
-    #    qml_path = os.path.abspath("gui_utils/volumer_viewer.qml")
-    #    self.quick3d_view.setSource(QUrl.fromLocalFile(qml_path))
-
-    #    placeholder = self.ui.quickWidget_3D
-    #    parent_widget = placeholder.parentWidget()
-    #    layout = parent_widget.layout()
-
-    #    # Create the container
-    #    self.quick3d_container = QWidget.createWindowContainer(self.quick3d_view, parent_widget)
-
-    #    # Ensure the container takes up space
-    #    self.quick3d_container.setMinimumSize(placeholder.size())
-
-    #    layout.replaceWidget(placeholder, self.quick3d_container)
-    #    placeholder.deleteLater()
-
-    #    # FORCE UI UPDATE
-    #    self.quick3d_container.show()
-    #    self.ui.stackedWidget_heatmap.setCurrentIndex(1)

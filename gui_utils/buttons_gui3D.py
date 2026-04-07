@@ -16,10 +16,13 @@ from gui_utils.segmentation_gui import SegmentationGUI
 from PySide6.QtWidgets import QDockWidget,QDialog,QVBoxLayout
 from PySide6.QtCore import Qt
 import SimpleITK as sITK
+from pathlib import Path
+from PySide6.QtWidgets import QMessageBox
+
 
 
 class PopupDialog(QDialog):
-    def __init__(self, parent=None, ui_widget=None):
+    def __init__(self,parent=None, ui_widget=None):
         super().__init__(parent)
         self.setWindowTitle("Resampling Function")
         layout = QVBoxLayout(self)
@@ -61,7 +64,7 @@ class ButtonsGUI_3D:
         target.setPlainText("File loaded: " + os.path.basename(file_name))
         #target.setPlainText(os.path.basename(file_name))
         target.setReadOnly(True)
-        target.setStyleSheet("color: green; font-size: 8pt;")
+        target.setStyleSheet("color: white; font-size: 8pt;")
 
         lm = self.LoadMRI
         lm.vtk_widgets = {}
@@ -70,6 +73,8 @@ class ButtonsGUI_3D:
             "sagittal": self.ui.vtkWidget_data_sagittal,
             "axial": self.ui.vtkWidget_data_axial,
         }
+
+        print('lm.vtk_widgets created', flush=True)
 
         self.ui.actionAddViewImage.triggered.connect(self.MW.add_another_file)
 
@@ -80,12 +85,12 @@ class ButtonsGUI_3D:
         self.initialize_contrast(data_index)
         self.initialize_cursor(data_index)
 
-        self.ui.checkBox_measurement.stateChanged.connect(self.measurement_function)
         self.LoadMRI.movingimg_filename = []
         self.ui.actionRegister.triggered.connect(self.initialize_registration)
         self.ui.actionResample.triggered.connect(self.initialize_resampling)
         self.ui.actionPaintbrush.triggered.connect(self.initialize_paintbrush)
         self.ui.actionSegmentation.triggered.connect(self.initialize_segmentation)
+        self.ui.actionMeasurement.triggered.connect(self.initialize_measurement)
 
 
 
@@ -151,23 +156,30 @@ class ButtonsGUI_3D:
         """
         Initialize paintbrush tool controls for MRI segmentation.
         """
-        dock = QDockWidget("Paintbrush", self.MW)
-        dock.setWidget(self.ui.groupBox_paintbrush_3d)
-        self.MW.addDockWidget(Qt.RightDockWidgetArea, dock)
-        #resize for heatmap and dock
-        min_w = self.MW.minimumWidth()
-        min_h = self.MW.minimumHeight()
-        self.MW.setMinimumSize(min_w+300,min_h)
+        # give the dock a unique object name
+        dock_name = "dock_paintbrush"
 
-        self.LoadMRI.brush = {
-            'size': self.ui.brush_size3d,
-            'size_slider': self.ui.brush_sizeSlider3d,
-            'label_occ': self.ui.doubleSpinBox_labelOcc3d,
-            'label_occ_slider': self.ui.sizeSlider_labelOcc3d
-        }
-        #Connect paintbrush for segmentation and MRID-tags
-        self.LoadMRI.paintbrush = Paintbrush(self.LoadMRI)
-        self.LoadMRI.PaintbrushGUI = PaintbrushGUI(self.MW,False)
+        # check if it exists already
+        dock = self.MW.findChild(QDockWidget, dock_name)
+        if dock is None:
+            dock = QDockWidget("Paintbrush", self.MW)
+            dock.setObjectName(dock_name)
+            dock.setWidget(self.ui.groupBox_paintbrush_3d)
+            self.MW.addDockWidget(Qt.RightDockWidgetArea, dock)
+            dock.visibilityChanged.connect(lambda visible: setattr(self.LoadMRI, 'brush_on', False) if not visible else None)
+
+            self.LoadMRI.brush = {
+                'size': self.ui.brush_size3d,
+                'size_slider': self.ui.brush_sizeSlider3d,
+                'label_occ': self.ui.doubleSpinBox_labelOcc3d,
+                'label_occ_slider': self.ui.sizeSlider_labelOcc3d
+            }
+            #Connect paintbrush for segmentation and MRID-tags
+            self.LoadMRI.paintbrush = Paintbrush(self.LoadMRI)
+            self.LoadMRI.PaintbrushGUI = PaintbrushGUI(self.MW,True)
+        else:
+            dock.show()
+            dock.raise_()
 
 
 
@@ -218,10 +230,49 @@ class ButtonsGUI_3D:
         go_left_btn.clicked.connect(lambda _, v='axial', i=2: self.LoadMRI.minimap.pan_arrows(view_name=v,diff_x=-pan_distance,diff_y=0,data_index=idx,data_3d=True))
 
 
-    def measurement_function(self):
+    def initialize_measurement(self):
         """
         Toggle measurement mode for MRI views and update interactor styles.
         """
+
+        # give the dock a unique object name
+        dock_name = "dock_measurement"
+
+        # check if it exists already
+        dock = self.MW.findChild(QDockWidget, dock_name)
+        if dock is None:
+            dock = QDockWidget("Measurement", self.MW)
+            dock.setObjectName(dock_name)
+            dock.setWidget(self.ui.groupBox_measurement)
+            self.MW.addDockWidget(Qt.RightDockWidgetArea, dock)
+
+            self.ui.checkBox_measurement.stateChanged.connect(self.measurement_function)
+        else:
+            dock.show()
+            dock.raise_()
+
+        checkbox = self.ui.checkBox_measurement
+        data_view = 'coronal'
+        if checkbox.isChecked():
+            checkbox.setText("ON")
+            self.LoadMRI.cursor.start_cursor(False,0,data_view)
+            self.LoadMRI.measurement_table = self.ui.tableWidget_meaurement
+            measurement = Measurement(self.LoadMRI)
+            self.ui.pushButton_deleteMeasurement.clicked.connect(measurement.delete_measurement)
+            #self.ui.comboBox_measurementColors.currentIndexChanged.connect(lambda index: measurement.change_color(index))
+            self.ui.comboBox_measurementColors.currentIndexChanged.connect(
+                lambda index: (setattr(measurement, "color_index", index), measurement.change_color(index))
+            )
+            for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
+                for view_name, vtk_widget in vtk_widget_image.items():
+                    interactor = vtk_widget.GetRenderWindow().GetInteractor()
+                    interactor.SetInteractorStyle(None)
+                    interactor.SetInteractorStyle(CustomInteractorStyle(self.LoadMRI.cursor, view_name,image_index,measurement,0))
+        else:
+            checkbox.setText("OFF")
+            self.LoadMRI.cursor.start_cursor(True,0,data_view)
+
+    def measurement_function(self):
         checkbox = self.ui.checkBox_measurement
         data_view = 'coronal'
         if checkbox.isChecked():
@@ -236,7 +287,6 @@ class ButtonsGUI_3D:
         else:
             checkbox.setText("OFF")
             self.LoadMRI.cursor.start_cursor(True,0,data_view)
-
 
     #def initialize_segmentation(self):
     #    """Initialize segmentation GUI."""
@@ -269,15 +319,71 @@ class ButtonsGUI_3D:
                 self.ui.comboBox_resamplefiles.currentIndex()
             )
         )
-        self.ui.pushButton_openfile.clicked.connect(lambda: self.LoadMRI.Resample.open_as_new_file(self,self.MW))
+        self.ui.pushButton_openfile100um.clicked.connect(lambda: self.LoadMRI.Resample.open_as_new_file(self,self.MW))
         self.ui.pushButton_done.clicked.connect(self.popup.close)
+
+        filename_end = 'resampled100um.nii.gz'
+        file_name = self.LoadMRI.file_name[0][:-7]
+        default_name = f"{file_name}_{filename_end}" #"label_volume.nii.gz"
+        file_path = os.path.join(self.LoadMRI.session_path, default_name)
+        file_path = Path(file_path)
+        if file_path.is_file():
+            self.ui.textEdit_resample100.setText(f"A file called \n {file_name} \n already exists. You can directly open this file.")
+            self.ui.pushButton_openfile100um.setEnabled(True)
+            self.LoadMRI.Resample.file_name100um = file_name
+
+        filename_end = 'resampled.nii.gz'
+        default_name = f"{file_name}_{filename_end}" #"label_volume.nii.gz"
+        file_path = os.path.join(self.LoadMRI.session_path, default_name)
+        file_path = Path(file_path)
+        if file_path.is_file():
+            self.ui.textEdit_resample25.setText(f"A file called \n {file_name} \n already exists.")
 
 
     def resample100um(self,index):
+        self.LoadMRI.Resample.progressbar = self.ui.progressBar_100um
+        filename_end = 'resampled100um.nii.gz'
+        file_name = self.LoadMRI.file_name[index][:-7]
+        default_name = f"{file_name}_{filename_end}" #"label_volume.nii.gz"
+        file_path = os.path.join(self.LoadMRI.session_path, default_name)
+        file_path = Path(file_path)
+
+        if file_path.is_file():
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle(f"Overwriting File")
+            msg_box.setText(f"A file called \n {file_name} \n already exists. Are you sure you want to overwrite it?")
+            msg_box.addButton("Yes", QMessageBox.ActionRole)
+            btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
+            msg_box.exec()
+            if msg_box.clickedButton()==btn_cancel:
+                self.ui.textEdit_resample100.setText(f"Existing file \n {file_name}")
+                self.ui.pushButton_openfile100um.setEnabled(True)
+                self.LoadMRI.Resample.file_name100um = file_name
+                return
+
         file_name = self.LoadMRI.Resample.resampling100um(index)
         self.ui.textEdit_resample100.setText(f"Resampling Done with saved as \n {file_name}")
+        self.ui.pushButton_openfile100um.setEnabled(True)
 
     def resample25um(self,index):
+        self.LoadMRI.Resample.progressbar = self.ui.progressBar_25um
+        filename_end = 'resampled.nii.gz'
+        file_name = self.LoadMRI.file_name[index][:-7]
+        default_name = f"{file_name}_{filename_end}" #"label_volume.nii.gz"
+        file_path = os.path.join(self.LoadMRI.session_path, default_name)
+        file_path = Path(file_path)
+
+        if file_path.is_file():
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle(f"Overwriting File")
+            msg_box.setText(f"A file called {file_name} already exists. Are you sure you want to overwrite it?")
+            btn_yes = msg_box.addButton("Yes", QMessageBox.ActionRole)
+            btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
+            msg_box.exec()
+            if msg_box.clickedButton()==btn_cancel:
+                self.ui.textEdit_resample100.setText(f"Existing file \n {file_name}")
+                return
+
         file_name = self.LoadMRI.Resample.resampling25um(index)
         self.ui.textEdit_resample25.setText(f"Resampling Done with saved as \n {file_name}")
 
@@ -295,18 +401,13 @@ class ButtonsGUI_3D:
         self.popup.resize(300, 300)
         self.popup.show()
 
-        #pushButton_regCancel
-        #pushButton_registration
-        #textEdit_pixels
-
-        #
         self.ui.comboBox_movingimg.currentIndexChanged.connect(lambda index: self.check_dimensions_movingimg(index))
-
-
 
         self.ui.pushButton_registration.clicked.connect(
             lambda: setattr(self.LoadMRI, "Registration", Registration(self.LoadMRI,self,self.ui.comboBox_movingimg.currentIndex()))
         )
+
+        self.LoadMRI.progressbar_registration = self.ui.progressBar_registration
 
         self.ui.pushButton_regCancel.clicked.connect(self.cancel_reg)
 
@@ -325,19 +426,29 @@ class ButtonsGUI_3D:
             lambda idx: setattr(self.LoadMRI, "finest_index", idx)
         )
 
-
     def cancel_reg(self):
          self.popup.close()
 
     def check_dimensions_movingimg(self,index):
-        #if
-        #self.pushButton_registration.setEnabled(False)
-        print('bin ich direkt hier?',index, )
         image = sITK.ReadImage(self.LoadMRI.movingimg_filename[index])
         volume = sITK.GetArrayFromImage(image)
-        print(volume.shape)
+        moving_ind = self.LoadMRI.movingimg_filename[index][:-7].split("ind_")[1]
+        fixed_ind = self.MW.LoadMRI.file_name[0][:-7].split("ind_")[1]
+        transform_filename = f"transformation_ind_{moving_ind}-to-ind_{fixed_ind}.txt"
+        file_path = os.path.join(self.LoadMRI.session_path, 'anat',transform_filename)
+        file_path1 = Path(file_path)
+        transform_filename = f"transformation_ind_{fixed_ind}-to-ind_{moving_ind}.txt"
+        file_path = os.path.join(self.LoadMRI.session_path, 'anat',transform_filename)
+        file_path2 = Path(file_path)
+
+        if file_path1.is_file() or file_path2.is_file():
+            self.MW.ui.textEdit_pixels.setText('A transformation file between these two files already exists.')
+            self.MW.ui.textEdit_pixels.setVisible(True)
+            self.MW.ui.pushButton_registration.setEnabled(False)
+            return
+
         if volume.shape[1]<4 or volume.shape[2]<4 or volume.shape[3]<4:
-            print('here bin ich im shape zu klein?')
+            self.MW.ui.textEdit_pixels.setText('Please select other file. The MRI Scan needs at least 4pixels in each direction.')
             self.MW.ui.textEdit_pixels.setVisible(True)
             self.MW.ui.pushButton_registration.setEnabled(False)
         else:
@@ -351,17 +462,28 @@ class ButtonsGUI_3D:
         """
         Initialize segmenation workflow.
         """
-        dock = QDockWidget("Segmentation", self.MW)
-        dock.setWidget(self.ui.groupBox_segmentation)
-        self.MW.addDockWidget(Qt.RightDockWidgetArea, dock)
-        #resize
-        min_w = self.MW.minimumWidth()
-        min_h = self.MW.minimumHeight()
-        self.MW.setMinimumSize(min_w+300,min_h)
+        # give the dock a unique object name
+        dock_name = "dock_segmentation"
 
-        #Connect paintbrush for segmentation and MRID-tags
-        self.LoadMRI.SegmentationGUI = SegmentationGUI(self.MW)
-        #self.LoadMRI.Segmentation = Segmentation(self.LoadMRI)
+        # check if it exists already
+        dock = self.MW.findChild(QDockWidget, dock_name)
+        if dock is None:
+            dock = QDockWidget("Segmentation", self.MW)
+            dock.setObjectName(dock_name)
+            dock.setWidget(self.ui.groupBox_segmentation)
+            self.MW.addDockWidget(Qt.RightDockWidgetArea, dock)
+
+            #Connect paintbrush for segmentation and MRID-tags
+            self.LoadMRI.SegmentationGUI = SegmentationGUI(self.MW)
+            #self.LoadMRI.Segmentation = Segmentation(self.LoadMRI)
+        else:
+            dock.show()
+            dock.raise_()
+
+
+
+
+
 
 
 

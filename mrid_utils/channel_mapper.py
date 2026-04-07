@@ -135,9 +135,7 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
         else:
             atlasCoord = fixed_coordinates[idx_nearest]
             print("atlas coordinates found")
-        #else:
-        #    print("No nearby atlas coordinate found")
-        #    continue
+
         #print(idx,coord, ch_coord)
         #atlasIdx = ((moving_coordinates[:, 0] == coord[0]) & (moving_coordinates[:, 1] == coord[1]) & (
         #            moving_coordinates[:, 2] == coord[2]))
@@ -149,7 +147,6 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
         #                (moving_coordinates[:, 1] >= coord[1] - 1) & (moving_coordinates[:, 1] <= coord[1] + 1) &
         #                (moving_coordinates[:, 2] >= coord[2] - 1) & (moving_coordinates[:, 2] <= coord[2] + 1)
         #                )
-
         #atlasCoord = fixed_coordinates[atlasIdx][0]
 
         x, y, z = atlasCoord.astype(int)
@@ -157,7 +154,7 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
         anat_region = label_to_region[label]
         regionNames.append(anat_region)
         regionNumbers.append(label)
-        rows.append({
+        rows.insert(0, { #.append({
             "Channel ID": idx,
             "Channel": label,
             "Channel Label": anat_region,
@@ -187,7 +184,6 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
         #print(line)
         #f.write(line)
         #f.write('\n')
-    print(rows,savepath,flush=True)
     # Writing the pyramidal channel
     #line = "CH:" + str(pyrCh) + " in pyramidal layer CA1"
     #print(line)
