@@ -17,5 +17,7 @@
         <file>Icons/Internet/eye.png</file>
         <file>Icons/Internet/hidden.png</file>
         <file>Icons/Internet/view.png</file>
+        <file>Icons/ephys/slicing_coronal_front.png</file>
+        <file>Icons/ephys/slicing_coronal_back.png</file>
     </qresource>
 </RCC>
