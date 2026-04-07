@@ -79,6 +79,8 @@ class Zoom:
                         Zoom.update_bounds(view_name_other, camera, renderer)
                     continue
                 renderer_other = widget.GetRenderWindow().GetRenderers().GetFirstRenderer()
+                if renderer_other is None:
+                    continue
                 camera_other = renderer_other.GetActiveCamera()
                 camera_other.ParallelProjectionOn()
 

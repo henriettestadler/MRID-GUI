@@ -39,8 +39,6 @@ class LoadMRI(QObject):
         self.actors = {}
         self.renderers = {}
         self.actors[0] = {}
-        self.actors[0] = {}
-        self.renderers[0] = {}
         self.renderers[0] = {}
 
         self.is_first_slice = True
@@ -245,10 +243,13 @@ class LoadMRI(QObject):
             img_vtk.GetPointData().SetScalars(vtk_array)
             img_vtk.Modified()
             self.paintbrush.color_mappers[data_view].Update()
-            self.paintbrush.overlay_actors[data_view].GetMapper().Update()
-            self.paintbrush.lookup.SetRange(0, len(self.paintbrush.color_combobox)-1)
-            actor = self.paintbrush.overlay_actors.get(data_view)
-            self.paintbrush.overlay_actors[data_view] = actor
+            for idx in range(len(self.renderers)):
+                if idx==3:
+                    return
+                self.paintbrush.overlay_actors[data_view][idx].GetMapper().Update()
+                self.paintbrush.lookup.SetRange(0, len(self.paintbrush.color_combobox)-1)
+                actor = self.paintbrush.overlay_actors[data_view][idx]
+                self.paintbrush.overlay_actors[data_view][idx] = actor
 
         if hasattr(self,'mrid_tags') and hasattr(self.mrid_tags,'actor_heatmap'):
             if data_view=='sagittal':
@@ -281,20 +282,32 @@ class LoadMRI(QObject):
         Show or hide measurement lines and text depending on whether they
         belong to the currently visible slice.
         """
-        for view_name, line_actor,line_slice_index,text_actor in self.measurement_lines:
+        for view_name, line_actor,line_slice_index,text_actor,_,dashed_lines,points in self.measurement_lines:
             renderer = self.measurement_renderer[view_name]
             if view_name == 'axial' and line_slice_index[0]==self.slice_indices[data_index][0]:
                 renderer.AddActor(line_actor)
+                renderer.AddActor(dashed_lines[1])
+                renderer.AddActor(dashed_lines[3])
                 text_actor.SetVisibility(1)
+                renderer.AddActor(points[2])
             elif view_name == 'coronal' and line_slice_index[1]==self.slice_indices[data_index][1]:
                 renderer.AddActor(line_actor)
+                renderer.AddActor(dashed_lines[1])
+                renderer.AddActor(dashed_lines[3])
                 text_actor.SetVisibility(1)
+                renderer.AddActor(points[2])
             elif view_name == 'sagittal' and line_slice_index[2]==self.slice_indices[data_index][2]:
                 renderer.AddActor(line_actor)
+                renderer.AddActor(dashed_lines[1])
+                renderer.AddActor(dashed_lines[3])
                 text_actor.SetVisibility(1)
+                renderer.AddActor(points[2])
             else:
                 renderer.RemoveActor(line_actor)
+                renderer.RemoveActor(dashed_lines[1])
+                renderer.RemoveActor(dashed_lines[3])
                 text_actor.SetVisibility(0)
+                renderer.RemoveActor(points[2])
 
 
     def on_threshold_changed(self, checked:bool,image_index:int,data_index:int,data_view:str):
