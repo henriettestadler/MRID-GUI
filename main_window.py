@@ -12,17 +12,18 @@ from gui_utils.intensity_table import IntensityTable
 import numpy as np
 from gui_utils.buttons_gui3D import ButtonsGUI_3D
 from gui_utils.buttons_gui4D import ButtonsGUI_4D
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog, QDockWidget
 import SimpleITK as sITK
 from file_handling.loadimage_into3D import LoadImage3D
 from file_handling.loadimage_into4D import LoadImage4D
 from core.cursor import Cursor
 from PySide6 import QtWidgets
 from ephys.init_ephys import InitEphys
-from PySide6.QtCore import Qt, QCoreApplication,QUrl
-from gui_utils.visualization3D import Visualization3D
+from PySide6.QtCore import Qt, QCoreApplication,QResource
 import qdarkstyle
 from utils.zoom import Zoom
+
+
 
 class MainWindow(QMainWindow):
     """
@@ -44,6 +45,7 @@ class MainWindow(QMainWindow):
         """
         #hide tab bars
         self.ui.tabWidget.tabBar().setVisible(False)
+        self.ui.tabWidget_visualisation.tabBar().setVisible(False)
 
         #only show one row of views and center the three visible widgets
         self.ui.groupBox_data2.setVisible(False)
@@ -55,6 +57,8 @@ class MainWindow(QMainWindow):
         self.ui.contrast_data.setCurrentIndex(0)
         self.ui.contrast_data.setItemEnabled(1, False)
         self.ui.contrast_data.setItemEnabled(2, False)
+        self.ui.groupBox_progressGUI.setVisible(False)
+        self.ui.dockWidget_ephys.setVisible(False)
 
         #resize to inital size
         self.resize(1600, 900)
@@ -63,40 +67,14 @@ class MainWindow(QMainWindow):
 
         # Connect all buttons to open file
         self.ui.actionOpen.triggered.connect(self.open_user_dialog)
-        self.ui.actionOpen_ephys_Data.triggered.connect(self.ephys_data)
+        self.ui.actionOpen_ephys_Data.triggered.connect(self.open_ephys_data)
         self.ui.actionQuit.triggered.connect(self.quit)
 
         # Re-render if tab changed
         self.setCursor(QtCore.Qt.CursorShape.ArrowCursor)
-        #save_path = "C:/Users/shadowfax/Downloads/atlas_filtered.nii.gz"
-        #self.visualization_3D(save_path)
-
-    def visualization_3D(self,save_path):
-        ## Quick3D Visualization
-        #self.ui.stackedWidget_heatmap.setCurrentIndex(1)
-        QApplication.processEvents()
-        self.ui.quickWidget_3D.setVisible(True)
-
-        #self.volume_provider = Visualization3D(save_path)
-        #self.ui.quickWidget_3D.engine().rootContext().setContextProperty("Visualization3D", self.volume_provider)
-
-        qml_path = os.path.abspath("gui_utils/volumer_viewer.qml")
-        self.ui.quickWidget_3D.setSource(QUrl.fromLocalFile(qml_path))
-
-        print('fertig bin ich')
-        self.ui.quickWidget_3D.setStyleSheet("background-color: magenta;")
-        self.ui.quickWidget_3D.show()
-        self.ui.quickWidget_3D.raise_()
-        print("quickWidget geometry:", self.ui.quickWidget_3D.geometry())
-        print("quickWidget visible:", self.ui.quickWidget_3D.isVisible())
-        print("quickWidget source:", self.ui.quickWidget_3D.source())
-        print("quickWidget format:", self.ui.quickWidget_3D.format())
-        print("text visible:", self.ui.plainTextEdit.isVisible())
-        print("File exists:", os.path.exists(os.path.abspath(qml_path)))
 
 
-
-    def ephys_data(self):
+    def open_ephys_data(self):
         file_name, _ = QFileDialog.getOpenFileName(
             None,
             "Open ephys Data File",
@@ -108,8 +86,25 @@ class MainWindow(QMainWindow):
         if not file_name:
             return
 
+        #pop up asking for the view if 4D data used
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("Open Main File")
+        msg_box.setText(f"Do you want to open the file \n {file_name}?")
+        msg_box.addButton("Yes", QMessageBox.ActionRole)
+        btn_no = msg_box.addButton("No, other File", QMessageBox.ActionRole)
+        btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
+        msg_box.exec()
+        if msg_box.clickedButton()==btn_cancel:
+            return
+        elif msg_box.clickedButton()==btn_no:
+            self.open_ephys_data()
+
+        self.ui.dockWidget_ephys.setVisible(True)
+        self.ui.stackedWidget_video.setCurrentIndex(1)
+        self.ui.textEdit_ephys.setText(f"File loaded: {file_name}")
         self.ui.tabWidget.setCurrentIndex(2)
         self.Ephys = InitEphys(self,file_name)
+        self.Ephys.open_dat()
 
     def resizeEvent(self, event):
         """
@@ -153,16 +148,24 @@ class MainWindow(QMainWindow):
             image = sITK.ReadImage(file_name)
             volume = sITK.GetArrayFromImage(image)
             if volume.ndim==4:
-                msg_box = QMessageBox()
-                msg_box.setWindowTitle("Data view")
-                msg_box.setText(f"Please select the anatomical view of your 4D data called \n {file_name}")
-                btn_axial = msg_box.addButton("Axial", QMessageBox.ActionRole)
-                btn_coronal = msg_box.addButton("Coronal", QMessageBox.ActionRole)
-                btn_sagittal = msg_box.addButton("Sagittal", QMessageBox.ActionRole)
-                btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
-                msg_box.exec()
-                if msg_box.clickedButton()==btn_cancel:
-                    return
+                if 'coronal' in file_name or 'Coronal' in file_name:
+                    data_view = "coronal"
+                elif 'sagittal' in file_name or 'Sagittal' in file_name:
+                    data_view = "sagittal"
+                elif 'axial' in file_name or 'Axial' in file_name:
+                    data_view = "axial"
+                else:
+                    msg_box = QMessageBox()
+                    msg_box.setWindowTitle("Data view")
+                    msg_box.setText(f"Could not automatically detect the data view. \n Please select the anatomical view of your 4D data called \n {file_name}")
+                    btn_axial = msg_box.addButton("Axial", QMessageBox.ActionRole)
+                    btn_coronal = msg_box.addButton("Coronal", QMessageBox.ActionRole)
+                    btn_sagittal = msg_box.addButton("Sagittal", QMessageBox.ActionRole)
+                    btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
+                    msg_box.exec()
+                    if msg_box.clickedButton()==btn_cancel:
+                        return
+                    data_view = {btn_axial: "axial", btn_coronal: "coronal", btn_sagittal: "sagittal"}.get(msg_box.clickedButton())
 
             if hasattr(self, "LoadMRI"):
                 #def open_as_new_file(self,buttons_gui3d,MW):
@@ -187,10 +190,13 @@ class MainWindow(QMainWindow):
                 self.LoadMRI.is_first_slice = False
 
                 #delete measurement actors
-                for view_name, line_actor,line_slice_index,text_actor in self.LoadMRI.measurement_lines:
+                for view_name, line_actor,line_slice_index,text_actor,_,dashed_lines,points in self.LoadMRI.measurement_lines:
                     renderer = self.LoadMRI.measurement_renderer[view_name]
                     renderer.RemoveActor(line_actor)
                     text_actor.SetVisibility(0)
+                    renderer.RemoveActor(dashed_lines[1])
+                    renderer.RemoveActor(dashed_lines[3])
+                    renderer.RemoveActor(points[2])
                 self.LoadMRI.measurement_lines = []
 
                 for idx in self.LoadMRI.minimap.minimap_renderers:
@@ -206,9 +212,15 @@ class MainWindow(QMainWindow):
                     self.LoadMRI.actors[idx] = {}
                     self.LoadMRI.img_vtks[idx] = {}
 
+                for data_index in range(len(self.LoadMRI.vtk_widgets[0])):
+                    if hasattr(self.LoadMRI, f"intensity_table{data_index}"):
+                        intensity_class = getattr(self.LoadMRI, f"intensity_table{data_index}")
+                        intensity_class.table.viewport().removeEventFilter(self)
+                        #intensity_class.table = None
+
                 #remove old renderers
                 for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
-                    for view_name, vtk_widget in vtk_widget_image.items():
+                    for view_name, vtk_widget in vtk_widget_image.items():                        
                         ren_win = vtk_widget.GetRenderWindow()
                         ren_coll = ren_win.GetRenderers()
 
@@ -223,7 +235,6 @@ class MainWindow(QMainWindow):
                 self.LoadMRI.file_name[0]= file_name
                 self.ui.comboBox_resamplefiles.addItem(os.path.basename(file_name)) #add to combobox for resampling
                 if volume.ndim==4:
-                    data_view = {btn_axial: "axial", btn_coronal: "coronal", btn_sagittal: "sagittal"}.get(msg_box.clickedButton())
                     self.restart_gui(file_name,data_view)
                 else:
                     data_view = "coronal" #for 3d data
@@ -237,7 +248,6 @@ class MainWindow(QMainWindow):
 
             self.ui.comboBox_resamplefiles.addItem(os.path.basename(file_name)) #add to combobox for resampling
             if volume.ndim==4:
-                data_view = {btn_axial: "axial", btn_coronal: "coronal", btn_sagittal: "sagittal"}.get(msg_box.clickedButton())
                 self.ui.groupBox_data0.setTitle(f"View: {data_view.upper()}")
             else:
                 data_view = "coronal" #3d has all view_names
@@ -272,28 +282,30 @@ class MainWindow(QMainWindow):
         self.ui.vtkWidget_legend2.GetRenderWindow().Render()
         #barcode sachen
 
+        self.ui.vtkWidget_ephys.GetRenderWindow().Render()
+
+
         if hasattr(self, 'LoadMRI'):
             if hasattr(self.LoadMRI,'minimap'):
                 if self.LoadMRI.vol_dim == 3:
-                    print('')
                     img_vtk = self.LoadMRI.img_vtks[0]["axial"]
-                    self.LoadMRI.minimap.add_minimap('axial',img_vtk,0,self.LoadMRI.vtk_widgets[0]["axial"],0)
+                    self.LoadMRI.minimap.add_minimap('axial',img_vtk,0,self.LoadMRI.vtk_widgets[0]["axial"],0,data_3d=True)
                     img_vtk = self.LoadMRI.img_vtks[0]["coronal"]
-                    self.LoadMRI.minimap.add_minimap('coronal',img_vtk,0,self.LoadMRI.vtk_widgets[0]["coronal"],0)
+                    self.LoadMRI.minimap.add_minimap('coronal',img_vtk,0,self.LoadMRI.vtk_widgets[0]["coronal"],0,data_3d=True)
                     img_vtk = self.LoadMRI.img_vtks[0]["sagittal"]
-                    self.LoadMRI.minimap.add_minimap('sagittal',img_vtk,0,self.LoadMRI.vtk_widgets[0]["sagittal"],0)
-                else:
-                    print('i')
-                    #for image_index,vtk_widget_image in self.vtk_widgets.items():
-                    #    if data_view=='axial':
-                    #        self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], vtk_widget_image["axial"], "axial",image_index,data_index)
-                    #    elif data_view=='coronal':
-                    #        self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], vtk_widget_image["coronal"], "coronal",image_index,data_index)
-                    #    elif data_view=='sagittal':
-                    #        self.setup_vtkdata(self.volume[data_index][image_index][z, :, :].T, vtk_widget_image["sagittal"], "sagittal",image_index,data_index)
+                    self.LoadMRI.minimap.add_minimap('sagittal',img_vtk,0,self.LoadMRI.vtk_widgets[0]["sagittal"],0,data_3d=True)
+            else:
+                #print('i')
+                #for image_index,vtk_widget_image in self.vtk_widgets.items():
+                #    if data_view=='axial':
+                #        self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], vtk_widget_image["axial"], "axial",image_index,data_index)
+                #    elif data_view=='coronal':
+                #        self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], vtk_widget_image["coronal"], "coronal",image_index,data_index)
+                #    elif data_view=='sagittal':
+                #        self.setup_vtkdata(self.volume[data_index][image_index][z, :, :].T, vtk_widget_image["sagittal"], "sagittal",image_index,data_index)
+                if hasattr(self.LoadMRI, 'vtk_widgets'):
                     for data_index in range(len(self.LoadMRI.vtk_widgets[0])):
                         for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
-                            print(self.ui.groupBox_data0.title())
                             if "CORONAL" in self.ui.groupBox_data0.title():
                                 view_name = "coronal"
                             elif "AXIAL" in self.ui.groupBox_data0.title():
@@ -303,6 +315,7 @@ class MainWindow(QMainWindow):
                             if image_index in self.LoadMRI.img_vtks:
                                 img_vtk = self.LoadMRI.img_vtks[image_index][view_name]
                                 self.LoadMRI.minimap.add_minimap(view_name,img_vtk,image_index,vtk_widget_image[view_name],data_index)
+
 
 
     def save_info_of_mainimage(self,data_view,data_index,file_name):
@@ -460,21 +473,24 @@ class MainWindow(QMainWindow):
                 self.LoadMRI.combo_Regimgname = self.ui.comboBox_movingimg
             else:
                 #pop up asking for the view if 4D data used
-                msg_box = QMessageBox()
-                msg_box.setWindowTitle("Select the correct view")
-                msg_box.setText("Please select the view you want to import the file in")
-                button_to_view =  {}
-                for image_index, vtk_widget_image in self.LoadMRI.vtk_widgets.items():
-                    for view_name in vtk_widget_image.keys():
-                        # Only create a button if we haven't already
-                        if view_name not in button_to_view.values():
-                            btn = msg_box.addButton(view_name.capitalize(), QMessageBox.ActionRole)
-                            button_to_view[btn] = view_name
-                btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
-                msg_box.exec()
-                if msg_box.clickedButton()==btn_cancel:
-                    return
-                data_view = button_to_view.get(msg_box.clickedButton())
+                if 'coronal' in file_name:
+                    data_view = "coronal"
+                elif 'sagittal' in file_name:
+                    data_view = "sagittal"
+                elif 'axial' in file_name:
+                    data_view = "axial"
+                else:
+                    msg_box = QMessageBox()
+                    msg_box.setWindowTitle("Data view")
+                    msg_box.setText(f"Could not automatically detect the data view. \n Please select the anatomical view of your 4D data called \n {file_name}")
+                    btn_axial = msg_box.addButton("Axial", QMessageBox.ActionRole)
+                    btn_coronal = msg_box.addButton("Coronal", QMessageBox.ActionRole)
+                    btn_sagittal = msg_box.addButton("Sagittal", QMessageBox.ActionRole)
+                    btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
+                    msg_box.exec()
+                    if msg_box.clickedButton()==btn_cancel:
+                        return
+                    data_view = {btn_axial: "axial", btn_coronal: "coronal", btn_sagittal: "sagittal"}.get(msg_box.clickedButton())
                 if not hasattr(self.LoadMRI,"LoadImage4D"):
                     self.LoadMRI.LoadImage4D = LoadImage4D(self, file_name)
                 vol = self.LoadMRI.LoadImage4D.open_file(file_name,data_view)
@@ -494,6 +510,11 @@ class MainWindow(QMainWindow):
         # Disconnect any important signals
         if hasattr(self.LoadMRI, "minimap"):
             zoom_notifier.factorChanged.disconnect(self.LoadMRI.minimap.create_small_rectangle)
+        dock_name = "dock_paintbrush4d"
+        dock = self.findChild(QDockWidget, dock_name)
+        if dock:
+            dock.close()
+            dock.deleteLater()
 
         # Clear stored references
         self.LoadMRI = None
@@ -520,9 +541,8 @@ class MainWindow(QMainWindow):
         self.save_info_of_mainimage(data_view,0,file_name)
 
         zoom_notifier.factorChanged.connect(self.LoadMRI.minimap.create_small_rectangle)
-        Zoom.fit_to_window(self.LoadMRI.vtk_widgets[0]["coronal"], self.LoadMRI.vtk_widgets.values(), self.LoadMRI.scale_bar, self.LoadMRI.vtk_widgets,0,data_3d=True)
+        Zoom.fit_to_window(self.LoadMRI.vtk_widgets[0][data_view], self.LoadMRI.vtk_widgets.values(), self.LoadMRI.scale_bar, self.LoadMRI.vtk_widgets,0,data_3d=True)
 
-        print('ende')
         return
 
 
@@ -531,11 +551,20 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
+    # Register the .qrc file dynamically
+
+    script_dir = os.path.dirname(__file__)
+    file_path = os.path.join(script_dir, "resources.rcc")
+    print(file_path,flush=True)
+    os.chdir(os.path.dirname(__file__))
+
+    QResource.registerResource(file_path)
     #to mix vtk and QtQuick3D
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     app = QApplication(sys.argv)
     #dark mode
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyside6())
+    #app.setWindowIcon(QIcon("Icons/Internet/eye_closed.png"))  # PNG or SVG
     widget = MainWindow()
     widget.show()
     sys.exit(app.exec())
