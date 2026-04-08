@@ -1,25 +1,11 @@
 import numpy as np
 from mrid_utils import com
 import os
-import nibabel as nib
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 from mplwidget import MplWidget
 from scipy.spatial import cKDTree
 import pandas as pd
-# TODO: HENRIETTE, BELOW MIGHT BE UNNECESSARY FOR YOU, JUST LOADING ATLAS IMAGES AND LABELS, just make sure you have the necessary variables loaded somewhere
-#root=""
 
-#
-#mask_path=os.path.join(root, "WHS_SD_rat_atlas_v4_pack","WHS_SD_v2_brainmask_bin.nii.gz")
-#nii_mask=nib.load(mask_path)
-#mask=np.asanyarray(nii_mask.dataobj)
-
-# t2s_path=os.path.join(root, "WHS_SD_rat_atlas_v4_pack","WHS_SD_rat_T2star_v1.01.nii.gz")
-# nii_t2s=nib.load(t2s_path)
-# t2s=np.asanyarray(nii_t2s.dataobj)
-
-# TODO: HENRIETTE, ABOVE MIGHT BE UNNECESSARY FOR YOU, JUST LOADING ATLAS IMAGES AND LABELS
 
 def map_electrodes_main(fitted_points, mrid_dict, px_size = 25, channel_separation = 50, total_ch = 64):
     """
@@ -120,6 +106,7 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
     pyrChIdx = 0
     pyrLyExists = False
     label_to_region = dict(zip(atlaslabelsdf["Labels"],atlaslabelsdf["Anatomical Regions"]))
+    print('np.size(moving_coordinates)',np.shape(moving_coordinates),flush=True)
     tree = cKDTree(moving_coordinates)
     rows = []
 
@@ -128,26 +115,7 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
     for idx, coord in enumerate(ch_coord):
         # Query nearest neighbor
         dist, idx_nearest = tree.query(coord)
-
-        # Allow only neighbors within sqrt(3) (same as ±1 cube)
-        if dist <= np.sqrt(3):
-            atlasCoord = fixed_coordinates[idx_nearest]
-        else:
-            atlasCoord = fixed_coordinates[idx_nearest]
-            print("atlas coordinates found")
-
-        #print(idx,coord, ch_coord)
-        #atlasIdx = ((moving_coordinates[:, 0] == coord[0]) & (moving_coordinates[:, 1] == coord[1]) & (
-        #            moving_coordinates[:, 2] == coord[2]))
-        #if fixed_coordinates[atlasIdx].any():
-        #    print("Exact coordinate exists")
-        #else:
-        #    print("no exact atlas coord")
-        #    atlasIdx = ((moving_coordinates[:, 0] >= coord[0] - 1) & (moving_coordinates[:, 0] <= coord[0] + 1) &
-        #                (moving_coordinates[:, 1] >= coord[1] - 1) & (moving_coordinates[:, 1] <= coord[1] + 1) &
-        #                (moving_coordinates[:, 2] >= coord[2] - 1) & (moving_coordinates[:, 2] <= coord[2] + 1)
-        #                )
-        #atlasCoord = fixed_coordinates[atlasIdx][0]
+        atlasCoord = fixed_coordinates[idx_nearest]
 
         x, y, z = atlasCoord.astype(int)
         label = atlas[x, y, z]
@@ -162,7 +130,6 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
             "Atlas y": atlasCoord[1],
             "Atlas z": atlasCoord[2],
         })
-        #anat_region = atlaslabelsdf["Anatomical Regions"][atlaslabelsdf["Labels"] == label].values[0]
 
         df = pd.DataFrame(rows)
         excel_path = os.path.join(savepath, "channel_atlas_coordinates.xlsx")
@@ -175,20 +142,10 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
             pyrLyExists = True
             if currPixVal < minPixVal:
                 minPixVal = currPixVal
-                pyrCh = idx
                 pyrChIdx = idx
                 #chMap.append(idx)
 
-        #line = "CH:" + str(idx) + " in " + anat_region + ' Segment: ' + str(label) + " atlas coord: " + str(
-        #    atlasCoord) #str(chMap[idx])
-        #print(line)
-        #f.write(line)
-        #f.write('\n')
-    # Writing the pyramidal channel
-    #line = "CH:" + str(pyrCh) + " in pyramidal layer CA1"
-    #print(line)
-    #f.write(line)
-    #f.write('\n')
+
     atlasCoordinates_pkl = []
     for idx, coord in enumerate(fitted_mrid_points):
         dist, idx_nearest = tree.query(coord)
@@ -234,60 +191,4 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
     return dwi1Dsignal,regionNames,regionNumbers,pyrLyExists,pyrChIdx,atlasCoordinates_pkl
 
 
-def get_mapped_ch(chmap_path, anat_list, num_channels=64, filename="channel_atlas_coordinates.txt"):
-    """
-    Gets channels in the given list of anatomical regions (anat_list).
-    Reads the localization results channel_atlas_coordinates.txt file in chmap_path.
-    num_channels per shank (default 64)
 
-    This function can be used together with plot_channels_on_atlas() function below
-    """
-    ch_coord = np.zeros((num_channels, 3))
-    fullpath = os.path.join(chmap_path, filename)
-    detected = 0
-    with open(fullpath) as f:
-        lines = f.readlines()
-        for i, line in enumerate(lines):
-            anat_region = line.split(":")[1].split("in")[-1][1:].split(" Segment")[0]
-            for roi in anat_list:
-                if anat_region == roi:
-                    ch = int(line.split()[0].split(":")[1])
-                    # if ch in ch_selected:
-                    x, y, z = line.split("[")[1].split("]")[0].split()
-                    ch_coord[detected, :] = np.array([x, y, z])
-                    detected = detected + 1
-
-    ch_coord = ch_coord[:detected, :]
-    ch_coord = ch_coord.astype(int)
-
-    return ch_coord
-
-
-
-def plot_channels_on_atlas(savefigname, path, ch_selected,dwi,t2s,mask):
-    """
-    Plots given set of channels on atlas images
-    """
-    # Plotting colormap settings
-    print('noch alles ok 1')
-    my_cmap_gray = cm.get_cmap("gray").copy()
-    my_cmap_gray.set_under('black', alpha=0)
-    cmap_args_gray = dict(cmap=my_cmap_gray, vmin=1)
-    print('noch alles ok 2')
-    y = np.median(ch_selected[:, 1]).astype(int)
-    print('noch alles ok 3')
-    if "t2s" in savefigname:
-        plt.imshow(t2s[:, y, :] * mask[:, y, :], **cmap_args_gray)
-    elif "dwi" in savefigname:
-        plt.imshow(dwi[:, y, :] * mask[:, y, :], **cmap_args_gray)
-
-    for idx, coord in enumerate(ch_selected):
-        x, _, z = coord
-        plt.scatter(z, x, s=0.1, c='r')
-    #     plt.text(z, x, str(ch_selected[idx]))
-
-    plt.savefig(os.path.join(path, savefigname), dpi=1000)
-    plt.show()
-    print('ok end')
-    #regionNumbers = list(dict.fromkeys(regionNumbers))
-    return #dwi1Dsignal, regionNumbers

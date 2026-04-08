@@ -55,7 +55,6 @@ def main(mrid_dict,mrid, savepath, sessionpath,atlas,atlaslabelsdf,dwi,t2s,mask,
         dwi1Dsignal,regionNames,regionNumbers,CA1,pyrChIdx,atlasCoordinates_pkl = channel_mapper.map_channels_to_atlas(ch_coords, fitted_points, moving_coordinates, fixed_coordinates, savepath,atlas,atlaslabelsdf,dwi) #,chMap)
         np.save(os.path.join(savepath, "dwi_1D_cross_section_pixel_values.npy"), dwi1Dsignal)
 
-    # TODO HENRIETTE: BELOW IS BARCODE RELATED
     if gaussian_sigmas_sagittal.any():
         max_sigmas = np.maximum(gaussian_sigmas_coronal, gaussian_sigmas_sagittal)
     else:
