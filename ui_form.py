@@ -210,24 +210,14 @@ class Ui_MainWindow(object):
         self.horizontalLayout_31.setObjectName(u"horizontalLayout_31")
         self.go_down_data20 = QToolButton(self.frame_8)
         self.go_down_data20.setObjectName(u"go_down_data20")
-        icon = QIcon()
-        if QIcon.hasThemeIcon(QIcon.ThemeIcon.GoDown):
-            icon = QIcon.fromTheme(QIcon.ThemeIcon.GoDown)
-        else:
-            icon.addFile(u".", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-
+        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoDown))
         self.go_down_data20.setIcon(icon)
 
         self.horizontalLayout_31.addWidget(self.go_down_data20)
 
         self.go_up_data20 = QToolButton(self.frame_8)
         self.go_up_data20.setObjectName(u"go_up_data20")
-        icon1 = QIcon()
-        if QIcon.hasThemeIcon(QIcon.ThemeIcon.GoUp):
-            icon1 = QIcon.fromTheme(QIcon.ThemeIcon.GoUp)
-        else:
-            icon1.addFile(u".", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-
+        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
         self.go_up_data20.setIcon(icon1)
 
         self.horizontalLayout_31.addWidget(self.go_up_data20)
@@ -2841,12 +2831,7 @@ class Ui_MainWindow(object):
         self.gridLayout_163.setObjectName(u"gridLayout_163")
         self.toolButton_forwardEvo = QToolButton(self.groupBox_65)
         self.toolButton_forwardEvo.setObjectName(u"toolButton_forwardEvo")
-        icon3 = QIcon()
-        if QIcon.hasThemeIcon(QIcon.ThemeIcon.MediaSeekForward):
-            icon3 = QIcon.fromTheme(QIcon.ThemeIcon.MediaSeekForward)
-        else:
-            icon3.addFile(u".", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-
+        icon3 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaSeekForward))
         self.toolButton_forwardEvo.setIcon(icon3)
         self.toolButton_forwardEvo.setIconSize(QSize(20, 20))
 
@@ -2854,12 +2839,7 @@ class Ui_MainWindow(object):
 
         self.toolButton_runEvo = QToolButton(self.groupBox_65)
         self.toolButton_runEvo.setObjectName(u"toolButton_runEvo")
-        icon4 = QIcon()
-        if QIcon.hasThemeIcon(QIcon.ThemeIcon.MediaPlaybackStart):
-            icon4 = QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart)
-        else:
-            icon4.addFile(u".", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-
+        icon4 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart))
         self.toolButton_runEvo.setIcon(icon4)
         self.toolButton_runEvo.setIconSize(QSize(20, 20))
         self.toolButton_runEvo.setCheckable(True)
@@ -2868,12 +2848,7 @@ class Ui_MainWindow(object):
 
         self.toolButton_backwardEvo = QToolButton(self.groupBox_65)
         self.toolButton_backwardEvo.setObjectName(u"toolButton_backwardEvo")
-        icon5 = QIcon()
-        if QIcon.hasThemeIcon(QIcon.ThemeIcon.MediaSeekBackward):
-            icon5 = QIcon.fromTheme(QIcon.ThemeIcon.MediaSeekBackward)
-        else:
-            icon5.addFile(u".", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-
+        icon5 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaSeekBackward))
         self.toolButton_backwardEvo.setIcon(icon5)
         self.toolButton_backwardEvo.setIconSize(QSize(20, 20))
 
@@ -3287,7 +3262,7 @@ class Ui_MainWindow(object):
         self.contrast_data1 = QWidget()
         self.contrast_data1.setObjectName(u"contrast_data1")
         self.contrast_data1.setEnabled(True)
-        self.contrast_data1.setGeometry(QRect(0, 0, 186, 170))
+        self.contrast_data1.setGeometry(QRect(0, 0, 186, 164))
         self.gridLayout_120 = QGridLayout(self.contrast_data1)
         self.gridLayout_120.setObjectName(u"gridLayout_120")
         self.tabWidget_5 = QTabWidget(self.contrast_data1)
@@ -3475,7 +3450,7 @@ class Ui_MainWindow(object):
         self.contrast_data2 = QWidget()
         self.contrast_data2.setObjectName(u"contrast_data2")
         self.contrast_data2.setEnabled(True)
-        self.contrast_data2.setGeometry(QRect(0, 0, 186, 170))
+        self.contrast_data2.setGeometry(QRect(0, 0, 186, 164))
         self.gridLayout_124 = QGridLayout(self.contrast_data2)
         self.gridLayout_124.setObjectName(u"gridLayout_124")
         self.tabWidget_6 = QTabWidget(self.contrast_data2)
@@ -3908,11 +3883,18 @@ class Ui_MainWindow(object):
         self.groupBox_paintbrush = QGroupBox(self.tab_15)
         self.groupBox_paintbrush.setObjectName(u"groupBox_paintbrush")
         self.groupBox_paintbrush.setEnabled(True)
+        self.groupBox_paintbrush.setMinimumSize(QSize(300, 0))
         self.groupBox_paintbrush.setMaximumSize(QSize(16777215, 16777215))
         self.gridLayout_43 = QGridLayout(self.groupBox_paintbrush)
         self.gridLayout_43.setObjectName(u"gridLayout_43")
         self.stackedWidget_mrid = QStackedWidget(self.groupBox_paintbrush)
         self.stackedWidget_mrid.setObjectName(u"stackedWidget_mrid")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.stackedWidget_mrid.sizePolicy().hasHeightForWidth())
+        self.stackedWidget_mrid.setSizePolicy(sizePolicy5)
+        self.stackedWidget_mrid.setMinimumSize(QSize(0, 0))
         self.page_5 = QWidget()
         self.page_5.setObjectName(u"page_5")
         self.gridLayout_137 = QGridLayout(self.page_5)
@@ -4011,36 +3993,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_137.addWidget(self.groupBox_36, 0, 3, 4, 1)
 
-        self.groupBox_29 = QGroupBox(self.page_5)
-        self.groupBox_29.setObjectName(u"groupBox_29")
-        self.groupBox_29.setMaximumSize(QSize(16777215, 100))
-        self.gridLayout_40 = QGridLayout(self.groupBox_29)
-        self.gridLayout_40.setObjectName(u"gridLayout_40")
-        self.paint_square_Post = QToolButton(self.groupBox_29)
-        self.paint_square_Post.setObjectName(u"paint_square_Post")
-        self.paint_square_Post.setFont(font)
-        self.paint_square_Post.setStyleSheet(u"")
-        self.paint_square_Post.setIcon(icon6)
-        self.paint_square_Post.setIconSize(QSize(20, 20))
-        self.paint_square_Post.setCheckable(True)
-        self.paint_square_Post.setChecked(True)
-        self.paint_square_Post.setAutoExclusive(False)
-
-        self.gridLayout_40.addWidget(self.paint_square_Post, 0, 0, 1, 1)
-
-        self.paint_round_Post = QToolButton(self.groupBox_29)
-        self.paint_round_Post.setObjectName(u"paint_round_Post")
-        self.paint_round_Post.setEnabled(True)
-        self.paint_round_Post.setIcon(icon7)
-        self.paint_round_Post.setIconSize(QSize(20, 20))
-        self.paint_round_Post.setCheckable(True)
-        self.paint_round_Post.setAutoExclusive(False)
-
-        self.gridLayout_40.addWidget(self.paint_round_Post, 0, 1, 1, 1)
-
-
-        self.gridLayout_137.addWidget(self.groupBox_29, 0, 1, 1, 1)
-
         self.groupBox_28 = QGroupBox(self.page_5)
         self.groupBox_28.setObjectName(u"groupBox_28")
         self.groupBox_28.setMaximumSize(QSize(16777215, 250))
@@ -4119,11 +4071,11 @@ class Ui_MainWindow(object):
         self.gridLayout.setObjectName(u"gridLayout")
         self.pushButton_anatOK = QPushButton(self.page_8)
         self.pushButton_anatOK.setObjectName(u"pushButton_anatOK")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.pushButton_anatOK.sizePolicy().hasHeightForWidth())
-        self.pushButton_anatOK.setSizePolicy(sizePolicy5)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.pushButton_anatOK.sizePolicy().hasHeightForWidth())
+        self.pushButton_anatOK.setSizePolicy(sizePolicy6)
         self.pushButton_anatOK.setMinimumSize(QSize(100, 80))
         font8 = QFont()
         font8.setBold(False)
@@ -4239,12 +4191,7 @@ class Ui_MainWindow(object):
         self.gridLayout_140.setObjectName(u"gridLayout_140")
         self.pushButton_trans1 = QPushButton(self.groupBox_trans1)
         self.pushButton_trans1.setObjectName(u"pushButton_trans1")
-        icon8 = QIcon()
-        if QIcon.hasThemeIcon(QIcon.ThemeIcon.DocumentOpen):
-            icon8 = QIcon.fromTheme(QIcon.ThemeIcon.DocumentOpen)
-        else:
-            icon8.addFile(u".", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-
+        icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentOpen))
         self.pushButton_trans1.setIcon(icon8)
         self.pushButton_trans1.setIconSize(QSize(40, 40))
 
@@ -4301,7 +4248,37 @@ class Ui_MainWindow(object):
 
         self.stackedWidget_mrid.addWidget(self.page_6)
 
-        self.gridLayout_43.addWidget(self.stackedWidget_mrid, 0, 0, 1, 1)
+        self.gridLayout_43.addWidget(self.stackedWidget_mrid, 0, 1, 1, 1)
+
+        self.groupBox_29 = QGroupBox(self.groupBox_paintbrush)
+        self.groupBox_29.setObjectName(u"groupBox_29")
+        self.groupBox_29.setMaximumSize(QSize(16777215, 100))
+        self.gridLayout_40 = QGridLayout(self.groupBox_29)
+        self.gridLayout_40.setObjectName(u"gridLayout_40")
+        self.paint_square_Post = QToolButton(self.groupBox_29)
+        self.paint_square_Post.setObjectName(u"paint_square_Post")
+        self.paint_square_Post.setFont(font)
+        self.paint_square_Post.setStyleSheet(u"")
+        self.paint_square_Post.setIcon(icon6)
+        self.paint_square_Post.setIconSize(QSize(20, 20))
+        self.paint_square_Post.setCheckable(True)
+        self.paint_square_Post.setChecked(True)
+        self.paint_square_Post.setAutoExclusive(False)
+
+        self.gridLayout_40.addWidget(self.paint_square_Post, 0, 0, 1, 1)
+
+        self.paint_round_Post = QToolButton(self.groupBox_29)
+        self.paint_round_Post.setObjectName(u"paint_round_Post")
+        self.paint_round_Post.setEnabled(True)
+        self.paint_round_Post.setIcon(icon7)
+        self.paint_round_Post.setIconSize(QSize(20, 20))
+        self.paint_round_Post.setCheckable(True)
+        self.paint_round_Post.setAutoExclusive(False)
+
+        self.gridLayout_40.addWidget(self.paint_round_Post, 0, 1, 1, 1)
+
+
+        self.gridLayout_43.addWidget(self.groupBox_29, 0, 0, 1, 1)
 
 
         self.gridLayout_104.addWidget(self.groupBox_paintbrush, 1, 5, 1, 1)
@@ -4311,7 +4288,31 @@ class Ui_MainWindow(object):
         self.tab_ephys.setObjectName(u"tab_ephys")
         self.gridLayout_22 = QGridLayout(self.tab_ephys)
         self.gridLayout_22.setObjectName(u"gridLayout_22")
-        self.tableWidget_ephys = QTableWidget(self.tab_ephys)
+        self.pushButton_anatRegion = QPushButton(self.tab_ephys)
+        self.pushButton_anatRegion.setObjectName(u"pushButton_anatRegion")
+        self.pushButton_anatRegion.setMinimumSize(QSize(0, 72))
+        self.pushButton_anatRegion.setFont(font1)
+        self.pushButton_anatRegion.setStyleSheet(u"color: rgb(224, 27, 36);")
+
+        self.gridLayout_22.addWidget(self.pushButton_anatRegion, 2, 4, 1, 1)
+
+        self.frame_2 = QFrame(self.tab_ephys)
+        self.frame_2.setObjectName(u"frame_2")
+        self.frame_2.setFrameShape(QFrame.StyledPanel)
+        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.gridLayout_168 = QGridLayout(self.frame_2)
+        self.gridLayout_168.setObjectName(u"gridLayout_168")
+        self.pushButton_selectAll = QPushButton(self.frame_2)
+        self.pushButton_selectAll.setObjectName(u"pushButton_selectAll")
+
+        self.gridLayout_168.addWidget(self.pushButton_selectAll, 0, 0, 1, 1)
+
+        self.pushButton_deselectAll = QPushButton(self.frame_2)
+        self.pushButton_deselectAll.setObjectName(u"pushButton_deselectAll")
+
+        self.gridLayout_168.addWidget(self.pushButton_deselectAll, 0, 1, 1, 1)
+
+        self.tableWidget_ephys = QTableWidget(self.frame_2)
         self.tableWidget_ephys.setObjectName(u"tableWidget_ephys")
         self.tableWidget_ephys.setFont(font2)
         self.tableWidget_ephys.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
@@ -4320,48 +4321,17 @@ class Ui_MainWindow(object):
         self.tableWidget_ephys.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tableWidget_ephys.horizontalHeader().setCascadingSectionResizes(False)
 
-        self.gridLayout_22.addWidget(self.tableWidget_ephys, 0, 4, 4, 1)
+        self.gridLayout_168.addWidget(self.tableWidget_ephys, 2, 0, 1, 2)
 
-        self.textEdit_ephys = QTextEdit(self.tab_ephys)
-        self.textEdit_ephys.setObjectName(u"textEdit_ephys")
-        self.textEdit_ephys.setMaximumSize(QSize(16777215, 50))
-        self.textEdit_ephys.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.textEdit_ephys.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.textEdit_ephys.setReadOnly(True)
+        self.pushButton_showChannels = QPushButton(self.frame_2)
+        self.pushButton_showChannels.setObjectName(u"pushButton_showChannels")
+        self.pushButton_showChannels.setCheckable(True)
+        self.pushButton_showChannels.setChecked(True)
 
-        self.gridLayout_22.addWidget(self.textEdit_ephys, 0, 1, 1, 1)
-
-        self.groupBox_5 = QGroupBox(self.tab_ephys)
-        self.groupBox_5.setObjectName(u"groupBox_5")
-        self.gridLayout_165 = QGridLayout(self.groupBox_5)
-        self.gridLayout_165.setObjectName(u"gridLayout_165")
-        self.comboBox_mridTag = QComboBox(self.groupBox_5)
-        self.comboBox_mridTag.setObjectName(u"comboBox_mridTag")
-        self.comboBox_mridTag.setEnabled(False)
-        self.comboBox_mridTag.setMinimumSize(QSize(0, 0))
-        self.comboBox_mridTag.setStyleSheet(u"color: rgb(224, 27, 36);")
-        self.comboBox_mridTag.setEditable(False)
-        self.comboBox_mridTag.setInsertPolicy(QComboBox.InsertAtBottom)
-        self.comboBox_mridTag.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-
-        self.gridLayout_165.addWidget(self.comboBox_mridTag, 1, 0, 1, 1)
-
-        self.pushButton_changeTAG = QPushButton(self.groupBox_5)
-        self.pushButton_changeTAG.setObjectName(u"pushButton_changeTAG")
-        self.pushButton_changeTAG.setStyleSheet(u"color: rgb(224, 27, 36);")
-
-        self.gridLayout_165.addWidget(self.pushButton_changeTAG, 0, 0, 1, 1)
+        self.gridLayout_168.addWidget(self.pushButton_showChannels, 1, 0, 1, 2)
 
 
-        self.gridLayout_22.addWidget(self.groupBox_5, 0, 2, 1, 1)
-
-        self.pushButton_anatRegion = QPushButton(self.tab_ephys)
-        self.pushButton_anatRegion.setObjectName(u"pushButton_anatRegion")
-        self.pushButton_anatRegion.setMinimumSize(QSize(0, 72))
-        self.pushButton_anatRegion.setFont(font1)
-        self.pushButton_anatRegion.setStyleSheet(u"color: rgb(224, 27, 36);")
-
-        self.gridLayout_22.addWidget(self.pushButton_anatRegion, 4, 4, 1, 1)
+        self.gridLayout_22.addWidget(self.frame_2, 0, 4, 2, 1)
 
         self.tabWidget_2 = QTabWidget(self.tab_ephys)
         self.tabWidget_2.setObjectName(u"tabWidget_2")
@@ -4394,13 +4364,7 @@ class Ui_MainWindow(object):
         self.resetCamera_ephys.setObjectName(u"resetCamera_ephys")
         self.resetCamera_ephys.setEnabled(True)
         self.resetCamera_ephys.setStyleSheet(u"")
-        icon10 = QIcon()
-        iconThemeName = u"go-home"
-        if QIcon.hasThemeIcon(iconThemeName):
-            icon10 = QIcon.fromTheme(iconThemeName)
-        else:
-            icon10.addFile(u".", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-
+        icon10 = QIcon(QIcon.fromTheme(u"go-home"))
         self.resetCamera_ephys.setIcon(icon10)
         self.resetCamera_ephys.setIconSize(QSize(60, 40))
         self.resetCamera_ephys.setAutoDefault(False)
@@ -4569,8 +4533,43 @@ class Ui_MainWindow(object):
 
         self.tabWidget_2.addTab(self.tab_5, "")
 
-        self.gridLayout_22.addWidget(self.tabWidget_2, 1, 1, 4, 3)
+        self.gridLayout_22.addWidget(self.tabWidget_2, 1, 0, 2, 4)
 
+        self.groupBox_5 = QGroupBox(self.tab_ephys)
+        self.groupBox_5.setObjectName(u"groupBox_5")
+        self.gridLayout_165 = QGridLayout(self.groupBox_5)
+        self.gridLayout_165.setObjectName(u"gridLayout_165")
+        self.comboBox_mridTag = QComboBox(self.groupBox_5)
+        self.comboBox_mridTag.setObjectName(u"comboBox_mridTag")
+        self.comboBox_mridTag.setEnabled(False)
+        self.comboBox_mridTag.setMinimumSize(QSize(0, 0))
+        self.comboBox_mridTag.setStyleSheet(u"color: rgb(224, 27, 36);")
+        self.comboBox_mridTag.setEditable(False)
+        self.comboBox_mridTag.setInsertPolicy(QComboBox.InsertAtBottom)
+        self.comboBox_mridTag.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+
+        self.gridLayout_165.addWidget(self.comboBox_mridTag, 1, 0, 1, 1)
+
+        self.pushButton_changeTAG = QPushButton(self.groupBox_5)
+        self.pushButton_changeTAG.setObjectName(u"pushButton_changeTAG")
+        self.pushButton_changeTAG.setStyleSheet(u"color: rgb(224, 27, 36);")
+
+        self.gridLayout_165.addWidget(self.pushButton_changeTAG, 0, 0, 1, 1)
+
+
+        self.gridLayout_22.addWidget(self.groupBox_5, 0, 3, 1, 1)
+
+        self.textEdit_ephys = QTextEdit(self.tab_ephys)
+        self.textEdit_ephys.setObjectName(u"textEdit_ephys")
+        self.textEdit_ephys.setMaximumSize(QSize(16777215, 50))
+        self.textEdit_ephys.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.textEdit_ephys.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.textEdit_ephys.setReadOnly(True)
+
+        self.gridLayout_22.addWidget(self.textEdit_ephys, 0, 0, 1, 3)
+
+        self.gridLayout_22.setColumnStretch(1, 2)
+        self.gridLayout_22.setColumnStretch(4, 2)
         self.tabWidget.addTab(self.tab_ephys, "")
         self.tab = QWidget()
         self.tab.setObjectName(u"tab")
@@ -4806,7 +4805,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.dockWidget_ephys = QDockWidget(MainWindow)
         self.dockWidget_ephys.setObjectName(u"dockWidget_ephys")
-        self.dockWidget_ephys.setMinimumSize(QSize(663, 223))
+        self.dockWidget_ephys.setMinimumSize(QSize(663, 249))
         self.Dock_ephys = QWidget()
         self.Dock_ephys.setObjectName(u"Dock_ephys")
         self.Dock_ephys.setMinimumSize(QSize(650, 0))
@@ -4831,58 +4830,84 @@ class Ui_MainWindow(object):
         self.gridLayout_69.setSpacing(0)
         self.gridLayout_69.setObjectName(u"gridLayout_69")
         self.gridLayout_69.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_2 = QPushButton(self.frame)
-        self.pushButton_2.setObjectName(u"pushButton_2")
-        self.pushButton_2.setEnabled(True)
-        icon16 = QIcon(QIcon.fromTheme(u"zoom-in"))
-        self.pushButton_2.setIcon(icon16)
-        self.pushButton_2.setIconSize(QSize(40, 40))
-
-        self.gridLayout_69.addWidget(self.pushButton_2, 2, 2, 1, 1)
-
-        self.pushButtonAmp_minus = QPushButton(self.frame)
-        self.pushButtonAmp_minus.setObjectName(u"pushButtonAmp_minus")
-        icon17 = QIcon()
-        icon17.addFile(u"Icons/ephys/amplitude_minus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButtonAmp_minus.setIcon(icon17)
-        self.pushButtonAmp_minus.setIconSize(QSize(40, 40))
-
-        self.gridLayout_69.addWidget(self.pushButtonAmp_minus, 2, 0, 1, 1)
-
         self.widget_pgEphys = PgWidget(self.frame)
         self.widget_pgEphys.setObjectName(u"widget_pgEphys")
 
-        self.gridLayout_69.addWidget(self.widget_pgEphys, 0, 0, 1, 6)
+        self.gridLayout_69.addWidget(self.widget_pgEphys, 0, 0, 1, 7)
 
-        self.pushButton_6 = QPushButton(self.frame)
-        self.pushButton_6.setObjectName(u"pushButton_6")
-        self.pushButton_6.setEnabled(False)
+        self.pushButton_timeline = QPushButton(self.frame)
+        self.pushButton_timeline.setObjectName(u"pushButton_timeline")
+        self.pushButton_timeline.setEnabled(True)
+        icon16 = QIcon()
+        icon16.addFile(u"Icons/ephys/select_timeline.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_timeline.setIcon(icon16)
+        self.pushButton_timeline.setIconSize(QSize(40, 20))
+        self.pushButton_timeline.setCheckable(True)
 
-        self.gridLayout_69.addWidget(self.pushButton_6, 2, 5, 1, 1)
+        self.gridLayout_69.addWidget(self.pushButton_timeline, 2, 5, 1, 1)
 
-        self.pushButton_3 = QPushButton(self.frame)
-        self.pushButton_3.setObjectName(u"pushButton_3")
-        self.pushButton_3.setEnabled(False)
+        self.pushButton_removeTimeline = QPushButton(self.frame)
+        self.pushButton_removeTimeline.setObjectName(u"pushButton_removeTimeline")
+        self.pushButton_removeTimeline.setEnabled(False)
+
+        self.gridLayout_69.addWidget(self.pushButton_removeTimeline, 3, 5, 1, 1)
+
+        self.pushButton_selectTime = QPushButton(self.frame)
+        self.pushButton_selectTime.setObjectName(u"pushButton_selectTime")
+        icon17 = QIcon()
+        icon17.addFile(u"Icons/ephys/select_time.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_selectTime.setIcon(icon17)
+        self.pushButton_selectTime.setIconSize(QSize(40, 40))
+        self.pushButton_selectTime.setCheckable(True)
+
+        self.gridLayout_69.addWidget(self.pushButton_selectTime, 2, 4, 2, 1)
+
+        self.pushButton_zoomOut = QPushButton(self.frame)
+        self.pushButton_zoomOut.setObjectName(u"pushButton_zoomOut")
+        self.pushButton_zoomOut.setEnabled(True)
         icon18 = QIcon(QIcon.fromTheme(u"zoom-out"))
-        self.pushButton_3.setIcon(icon18)
-        self.pushButton_3.setIconSize(QSize(40, 40))
+        self.pushButton_zoomOut.setIcon(icon18)
+        self.pushButton_zoomOut.setIconSize(QSize(40, 40))
 
-        self.gridLayout_69.addWidget(self.pushButton_3, 2, 3, 1, 1)
+        self.gridLayout_69.addWidget(self.pushButton_zoomOut, 2, 3, 2, 1)
+
+        self.pushButton_zoomReset = QPushButton(self.frame)
+        self.pushButton_zoomReset.setObjectName(u"pushButton_zoomReset")
+        self.pushButton_zoomReset.setEnabled(True)
+        icon19 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ViewFullscreen))
+        self.pushButton_zoomReset.setIcon(icon19)
+        self.pushButton_zoomReset.setIconSize(QSize(40, 40))
+
+        self.gridLayout_69.addWidget(self.pushButton_zoomReset, 2, 2, 2, 1)
 
         self.pushButtonAmp_plus = QPushButton(self.frame)
         self.pushButtonAmp_plus.setObjectName(u"pushButtonAmp_plus")
-        icon19 = QIcon()
-        icon19.addFile(u"Icons/ephys/amplitude_plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButtonAmp_plus.setIcon(icon19)
+        icon20 = QIcon()
+        icon20.addFile(u"Icons/ephys/amplitude_plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButtonAmp_plus.setIcon(icon20)
         self.pushButtonAmp_plus.setIconSize(QSize(40, 40))
 
-        self.gridLayout_69.addWidget(self.pushButtonAmp_plus, 2, 1, 1, 1)
+        self.gridLayout_69.addWidget(self.pushButtonAmp_plus, 2, 1, 2, 1)
 
-        self.pushButton_4 = QPushButton(self.frame)
-        self.pushButton_4.setObjectName(u"pushButton_4")
-        self.pushButton_4.setEnabled(False)
+        self.pushButtonAmp_minus = QPushButton(self.frame)
+        self.pushButtonAmp_minus.setObjectName(u"pushButtonAmp_minus")
+        icon21 = QIcon()
+        icon21.addFile(u"Icons/ephys/amplitude_minus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButtonAmp_minus.setIcon(icon21)
+        self.pushButtonAmp_minus.setIconSize(QSize(40, 40))
 
-        self.gridLayout_69.addWidget(self.pushButton_4, 2, 4, 1, 1)
+        self.gridLayout_69.addWidget(self.pushButtonAmp_minus, 2, 0, 2, 1)
+
+        self.pushButton_measurement = QPushButton(self.frame)
+        self.pushButton_measurement.setObjectName(u"pushButton_measurement")
+        self.pushButton_measurement.setEnabled(True)
+        icon22 = QIcon()
+        icon22.addFile(u"Icons/Internet/measure.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_measurement.setIcon(icon22)
+        self.pushButton_measurement.setIconSize(QSize(40, 40))
+        self.pushButton_measurement.setCheckable(True)
+
+        self.gridLayout_69.addWidget(self.pushButton_measurement, 2, 6, 2, 1)
 
 
         self.gridLayout_75.addWidget(self.frame, 0, 0, 1, 1)
@@ -4991,7 +5016,7 @@ class Ui_MainWindow(object):
         self.stackedWidget_mrid.setCurrentIndex(0)
         self.histogram_label.setCurrentIndex(-1)
         self.stackedWidget_4D.setCurrentIndex(1)
-        self.tabWidget_2.setCurrentIndex(1)
+        self.tabWidget_2.setCurrentIndex(0)
         self.resetCamera_ephys.setDefault(False)
         self.stackedWidget_video.setCurrentIndex(1)
         self.resetCamera_vis3D.setDefault(False)
@@ -5446,9 +5471,6 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem23.setText(QCoreApplication.translate("MainWindow", u"Label", None));
         self.groupBox_36.setTitle(QCoreApplication.translate("MainWindow", u"Histogram", None))
         self.groupBox_48.setTitle(QCoreApplication.translate("MainWindow", u"Label", None))
-        self.groupBox_29.setTitle(QCoreApplication.translate("MainWindow", u"Brush Style", None))
-        self.paint_square_Post.setText("")
-        self.paint_round_Post.setText("")
         self.groupBox_28.setTitle(QCoreApplication.translate("MainWindow", u"Paintbrush Inspector", None))
         self.groupBox_31.setTitle(QCoreApplication.translate("MainWindow", u"Label Opacity", None))
         self.groupBox_30.setTitle(QCoreApplication.translate("MainWindow", u"Brush Size", None))
@@ -5507,19 +5529,14 @@ class Ui_MainWindow(object):
 "li.checked::marker { content: \"\\2612\"; }\n"
 "</style></head><body style=\" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:9pt;\">Please select the correct transformation files for dataview</span></p></body></html>", None))
+        self.groupBox_29.setTitle(QCoreApplication.translate("MainWindow", u"Brush Style", None))
+        self.paint_square_Post.setText("")
+        self.paint_round_Post.setText("")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_15), QCoreApplication.translate("MainWindow", u"Popups for 4D Data", None))
-        self.textEdit_ephys.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:20pt; color:#ffffff;\">Atlas 3D Visualisation</span></p></body></html>", None))
-        self.groupBox_5.setTitle("")
-        self.comboBox_mridTag.setCurrentText("")
-        self.pushButton_changeTAG.setText(QCoreApplication.translate("MainWindow", u"CHANGE TAG", None))
         self.pushButton_anatRegion.setText(QCoreApplication.translate("MainWindow", u"CHANGE ANAT REGION", None))
+        self.pushButton_selectAll.setText(QCoreApplication.translate("MainWindow", u"Select All", None))
+        self.pushButton_deselectAll.setText(QCoreApplication.translate("MainWindow", u"Deselect All", None))
+        self.pushButton_showChannels.setText(QCoreApplication.translate("MainWindow", u"Show only selected Channels", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_slicey.setToolTip(QCoreApplication.translate("MainWindow", u"Coronal Slicing", None))
 #endif // QT_CONFIG(tooltip)
@@ -5551,6 +5568,17 @@ class Ui_MainWindow(object):
         self.pushButton_videoPlay.setText("")
         self.pushButton_AddVideo.setText(QCoreApplication.translate("MainWindow", u"OPEN VIDEO", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_5), QCoreApplication.translate("MainWindow", u"Video", None))
+        self.groupBox_5.setTitle("")
+        self.comboBox_mridTag.setCurrentText("")
+        self.pushButton_changeTAG.setText(QCoreApplication.translate("MainWindow", u"CHANGE TAG", None))
+        self.textEdit_ephys.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:20pt; color:#ffffff;\">Atlas 3D Visualisation</span></p></body></html>", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_ephys), QCoreApplication.translate("MainWindow", u"ephys", None))
         self.groupBox_ChangeanatRegion.setTitle("")
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Anatomical Region", None))
@@ -5596,12 +5624,35 @@ class Ui_MainWindow(object):
         self.menuTools.setTitle(QCoreApplication.translate("MainWindow", u"3D Tools", None))
         self.menu4D_Tools.setTitle(QCoreApplication.translate("MainWindow", u"4D Tools", None))
         self.menuElectrode_Localization.setTitle(QCoreApplication.translate("MainWindow", u"Electrode Localization", None))
-        self.pushButton_2.setText("")
-        self.pushButtonAmp_minus.setText("")
-        self.pushButton_6.setText(QCoreApplication.translate("MainWindow", u"Measurement", None))
-        self.pushButton_3.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_timeline.setToolTip(QCoreApplication.translate("MainWindow", u"Draw Timeline", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_timeline.setText("")
+        self.pushButton_removeTimeline.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_selectTime.setToolTip(QCoreApplication.translate("MainWindow", u"Select Time", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_selectTime.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_zoomOut.setToolTip(QCoreApplication.translate("MainWindow", u"Zoom Out", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_zoomOut.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_zoomReset.setToolTip(QCoreApplication.translate("MainWindow", u"Reset Zoom", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_zoomReset.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButtonAmp_plus.setToolTip(QCoreApplication.translate("MainWindow", u"Increase Amplitude", None))
+#endif // QT_CONFIG(tooltip)
         self.pushButtonAmp_plus.setText("")
-        self.pushButton_4.setText(QCoreApplication.translate("MainWindow", u"Draw Timeline", None))
+#if QT_CONFIG(tooltip)
+        self.pushButtonAmp_minus.setToolTip(QCoreApplication.translate("MainWindow", u"Decrease Amplitude", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButtonAmp_minus.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_measurement.setToolTip(QCoreApplication.translate("MainWindow", u"Measure", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_measurement.setText("")
         self.groupBox_3.setTitle("")
         self.lineEdit_2.setText(QCoreApplication.translate("MainWindow", u"Duration (ms)", None))
         self.spinBox_startMs.setSuffix(QCoreApplication.translate("MainWindow", u"ms", None))

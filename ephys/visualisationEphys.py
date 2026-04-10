@@ -5,11 +5,13 @@ import pyqtgraph as pg
 
 class VisualisationEphys:
     def __init__(self,MW,Vis3D,read_data,channels,skipped_ch):
+
+
         self.MW = MW
         self.Vis3D = Vis3D
         self.read_data = read_data
         self.total_ch_visible = 20
-        duration = 3
+        duration = 1.5
 
         self.t_start = self.read_data.analogsignals[0].t_start
         self.t_stop = self.read_data.analogsignals[0].t_stop
@@ -20,23 +22,31 @@ class VisualisationEphys:
         self.time_start = int(self.t_stop/2)
         self.time_end = self.time_start + duration
 
-
         time_start_min = int(self.time_start/60)
         time_start_sec = int(self.time_start - time_start_min*60)
         time_start_ms = int((self.time_start - time_start_min*60-time_start_sec)*1000)
         self.MW.ui.spinBox_startMin.setValue(time_start_min) #min
         self.MW.ui.spinBox_startS.setValue(time_start_sec) #sec
         self.MW.ui.spinBox_startMs.setValue(time_start_ms) #ms
+        self.MW.ui.spinBox_startMs.setMaximum(int((float(self.t_stop.magnitude-self.t_start.magnitude))*1000))
+        self.MW.ui.spinBox_startS.setMaximum(int((float(self.t_stop.magnitude-self.t_start.magnitude))*1000))
+
         self.MW.ui.spinBox_duration.setValue(duration*1000)
         self.MW.ui.horizontalSlider_ephys.setMaximum(int((float(self.t_stop.magnitude-self.t_start.magnitude)-duration)*1000))
         self.MW.ui.horizontalSlider_ephys.setValue(self.time_start*1000) #sec
 
-        self.MW.ui.spinBox_startMin.valueChanged.connect(self.change_start_end_time)
-        self.MW.ui.spinBox_startS.valueChanged.connect(self.change_start_end_time)
-        self.MW.ui.spinBox_startMs.valueChanged.connect(self.change_start_end_time)
-        self.MW.ui.spinBox_duration.valueChanged.connect(self.change_start_end_time)
+        self.MW.ui.spinBox_startMin.editingFinished.connect(self.change_start_end_time)
+        self.MW.ui.spinBox_startS.editingFinished.connect(self.change_start_end_time)
+        self.MW.ui.spinBox_startMs.editingFinished.connect(self.change_start_end_time)
+        self.MW.ui.spinBox_duration.editingFinished.connect(self.change_start_end_time)
         self.MW.ui.horizontalSlider_ephys.valueChanged.connect(self.change_start_end_time_slider)
 
+        self.MW.ui.pushButton_zoomOut.clicked.connect(self.MW.ui.widget_pgEphys.zoomOut)
+        self.MW.ui.pushButton_zoomReset.clicked.connect(self.MW.ui.widget_pgEphys.zoomReset)
+        self.MW.ui.pushButton_measurement.clicked.connect(self.MW.ui.widget_pgEphys.plot.activate_measurement)
+        self.MW.ui.pushButton_selectTime.clicked.connect(self.MW.ui.widget_pgEphys.plot.select_timeframe)
+        self.MW.ui.pushButton_timeline.clicked.connect(self.MW.ui.widget_pgEphys.plot.draw_timeline)
+        self.MW.ui.pushButton_removeTimeline.clicked.connect(self.MW.ui.widget_pgEphys.plot.remove_timeline)
 
         # create and electrode table
         self.Vis3D.table_excel = self.MW.ui.tableWidget_ephys
@@ -45,7 +55,13 @@ class VisualisationEphys:
 
 
     def visualize_data(self,channels):
+        if self.time_start==self.time_end or channels==[]:
+            if channels==[]:
+                self.MW.ui.widget_pgEphys.plot.clear()
+            return
         signal = self.read_data.analogsignals[0].load(time_slice=(self.time_start,self.time_end),channel_indexes=channels)
+        self.MW.ui.widget_pgEphys.xMin = self.time_start
+        self.MW.ui.widget_pgEphys.xMax = self.time_end
         self.displayed_channels,self.ephys_lines = self.MW.ui.widget_pgEphys.plot_ephys(signal.times, signal.magnitude, channels)
 
         # highlight channel, even after time scrolling
@@ -53,14 +69,28 @@ class VisualisationEphys:
             self.highlight_channel(ch_idx=self.Vis3D.table_excel.currentRow())
 
 
-    def change_start_end_time(self,val):
-        self.time_start = self.MW.ui.spinBox_startMin.value()*60 + self.MW.ui.spinBox_startS.value() + self.MW.ui.spinBox_startMs.value()/1000
+    def change_start_end_time(self):
+        self.time_start = min(self.MW.ui.spinBox_startMin.value()*60 + self.MW.ui.spinBox_startS.value() + self.MW.ui.spinBox_startMs.value()/1000,self.t_stop.magnitude-self.MW.ui.spinBox_duration.value()/1000)
+
+        print('change input of sliders',self.time_start,flush=True)
         self.time_end = self.time_start + self.MW.ui.spinBox_duration.value()/1000
 
         self.MW.ui.horizontalSlider_ephys.blockSignals(True)
+        self.MW.ui.spinBox_startMin.blockSignals(True)
+        self.MW.ui.spinBox_startS.blockSignals(True)
+        self.MW.ui.spinBox_startMs.blockSignals(True)
         self.MW.ui.horizontalSlider_ephys.setMaximum(int((self.t_stop.magnitude-self.t_start.magnitude-self.MW.ui.spinBox_duration.value()/1000)*1000))
         self.MW.ui.horizontalSlider_ephys.setValue(self.time_start*1000) #ms
+        time_start_min = int(self.time_start/60)
+        time_start_sec = int(self.time_start - time_start_min*60)
+        time_start_ms = int((self.time_start - time_start_min*60-time_start_sec)*1000)
+        self.MW.ui.spinBox_startMin.setValue(time_start_min) #min
+        self.MW.ui.spinBox_startS.setValue(time_start_sec) #sec
+        self.MW.ui.spinBox_startMs.setValue(time_start_ms) #ms
         self.MW.ui.horizontalSlider_ephys.blockSignals(False)
+        self.MW.ui.spinBox_startMin.blockSignals(False)
+        self.MW.ui.spinBox_startS.blockSignals(False)
+        self.MW.ui.spinBox_startMs.blockSignals(False)
 
         self.visualize_data(self.displayed_channels)
 
@@ -80,11 +110,9 @@ class VisualisationEphys:
 
         self.time_start = self.MW.ui.spinBox_startMin.value()*60 + self.MW.ui.spinBox_startS.value() + self.MW.ui.spinBox_startMs.value()/1000
         self.time_end = self.time_start + self.MW.ui.spinBox_duration.value()/1000
-
         self.visualize_data(self.displayed_channels)
 
     def highlight_channel(self,ch_idx):
-        print('HIGHLIGHT CHANNEL',ch_idx,flush=True)
         if self.ephys_lines[ch_idx] is None:
             return
         pen_current = self.ephys_lines[ch_idx].opts['pen']
@@ -106,6 +134,8 @@ class VisualisationEphys:
         self.ephys_lines[ch_idx].setPen(current_pen)
 
         self.Vis3D.table_excel.selectRow(ch_idx)
+
+        self.ch_highlight = ch_idx
 
 
 

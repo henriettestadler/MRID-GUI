@@ -3,9 +3,9 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout
 import pyqtgraph as pg
 import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtCore import QRectF
-from PySide6.QtWidgets import QDockWidget
+from PySide6.QtCore import QRectF,QLineF
 from PySide6.QtGui import QKeySequence,QShortcut
+from PySide6 import QtGui
 
 class ClickablePlotWidget(pg.PlotWidget):
     def __init__(self, parent=None):
@@ -13,7 +13,10 @@ class ClickablePlotWidget(pg.PlotWidget):
         self.PgWidget = parent  # reference to your PgEphysWidget
         self.scroll_time = False
         self.zooming = False
+        self.measurement = False
+        self.timeline = False
         self.rect_item = None
+        self.timeline_item = None
 
 
     def mouseDoubleClickEvent(self, event):
@@ -22,10 +25,9 @@ class ClickablePlotWidget(pg.PlotWidget):
         x = pos.x()
         y = pos.y()
         # Pass event up to main widget
-        channel_idx = self.PgWidget.find_closest_line( x, y)
+        channel_idx = self.PgWidget.find_closest_line(x, y)
 
         # highlight line and focus on point
-        print('mouseDoubleClickEvent',flush=True)
         self.PgWidget.VisEphys.Vis3D.manually_pick_point(point=[],idx=channel_idx)
         self.PgWidget.VisEphys.highlight_channel(channel_idx)
 
@@ -36,35 +38,78 @@ class ClickablePlotWidget(pg.PlotWidget):
             self.scroll_time = True
             self.pos_original = event.globalPos()
         elif event.button() == Qt.LeftButton:
-            self.zooming = True
+            if self.PgWidget.MW.ui.pushButton_measurement.isChecked():
+                self.measurement = True
+            elif self.PgWidget.MW.ui.pushButton_timeline.isChecked():
+                self.timeline = True
+                pos = self.plotItem.vb.mapSceneToView(event.pos())
+                if self.timeline_item is not None:
+                    self.removeItem(self.timeline_item)
+                    self.removeItem(self.timeline_text)
+                self.timeline_item = pg.QtWidgets.QGraphicsLineItem(
+                    QLineF(pos.x(), self.PgWidget.yMin,
+                           pos.x(),
+                           self.PgWidget.yMax)
+                )
+                self.timeline_item.setPen(pg.mkPen('w'))
+                self.addItem(self.timeline_item)
+
+                mins = int(pos.x() // 60)
+                secs = int(pos.x() % 60)
+                ms = int((pos.x() % 1) * 1000)
+                self.timeline_text = pg.TextItem(
+                    f"Time: {mins}:{secs:02d}.{ms:03d}, {(pos.x()):.3f} sec",
+                    color='w', anchor=(0, 1),     fill=pg.mkBrush(0, 0, 0, 150),
+                    border=pg.mkPen('w', width=1),
+                )
+                self.timeline_text.setPos(self.PgWidget.xMin, self.PgWidget.yMin)
+                self.timeline_text.setFont(QtGui.QFont("Arial", 12, QtGui.QFont.Bold))
+                self.addItem(self.timeline_text)
+
+                self.PgWidget.MW.ui.pushButton_removeTimeline.setEnabled(True)
+            else:
+                self.zooming = True
             self.pos_original = self.plotItem.vb.mapSceneToView(event.pos())
-            print(self.pos_original,flush=True)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.RightButton:
             self.scroll_time = False
         elif event.button() == Qt.LeftButton:
-            ## zooming
             pos = self.plotItem.vb.mapSceneToView(event.pos())
-            #print('width',pos.x() - self.pos_original.x(),flush=True) #sec
-            #print('height',pos.y() - self.pos_original.y(),flush=True) #some unit
-            if pos.x() > self.pos_original.x():
-                self.xMin = self.pos_original.x()
-                self.xMax = pos.x()
-            else:
-                self.xMin = pos.x()
-                self.xMax = self.pos_original.x()
+            if self.zooming:
+                diff_x = self.PgWidget.xMax - self.PgWidget.xMin
+                diff_y = self.PgWidget.yMax - self.PgWidget.yMin
+                if abs(pos.x() - self.pos_original.x()) < diff_x/10 and abs(pos.y() - self.pos_original.y()) < diff_y/10:
+                    self.zooming = False
+                    return
+                if pos.x() > self.pos_original.x():
+                    self.PgWidget.xMin = max(self.pos_original.x(),self.PgWidget.VisEphys.time_start)
+                    self.PgWidget.xMax = min(pos.x(),self.PgWidget.VisEphys.time_end)
 
-            if pos.y() > self.pos_original.y():
-                self.yMin = self.pos_original.y()
-                self.yMax = pos.y()
-            else:
-                self.yMin = pos.y()
-                self.yMax = self.pos_original.y()
-            self.PgWidget.plot.setXRange(self.xMin,self.xMax)
-            self.PgWidget.plot.setYRange(self.yMin,self.yMax)
-            self.PgWidget.plot.setLimits(yMin=self.yMin, yMax=self.yMax,xMin=self.xMin,xMax=self.xMax)
-            self.zooming = False
+                else:
+                    self.PgWidget.xMin = max(pos.x() ,self.PgWidget.VisEphys.time_start)
+                    self.PgWidget.xMax = min(self.pos_original.x(),self.PgWidget.VisEphys.time_end)
+
+                if not self.PgWidget.MW.ui.pushButton_selectTime.isChecked():
+                    if pos.y() > self.pos_original.y():
+                        self.PgWidget.yMin = max(self.pos_original.y(),-self.PgWidget.slot_height)
+                        self.PgWidget.yMax = min(pos.y(), (len(self.PgWidget.VisEphys.all_channels)-1) * self.PgWidget.slot_height)
+                    else:
+                        self.PgWidget.yMin = max(pos.y(),-self.PgWidget.slot_height)
+                        self.PgWidget.yMax = min(self.pos_original.y(), (len(self.PgWidget.VisEphys.all_channels)-1) * self.PgWidget.slot_height)
+                self.PgWidget.plot.setXRange(self.PgWidget.xMin,self.PgWidget.xMax)
+                self.PgWidget.plot.setYRange(self.PgWidget.yMin,self.PgWidget.yMax)
+                self.PgWidget.plot.setLimits(yMin=self.PgWidget.yMin, yMax=self.PgWidget.yMax,xMin=self.PgWidget.xMin,xMax=self.PgWidget.xMax)
+                if self.rect_item is not None:
+                    self.removeItem(self.rect_item)
+                self.zooming = False
+            elif self.measurement:
+                self.measurement =False
+            elif self.timeline:
+                if hasattr(self, "timeline_text"):
+                    self.removeItem(self.timeline_text)
+                self.timeline =False
+
 
     def mouseMoveEvent(self, event):
         if self.scroll_time:
@@ -74,10 +119,9 @@ class ClickablePlotWidget(pg.PlotWidget):
                 self.PgWidget.VisEphys.time_start = max(0,self.PgWidget.VisEphys.time_start+delta.x()/1000)
                 self.PgWidget.VisEphys.time_end += delta.x()/1000
                 signal = self.PgWidget.VisEphys.read_data.analogsignals[0].load(time_slice=(self.PgWidget.VisEphys.time_start,self.PgWidget.VisEphys.time_end),channel_indexes=self.PgWidget.displayed_channels)
-                self.PgWidget.plot_ephys(signal.times, signal.magnitude, self.PgWidget.displayed_channels)
+                self.PgWidget.VisEphys.displayed_channels,self.PgWidget.VisEphys.ephys_lines = self.PgWidget.plot_ephys(signal.times, signal.magnitude, self.PgWidget.displayed_channels)
 
                 #change slots
-
                 self.PgWidget.MW.ui.spinBox_startMin.blockSignals(True)
                 self.PgWidget.MW.ui.spinBox_startS.blockSignals(True)
                 self.PgWidget.MW.ui.spinBox_startMs.blockSignals(True)
@@ -99,6 +143,29 @@ class ClickablePlotWidget(pg.PlotWidget):
             if self.rect_item is not None:
                     self.removeItem(self.rect_item)
             # draw new rect
+            if not self.PgWidget.MW.ui.pushButton_selectTime.isChecked():
+                self.rect_item = pg.QtWidgets.QGraphicsRectItem(
+                    QRectF(self.pos_original.x(), self.pos_original.y(),
+                           pos.x() - self.pos_original.x(),
+                           pos.y() - self.pos_original.y())
+                )
+            else:
+                self.rect_item = pg.QtWidgets.QGraphicsRectItem(
+                    QRectF(self.pos_original.x(), self.PgWidget.yMin,
+                           pos.x() - self.pos_original.x(),
+                           self.PgWidget.yMax-self.PgWidget.yMin)
+                )
+            self.rect_item.setPen(pg.mkPen('w'))
+            self.rect_item.setBrush(pg.mkBrush(255, 255, 255, 50))
+            self.addItem(self.rect_item)
+
+        elif self.measurement:
+            print('self.measurement, hier bin ich die ganze zeit',flush=True)
+            pos = self.plotItem.vb.mapSceneToView(event.pos())
+
+            if self.rect_item is not None:
+                    self.removeItem(self.rect_item)
+            # draw new rect
             self.rect_item = pg.QtWidgets.QGraphicsRectItem(
                 QRectF(self.pos_original.x(), self.pos_original.y(),
                        pos.x() - self.pos_original.x(),
@@ -108,21 +175,112 @@ class ClickablePlotWidget(pg.PlotWidget):
             self.rect_item.setBrush(pg.mkBrush(255, 255, 255, 50))  # semi-transparent
             self.addItem(self.rect_item)
 
-            print('width',pos.x() - self.pos_original.x(),flush=True) #sec
-            print('height',pos.y() - self.pos_original.y(),flush=True) #some unit
-
-
-            # box from self.pos_original to pos
-            # -> get ms and uV (print
+            self.measure_from_pos(pos)
 
 
         super().mouseMoveEvent(event)
 
 
+    def activate_measurement(self,val):
+        # Then style the checked state
+        self.PgWidget.MW.ui.pushButton_measurement.setStyleSheet("""
+            QPushButton:checked {
+                background-color: palette(highlight);
+                color: palette(highlighted-text);
+            }
+        """)
+        self.PgWidget.MW.ui.pushButton_selectTime.setChecked(False)
+        self.PgWidget.MW.ui.pushButton_timeline.setChecked(False)
 
-    #def wheelEvent(self, event):
+
+    def select_timeframe(self,val):
+        self.PgWidget.MW.ui.pushButton_selectTime.setStyleSheet("""
+            QPushButton:checked {
+                background-color: palette(highlight);
+                color: palette(highlighted-text);
+            }
+        """)
+        self.PgWidget.MW.ui.pushButton_measurement.setChecked(False)
+        self.PgWidget.MW.ui.pushButton_timeline.setChecked(False)
 
 
+    def draw_timeline(self,val):
+        self.PgWidget.MW.ui.pushButton_timeline.setStyleSheet("""
+            QPushButton:checked {
+                background-color: palette(highlight);
+                color: palette(highlighted-text);
+            }
+        """)
+        self.PgWidget.MW.ui.pushButton_selectTime.setChecked(False)
+        self.PgWidget.MW.ui.pushButton_measurement.setChecked(False)
+
+    def remove_timeline(self,pos):
+        self.removeItem(self.timeline_item)
+        self.PgWidget.MW.ui.pushButton_removeTimeline.setEnabled(False)
+
+    def measure_from_pos(self,pos):
+        # get the times
+        t1 = pos.x() if pos.x() < self.pos_original.x() else self.pos_original.x()
+        t2 = self.pos_original.x() if pos.x() < self.pos_original.x() else pos.x()
+
+        # get the data
+        y1 = pos.y() if pos.y() < self.pos_original.y() else self.pos_original.y()
+        y2 = self.pos_original.y() if pos.y() < self.pos_original.y() else pos.y()
+
+        steps = np.arange(y1+self.PgWidget.slot_height*0.1, y2-self.PgWidget.slot_height*0.1, self.PgWidget.slot_height)
+        channels_measurement = []
+        line_indices = []
+        for y_datapoint in steps:
+            idx = self.PgWidget.find_closest_line(pos.x(), y_datapoint)
+            channel_idx = self.PgWidget.VisEphys.all_channels[idx]
+            if channel_idx in self.PgWidget.displayed_channels and channel_idx not in channels_measurement:
+                channels_measurement.append(channel_idx)
+                line_indices.append(idx)
+
+        if channels_measurement == [] or abs(t2-t1)<1e-4:
+            return
+
+        signal = self.PgWidget.VisEphys.read_data.analogsignals[0].load(time_slice=(t1,t2),channel_indexes=channels_measurement)
+
+        if hasattr(self,"plot_points"):
+            self.removeItem(self.plot_points)
+            for text in self.measurement_text.values():
+                self.removeItem(text)
+
+        points_x = []
+        points_y = []
+        self.measurement_text = {}
+
+        for idx,ch_idx in enumerate(channels_measurement):
+            signal_data = signal.magnitude[:, idx]
+            ch_max = np.max(signal_data)
+            ch_min = np.min(signal_data)
+            t_max = signal.times[np.argwhere(signal_data==ch_max)[0][0]]
+            t_min = signal.times[np.argwhere(signal_data==ch_min)[0][0]]
+            diff_y_uV = (ch_max-ch_min)*0.192
+            signal_times, values = self.PgWidget.lines_values[line_indices[idx]]
+            y_max=values[np.argmin(np.abs(signal_times - t_max))]
+            y_min=values[np.argmin(np.abs(signal_times - t_min))]
+            points_x.append(t_max)
+            points_x.append(t_min)
+            points_y.append(y_max)
+            points_y.append(y_min)
+
+            mins = abs(int(float(t_max-t_min) // 60))
+            secs = abs(int(float(t_max-t_min) % 60))
+            ms = abs(int((float(t_max-t_min) % 1) * 1000))
+            self.measurement_text[idx] = pg.TextItem(
+                f"Ch {ch_idx}: {mins}:{secs:02d}.{ms:03d}, {(diff_y_uV):.3f} uV",
+                color='w', anchor=(0, 1), fill=pg.mkBrush(0, 0, 0, 150),
+                border=pg.mkPen('w', width=1),
+            )
+            font_size=self.height()*0.015
+            self.measurement_text[idx].setPos(self.PgWidget.xMin, self.PgWidget.yMin+font_size/5*idx)
+            self.measurement_text[idx].setFont(QtGui.QFont("Arial", font_size, QtGui.QFont.Bold))
+            self.addItem(self.measurement_text[idx])
+
+        self.plot_points = self.plot(points_x, points_y, pen=None, symbol='o')
+        # -> get ms and uV
 
 
 class PgWidget(QWidget):
@@ -176,23 +334,34 @@ class PgWidget(QWidget):
         self.amplitude = max(0.01,self.amplitude+amplitude_change)
 
         #plot channels new and highlight current selected channel
-        self.plot_ephys(signal.times, signal.magnitude, self.displayed_channels)
-        if self.VisEphys.Vis3D.table_excel.currentRow()!=-1:
-            self.VisEphys.highlight_channel(ch_idx=self.VisEphys.Vis3D.table_excel.currentRow())
+        self.VisEphys.displayed_channels,self.VisEphys.ephys_lines = self.plot_ephys(signal.times, signal.magnitude, self.displayed_channels,clear=False)
+        print(self.VisEphys.Vis3D.table_excel.currentRow(),flush=True)
+        #if self.VisEphys.Vis3D.table_excel.currentRow()!=-1:
+        self.VisEphys.highlight_channel(ch_idx=self.VisEphys.ch_highlight)
 
 
 
-    def plot_ephys(self,signal_times, signal_data, channels):
+    def plot_ephys(self,signal_times, signal_data, channels,clear=True):
         """
         signal_times: 1D array of times (seconds)
         signal_data: 2D array (samples x channels)
         channels: list of channel indices to display
         slot_height: vertical offset per channel
         """
-        self.plot.clear()
+        if clear:
+            self.plot.clear()
+        else:
+            #remove all lines
+            for line in self.lines.values():
+                self.plot.removeItem(line)
+
+        show_all = self.MW.ui.pushButton_showChannels.isChecked()
+
         self.lines = {}
         self.displayed_channels = []
         self.lines_values = {}
+        self.signal_data = signal_data
+        self.signal_times = signal_times
 
         n_samples, n_channels = signal_data.shape
 
@@ -203,8 +372,14 @@ class PgWidget(QWidget):
         for i,ch_idx in enumerate(channels):
             index = self.VisEphys.all_channels.index(ch_idx)
 
-            # offset each channel
-            offset = (len(self.VisEphys.all_channels)-1-index) * self.slot_height
+            # offset each channel with space for deselected channels or not (depending on user input)
+            print(show_all,flush=True)
+            if show_all:
+                offset = (len(self.VisEphys.all_channels)-1-index) * self.slot_height
+            else:
+                offset = (len(channels)-1-i) * self.slot_height
+                print(offset,ch_idx,flush=True)
+
             ch = signal_data[:, i]
             if ch.size==0:
                 continue
@@ -229,7 +404,12 @@ class PgWidget(QWidget):
             i+=1
 
         # y-axis ticks in the center of each channel slot
-        yticks = [((len(self.VisEphys.all_channels)-1-index) * self.slot_height, str(ch)) for index, ch in enumerate(self.VisEphys.all_channels)]
+        if show_all:
+            yticks = [((len(self.VisEphys.all_channels)-1-index) * self.slot_height, str(ch)) for index, ch in enumerate(self.VisEphys.all_channels)]
+        else:
+            yticks = [((len(channels)-1-index) * self.slot_height, str(ch)) for index, ch in enumerate(channels)]
+            self.yMax = len(self.displayed_channels) * self.slot_height
+
         self.plot.getAxis('left').setTicks([yticks])
         self.plot.setXRange(self.xMin,self.xMax)
         self.plot.setYRange(self.yMin,self.yMax)
@@ -263,5 +443,29 @@ class PgWidget(QWidget):
 
         return closest_line
 
+    def zoomReset(self):
+        self.xMin = self.VisEphys.time_start
+        self.xMax = self.VisEphys.time_end
+        self.yMin = -self.slot_height
+        self.yMax = (len(self.VisEphys.all_channels)-1) * self.slot_height
+
+        self.plot.setXRange(self.xMin,self.xMax)
+        self.plot.setYRange(self.yMin,self.yMax)
+        self.plot.setLimits(yMin=self.yMin, yMax=self.yMax,xMin=self.xMin,xMax=self.xMax)
+        #if hasattr(self.plot,"measurement_text"):
+        #    for text in self.measurement_text.values():
+        #    self.plot.measurement_text.setPos(self.PgWidget.xMin, self.PgWidget.yMin)
+
+    def zoomOut(self):
+        self.xMin = max(self.xMin-0.1,self.VisEphys.time_start)
+        self.xMax = min(self.xMax+0.1,self.VisEphys.time_end)
+        self.yMin = max(self.yMin-self.slot_height,-self.slot_height)
+        self.yMax = min(self.yMax+self.slot_height, (len(self.VisEphys.all_channels)-1) * self.slot_height)
+
+        self.plot.setXRange(self.xMin,self.xMax)
+        self.plot.setYRange(self.yMin,self.yMax)
+        self.plot.setLimits(yMin=self.yMin, yMax=self.yMax,xMin=self.xMin,xMax=self.xMax)
+        #if hasattr(self.plot,"measurement_text"):
+        #    self.plot.measurement_text.setPos(self.PgWidget.xMin, self.PgWidget.yMin)
 
 

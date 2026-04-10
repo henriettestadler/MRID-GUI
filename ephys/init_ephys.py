@@ -97,7 +97,6 @@ class InitEphys:
             self.Visualisation3D.initialize_mridTag(self.mrid,chMap=all_channels[self.mrid_idx_xml])
             self.VisEphys = VisualisationEphys(self.MW,self.Visualisation3D,read_data,all_channels[self.mrid_idx_xml],skipped_ch[self.mrid_idx_xml])
         else:
-            print(self.mrid)
             self.Visualisation3D.spinbox.blockSignals(True)
             self.Visualisation3D.initialize_mridTag(self.mrid,chMap=all_channels[self.mrid_idx_xml])
             self.Visualisation3D.spinbox.blockSignals(False)
