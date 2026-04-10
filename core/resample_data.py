@@ -291,16 +291,15 @@ class ResampleData:
         self.LoadMRI.file_name[data_index] = self.file_name100um
         img = sITK.ReadImage(self.file_name100um)
         #new volume and spacing
-        self.LoadMRI.volume[data_index] = {}
-        self.LoadMRI.volume[data_index][0] = sITK.GetArrayFromImage(img)
-        self.LoadMRI.volume[data_index][1] = sITK.GetArrayFromImage(img)
-        self.LoadMRI.volume[data_index][2] = sITK.GetArrayFromImage(img)
+        self.LoadMRI.volumes[data_index] = MRIVolume.from_file(file_name)
+        self.LoadMRI.volumes[data_index].slices[0] = sITK.GetArrayFromImage(img)
+        self.LoadMRI.volumes[data_index].slices[1] = sITK.GetArrayFromImage(img)
+        self.LoadMRI.volumes[data_index].slices[2] = sITK.GetArrayFromImage(img)
         self.LoadMRI.ref_image = img
         self.LoadMRI.spacing = {}
-        self.LoadMRI.spacing[data_index] = []
-        self.LoadMRI.spacing[data_index] = img.GetSpacing()[::-1]
-        self.LoadMRI.vol_dim = self.LoadMRI.volume[data_index][0].ndim
-
+        #self.LoadMRI.volumes[data_index].spacing = img.GetSpacing()[::-1]
+        #self.LoadMRI.vol_dim = self.LoadMRI.volumes[data_index].slices[0].ndim
+        self.LoadMRI.vol_dim = 4 if self.LoadMRI.volumes[data_index].is_4d else 3
         self.LoadMRI.is_first_slice = False
 
 

@@ -244,33 +244,33 @@ class Paintbrush:
             self.source = vtk.vtkCubeSource()
             self.source.SetZLength(0.1)  # flat in slice plane
             if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
-                self.source.SetXLength(self.size*LM.spacing[data_index][2])
-                self.source.SetYLength(self.size*LM.spacing[data_index][1])
+                self.source.SetXLength(self.size*LM.volumes[data_index].spacing[2])
+                self.source.SetYLength(self.size*LM.volumes[data_index].spacing[1])
                 if self.size % 2 == 0:
-                    self.source.SetCenter((x - 0.5) * LM.spacing[data_index][2],(y - 0.5) * LM.spacing[data_index][1],1 )
+                    self.source.SetCenter((x - 0.5) * LM.volumes[data_index].spacing[2],(y - 0.5) * LM.volumes[data_index].spacing[1],1 )
                 else:
-                    self.source.SetCenter(x * LM.spacing[data_index][2],y * LM.spacing[data_index][1],1 )
+                    self.source.SetCenter(x * LM.volumes[data_index].spacing[2],y * LM.volumes[data_index].spacing[1],1 )
             elif view_name == 'coronal':
-                self.source.SetXLength(self.size*LM.spacing[data_index][2])
-                self.source.SetYLength(self.size*LM.spacing[data_index][0])
+                self.source.SetXLength(self.size*LM.volumes[data_index].spacing[2])
+                self.source.SetYLength(self.size*LM.volumes[data_index].spacing[0])
                 if self.size % 2 == 0:
-                    self.source.SetCenter((x - 0.5) * LM.spacing[data_index][2],(z - 0.5) * LM.spacing[data_index][0],1 )
+                    self.source.SetCenter((x - 0.5) * LM.volumes[data_index].spacing[2],(z - 0.5) * LM.volumes[data_index].spacing[0],1 )
                 else:
-                    self.source.SetCenter(x * LM.spacing[data_index][2],z * LM.spacing[data_index][0],1 )
+                    self.source.SetCenter(x * LM.volumes[data_index].spacing[2],z * LM.volumes[data_index].spacing[0],1 )
             elif (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
-                self.source.SetXLength(self.size*LM.spacing[data_index][1])
-                self.source.SetYLength(self.size*LM.spacing[data_index][2])
+                self.source.SetXLength(self.size*LM.volumes[data_index].spacing[1])
+                self.source.SetYLength(self.size*LM.volumes[data_index].spacing[2])
                 if self.size % 2 == 0:
-                    self.source.SetCenter((y - 0.5) * LM.spacing[data_index][1],(x - 0.5) * LM.spacing[data_index][2],1 )
+                    self.source.SetCenter((y - 0.5) * LM.volumes[data_index].spacing[1],(x - 0.5) * LM.volumes[data_index].spacing[2],1 )
                 else:
-                    self.source.SetCenter(y * LM.spacing[data_index][1],x * LM.spacing[data_index][2],1 )
+                    self.source.SetCenter(y * LM.volumes[data_index].spacing[1],x * LM.volumes[data_index].spacing[2],1 )
             elif view_name == 'sagittal':
-                self.source.SetXLength(self.size*LM.spacing[data_index][0])
-                self.source.SetYLength(self.size*LM.spacing[data_index][1])
+                self.source.SetXLength(self.size*LM.volumes[data_index].spacing[0])
+                self.source.SetYLength(self.size*LM.volumes[data_index].spacing[1])
                 if self.size % 2 == 0:
-                    self.source.SetCenter((self.LoadMRI.volume[0][0].shape[0]-z - 0.5) * LM.spacing[data_index][0],(y - 0.5) * LM.spacing[data_index][1],1 )
+                    self.source.SetCenter((self.LoadMRI.volume[0][0].shape[0]-z - 0.5) * LM.volumes[data_index].spacing[0],(y - 0.5) * LM.volumes[data_index].spacing[1],1 )
                 else:
-                    self.source.SetCenter((self.LoadMRI.volume[0][0].shape[0]-z-1) * LM.spacing[data_index][0],y * LM.spacing[data_index][1],1)
+                    self.source.SetCenter((self.LoadMRI.volume[0][0].shape[0]-z-1) * LM.volumes[data_index].spacing[0],y * LM.volumes[data_index].spacing[1],1)
 
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputConnection(self.source.GetOutputPort())
@@ -303,18 +303,18 @@ class Paintbrush:
                 if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
                     x_new = x+0.5
                     y_new = y+ 0.5
-                    spacing_x = LM.spacing[data_index][2]
-                    spacing_y = LM.spacing[data_index][1]
+                    spacing_x = LM.volumes[data_index].spacing[2]
+                    spacing_y = LM.volumes[data_index].spacing[1]
                 elif view_name == 'coronal':
                     x_new = x+0.5
                     y_new = z+ 0.5
-                    spacing_x = LM.spacing[data_index][2]
-                    spacing_y = LM.spacing[data_index][0]
+                    spacing_x = LM.volumes[data_index].spacing[2]
+                    spacing_y = LM.volumes[data_index].spacing[0]
                 elif view_name == 'sagittal':
                     x_new = self.LoadMRI.volume[0][0].shape[0]-z-1.5
                     y_new = y+ 0.5
-                    spacing_x = LM.spacing[data_index][0]
-                    spacing_y = LM.spacing[data_index][1]
+                    spacing_x = LM.volumes[data_index].spacing[0]
+                    spacing_y = LM.volumes[data_index].spacing[1]
 
                 for xx in range(int(radius)):
                     xx +=1
@@ -327,18 +327,18 @@ class Paintbrush:
                 if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
                     x_new = x
                     y_new = y
-                    spacing_x = LM.spacing[data_index][2]
-                    spacing_y = LM.spacing[data_index][1]
+                    spacing_x = LM.volumes[data_index].spacing[2]
+                    spacing_y = LM.volumes[data_index].spacing[1]
                 elif view_name == 'coronal':
                     x_new = x
                     y_new = z
-                    spacing_x = LM.spacing[data_index][2]
-                    spacing_y = LM.spacing[data_index][0]
+                    spacing_x = LM.volumes[data_index].spacing[2]
+                    spacing_y = LM.volumes[data_index].spacing[0]
                 elif view_name == 'sagittal':
                     x_new = self.LoadMRI.volume[0][0].shape[0]-z-1
                     y_new = y
-                    spacing_x = LM.spacing[data_index][0]
-                    spacing_y = LM.spacing[data_index][1]
+                    spacing_x = LM.volumes[data_index].spacing[0]
+                    spacing_y = LM.volumes[data_index].spacing[1]
                 for xx in range(int(radius)):
                     xx += 1
                     for yy in range(int(radius)):
@@ -504,7 +504,7 @@ class Paintbrush:
             for view_name, widget in vtk_widget_image.items():
                 widget.GetRenderWindow().Render()
 
-        flip_axes = tuple(i for i, flip in enumerate(self.LoadMRI.axes_to_flip[data_index][::-1]) if flip)
+        flip_axes = tuple(i for i, flip in enumerate(self.LoadMRI.volumes[data_index].axes_to_flip[::-1]) if flip)
         vol = np.flip(self.label_volume[data_index], axis=flip_axes)
         #change volume in intensity table
         table_class = getattr(self.LoadMRI,f"intensity_table{data_index}")
@@ -526,11 +526,11 @@ class Paintbrush:
 
         # Correct spacing per view
         if view_name == "axial" or self.LoadMRI.vol_dim==4:     #x,y
-            spacing = (self.LoadMRI.spacing[data_index][2], self.LoadMRI.spacing[data_index][1], 1)
+            spacing = (self.LoadMRI.volumes[data_index].spacing[2], self.LoadMRI.volumes[data_index].spacing[1], 1)
         elif view_name == "coronal":  #
-            spacing = (self.LoadMRI.spacing[data_index][2], self.LoadMRI.spacing[data_index][0], 1)
+            spacing = (self.LoadMRI.volumes[data_index].spacing[2], self.LoadMRI.volumes[data_index].spacing[0], 1)
         elif view_name == "sagittal": #y,z
-            spacing = (self.LoadMRI.spacing[data_index][0], self.LoadMRI.spacing[data_index][1], 1)
+            spacing = (self.LoadMRI.volumes[data_index].spacing[0], self.LoadMRI.volumes[data_index].spacing[1], 1)
 
 
         # Prepare your VTK image

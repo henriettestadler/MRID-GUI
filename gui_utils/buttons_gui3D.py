@@ -111,19 +111,19 @@ class ButtonsGUI_3D:
         }
 
         # initialize Contrast class (for each data_view once)
-        lm.contrastClass_0 = Contrast(lm, data_index=0)
+        lm.contrast[0] = Contrast(lm, data_index=0)
 
         self.LoadMRI.contrast_ui_elements[0]["brightness0"].valueChanged.connect(
-            lambda value: lm.contrastClass_0.changed_sliders(value, image_index=0) # lm.contrastClass.changed_sliders(value,image_index=0)
+            lambda value: lm.contrast[0].changed_sliders(value, image_index=0) # lm.contrastClass.changed_sliders(value,image_index=0)
         )
         self.LoadMRI.contrast_ui_elements[0]["contrast0"].valueChanged.connect(
-            lambda value: lm.contrastClass_0.changed_sliders(value, image_index=0) # lm.contrastClass.changed_sliders(value,image_index=0)
+            lambda value: lm.contrast[0].changed_sliders(value, image_index=0) # lm.contrastClass.changed_sliders(value,image_index=0)
         )
         self.LoadMRI.contrast_ui_elements[0]["auto0"].clicked.connect(
-            lambda: lm.contrastClass_0.auto(image_index=0)
+            lambda: lm.contrast[0].auto(image_index=0)
         )
         self.LoadMRI.contrast_ui_elements[0]["reset0"].clicked.connect(
-            lambda: lm.contrastClass_0.reset(image_index=0)
+            lambda: lm.contrast[0].reset(image_index=0)
         )
 
 
@@ -147,9 +147,9 @@ class ButtonsGUI_3D:
         spin_x = lm.cursor_ui[f"spin_x{data_index}"]
         spin_y = lm.cursor_ui[f"spin_y{data_index}"]
         spin_z = lm.cursor_ui[f"spin_z{data_index}"]
-        spin_x.setMaximum(lm.volume[data_index][0].shape[2])
-        spin_y.setMaximum(lm.volume[data_index][0].shape[1])
-        spin_z.setMaximum(lm.volume[data_index][0].shape[0])
+        spin_x.setMaximum(lm.volumes[data_index].slices[0].shape[2])
+        spin_y.setMaximum(lm.volumes[data_index].slices[0].shape[1])
+        spin_z.setMaximum(lm.volumes[data_index].slices[0].shape[0])
 
 
     def initialize_paintbrush(self):

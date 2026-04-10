@@ -118,14 +118,14 @@ class SegmentationGUI:
         self.LoadMRI.Segmentation.only_update_displayed_image()
 
         #create table entry or update with new volume
-        indices = [i for i, val in enumerate(self.LoadMRI.intensity_table0.file_name) if val == 'Threshold Image']
+        indices = [i for i, val in enumerate(self.LoadMRI.intensity_table[0].file_name) if val == 'Threshold Image']
         if not indices:
-            self.LoadMRI.intensity_table0.update_table('Threshold Image',self.LoadMRI.th_img/ 32767.0, 0)
+            self.LoadMRI.intensity_table[0].update_table('Threshold Image',self.LoadMRI.th_img/ 32767.0, 0)
         else:
             index = indices[0]
-            self.LoadMRI.intensity_table0.intensity_volumes[index] = self.LoadMRI.th_img/ 32767.0
+            self.LoadMRI.intensity_table[0].intensity_volumes[index] = self.LoadMRI.th_img/ 32767.0
             #update table
-            self.LoadMRI.intensity_table0.update_intensity_values(0)
+            self.LoadMRI.intensity_table[0].update_intensity_values(0)
 
     # --- Synchronize UI values for lower/upper threshold bounds ---
     def on_spin_changed_lower(self,val):

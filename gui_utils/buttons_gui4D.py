@@ -208,43 +208,43 @@ class ButtonsGUI_4D:
         }
 
         # initialize Contrast class (for each data_view once)
-        setattr(lm, f"contrastClass_{data_index}", Contrast(lm, data_index))
+        lm.contrast[data_index] = Contrast(lm, data_index=0)
 
         self.LoadMRI.contrast_ui_elements[data_index]["brightness0"].valueChanged.connect(
-            lambda value: getattr(lm, f"contrastClass_{data_index}").changed_sliders(value, image_index=0) # lm.contrastClass.changed_sliders(value,image_index=0)
+            lambda value: self.LoadMRI.contrast[data_index].changed_sliders(value, image_index=0) # lm.contrastClass.changed_sliders(value,image_index=0)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["contrast0"].valueChanged.connect(
-            lambda value: getattr(lm, f"contrastClass_{data_index}").changed_sliders(value, image_index=0) # lm.contrastClass.changed_sliders(value,image_index=0)
+            lambda value: self.LoadMRI.contrast[data_index].changed_sliders(value, image_index=0) # lm.contrastClass.changed_sliders(value,image_index=0)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["auto0"].clicked.connect(
-            lambda: getattr(lm, f"contrastClass_{data_index}").auto(image_index=0)
+            lambda: self.LoadMRI.contrast[data_index].auto(image_index=0)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["reset0"].clicked.connect(
-            lambda: getattr(lm, f"contrastClass_{data_index}").reset(image_index=0)
+            lambda: self.LoadMRI.contrast[data_index].reset(image_index=0)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["brightness1"].valueChanged.connect(
-            lambda value: getattr(lm, f"contrastClass_{data_index}").changed_sliders(value, image_index=1) #  value: lm.contrastClass.changed_sliders(value,image_index=1)
+            lambda value: self.LoadMRI.contrast[data_index].changed_sliders(value, image_index=1) #  value: lm.contrastClass.changed_sliders(value,image_index=1)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["contrast1"].valueChanged.connect(
-            lambda value: getattr(lm, f"contrastClass_{data_index}").changed_sliders(value, image_index=1) # lm.contrastClass.changed_sliders(value,image_index=1)
+            lambda value: self.LoadMRI.contrast[data_index].changed_sliders(value, image_index=1) # lm.contrastClass.changed_sliders(value,image_index=1)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["auto1"].clicked.connect(
-            lambda: getattr(lm, f"contrastClass_{data_index}").auto(image_index=1)
+            lambda: self.LoadMRI.contrast[data_index].auto(image_index=1)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["reset1"].clicked.connect(
-            lambda: getattr(lm, f"contrastClass_{data_index}").reset(image_index=1) #lm.contrastClass.reset(image_index=1)
+            lambda: self.LoadMRI.contrast[data_index].reset(image_index=1) #lm.contrastClass.reset(image_index=1)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["brightness2"].valueChanged.connect(
-            lambda value: getattr(lm, f"contrastClass_{data_index}").changed_sliders(value, image_index=2) #  lm.contrastClass.changed_sliders(value,image_index=2)
+            lambda value: self.LoadMRI.contrast[data_index].changed_sliders(value, image_index=2) #  lm.contrastClass.changed_sliders(value,image_index=2)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["contrast2"].valueChanged.connect(
-            lambda value: getattr(lm, f"contrastClass_{data_index}").changed_sliders(value, image_index=2) #  lm.contrastClass.changed_sliders(value,image_index=2)
+            lambda value: self.LoadMRI.contrast[data_index].changed_sliders(value, image_index=2) #  lm.contrastClass.changed_sliders(value,image_index=2)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["auto2"].clicked.connect(
-            lambda: getattr(lm, f"contrastClass_{data_index}").auto(image_index=2) # lm.contrastClass.auto(image_index=2)
+            lambda: self.LoadMRI.contrast[data_index].auto(image_index=2) # lm.contrastClass.auto(image_index=2)
         )
         self.LoadMRI.contrast_ui_elements[data_index]["reset2"].clicked.connect(
-            lambda: getattr(lm, f"contrastClass_{data_index}").reset(image_index=2)
+            lambda: self.LoadMRI.contrast[data_index].reset(image_index=2)
         )
 
         self.ui.contrast_data.setItemEnabled(data_index, True)
@@ -278,9 +278,9 @@ class ButtonsGUI_4D:
         spin_x = lm.cursor_ui[f"spin_x{data_index}"]
         spin_y = lm.cursor_ui[f"spin_y{data_index}"]
         spin_z = lm.cursor_ui[f"spin_z{data_index}"]
-        spin_x.setMaximum(lm.volume[data_index][0].shape[2])
-        spin_y.setMaximum(lm.volume[data_index][0].shape[1])
-        spin_z.setMaximum(lm.volume[data_index][0].shape[0])
+        spin_x.setMaximum(lm.volumes[data_index].slices[0].shape[2])
+        spin_y.setMaximum(lm.volumes[data_index].slices[0].shape[1])
+        spin_z.setMaximum(lm.volumes[data_index].slices[0].shape[0])
 
 
     def initialize_paintbrush(self):
@@ -343,7 +343,7 @@ class ButtonsGUI_4D:
             combobox = getattr(self.ui, f"changetimestamp_data{data_index}{idx}")
             spinbox.setMinimum(0)
             combobox.setMinimum(0)
-            max_val = self.LoadMRI.volume4D[0].shape[0] - 1
+            max_val = self.LoadMRI.volumes[data_index].array_4d.shape[0] - 1
             spinbox.setMaximum(max_val)
             combobox.setMaximum(max_val)
             spinbox.setValue(idx * 4)
@@ -352,7 +352,7 @@ class ButtonsGUI_4D:
             combobox.valueChanged.connect(lambda val, i=idx: self.timestamp4D_changed(val, i, data_index,data_view))
 
             groupBox = getattr(self.ui, f"groupBox_time{data_index}{idx}")
-            title = f"Timestamp t={self.LoadMRI.timestamp4D[idx]}"
+            title = f"Timestamp t={self.LoadMRI.volumes[data_index].timestamp4D[idx]}"
             groupBox.setTitle(title)
             tabBox = getattr(self.ui, f"tabWidget_time{data_index}")
             tabBox.setTabText(idx, title)
@@ -594,7 +594,6 @@ class ButtonsGUI_4D:
             self.ui.groupBox_progressGUI.setVisible(True)
             self.LoadMRI.ElectrodeLoc.groupBox_progressGUI = self.ui.groupBox_progressGUI
             self.ui.textEdit_progress.setPlainText("Finding Gaussian Centers...")
-            #self.ui.textEdit_progress.setPlainText("Finding Gaussian Centers...")
             self.LoadMRI.ElectrodeLoc.progress = self.ui.progressBar
             self.LoadMRI.ElectrodeLoc.progress.setValue(10)
 

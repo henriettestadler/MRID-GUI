@@ -6,7 +6,9 @@ from vtk.util import numpy_support
 import numpy as np
 from utils.zoom import Zoom
 from utils.scale_bar import Scale
-
+from core.mri_volume import MRIVolume
+from gui_utils.intensity_table import IntensityTable
+from utils.contrast import Contrast
 
 class LoadMRI(QObject):
     """
@@ -15,10 +17,9 @@ class LoadMRI(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         # Core volume data
-        self.volume = {}
+        self.volumes: dict[int, MRIVolume] = {}
         self.actors_non_mainimage = {}
         self.actors_non_mainimage[0] = {}
-        self.timestamp4D = {}
         self.slice_indices = {}
         self.slice_indices[0] = [0, 0, 0]  # z y x (for cursor +1)
 
@@ -43,6 +44,9 @@ class LoadMRI(QObject):
 
         self.is_first_slice = True
 
+        self.intensity_table: dict[int, IntensityTable] = {}
+        self.contrast: dict[int, Contrast] = {}
+
 
 
     def load_file(self,vol_dim:int,data_view,data_index,first_time=True):
@@ -53,17 +57,17 @@ class LoadMRI(QObject):
         # Set-up first slide
         z, y, x = self.slice_indices[data_index]
         if vol_dim == 3:
-            self.setup_vtkdata(self.volume[data_index][2][z, :, :], self.vtk_widgets[0]["axial"], "axial",0,data_index)
-            self.setup_vtkdata(self.volume[data_index][0][:, y, :], self.vtk_widgets[0]["coronal"], "coronal",0,data_index)
-            self.setup_vtkdata(np.fliplr(self.volume[data_index][1][:, :, x].T), self.vtk_widgets[0]["sagittal"], "sagittal",0,data_index)
+            self.setup_vtkdata(self.volumes[data_index].slices[2][z, :, :], self.vtk_widgets[0]["axial"], "axial",0,data_index)
+            self.setup_vtkdata(self.volumes[data_index].slices[0][:, y, :], self.vtk_widgets[0]["coronal"], "coronal",0,data_index)
+            self.setup_vtkdata(np.fliplr(self.volumes[data_index].slices[1][:, :, x].T), self.vtk_widgets[0]["sagittal"], "sagittal",0,data_index)
         else:
             for image_index,vtk_widget_image in self.vtk_widgets.items():
                 if data_view=='axial':
-                    self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], vtk_widget_image["axial"], "axial",image_index,data_index)
+                    self.setup_vtkdata(self.volumes[data_index].slices[image_index][z, :, :], vtk_widget_image["axial"], "axial",image_index,data_index)
                 elif data_view=='coronal':
-                    self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], vtk_widget_image["coronal"], "coronal",image_index,data_index)
+                    self.setup_vtkdata(self.volumes[data_index].slices[image_index][z, :, :], vtk_widget_image["coronal"], "coronal",image_index,data_index)
                 elif data_view=='sagittal':
-                    self.setup_vtkdata(self.volume[data_index][image_index][z, :, :].T, vtk_widget_image["sagittal"], "sagittal",image_index,data_index)
+                    self.setup_vtkdata(self.volumes[data_index].slices[image_index][z, :, :].T, vtk_widget_image["sagittal"], "sagittal",image_index,data_index)
 
         # Add scale_bar and minimap
         for view_name in 'axial','coronal','sagittal':
@@ -96,13 +100,13 @@ class LoadMRI(QObject):
         # Correct spacing per view
         if self.vol_dim==3:
             if view_name == "axial":      # z fixed -> (y,x)
-                spacing = (self.spacing[data_index][2], self.spacing[data_index][1], 1)
+                spacing = (self.volumes[data_index].spacing[2], self.volumes[data_index].spacing[1], 1)
             elif view_name == "coronal": # y fixed -> (z,x)
-                spacing = (self.spacing[data_index][2], self.spacing[data_index][0], 1)
+                spacing = (self.volumes[data_index].spacing[2], self.volumes[data_index].spacing[0], 1)
             elif view_name == "sagittal":# x fixed -> (z,y)
-                spacing = (self.spacing[data_index][0], self.spacing[data_index][1], 1)
+                spacing = (self.volumes[data_index].spacing[0], self.volumes[data_index].spacing[1], 1)
         else:
-            spacing = (self.spacing[data_index][2], self.spacing[data_index][1], 1)
+            spacing = (self.volumes[data_index].spacing[2], self.volumes[data_index].spacing[1], 1)
 
         img_vtk.SetSpacing(spacing)
         img_vtk.GetPointData().SetScalars(vtk_data)
@@ -143,7 +147,7 @@ class LoadMRI(QObject):
 
         # Attach LUT for contrast and brightness
         prop = actor.GetProperty()
-        contrast_class = getattr(self, f"contrastClass_{data_index}")
+        contrast_class = self.contrast[data_index]
         prop.SetLookupTable(contrast_class.lut_vtk[image_index])
         prop.UseLookupTableScalarRangeOn()  # force LUT range
 
@@ -203,14 +207,14 @@ class LoadMRI(QObject):
             self.Segmentation.only_update_displayed_image()
         else:
             if self.vol_dim==3:
-                self.only_display_slide(self.volume[data_index][image_index][:, y, :], "coronal",0)
-                self.only_display_slide(np.fliplr(self.volume[data_index][image_index][:, :, x].T), "sagittal",0)
-                self.only_display_slide(self.volume[data_index][image_index][z, :, :], "axial",0)
+                self.only_display_slide(self.volumes[data_index].slices[image_index][:, y, :], "coronal",0)
+                self.only_display_slide(np.fliplr(self.volumes[data_index].slices[image_index][:, :, x].T), "sagittal",0)
+                self.only_display_slide(self.volumes[data_index].slices[image_index][z, :, :], "axial",0)
             else:
                 if data_view=='sagittal':
-                    self.only_display_slide(self.volume[data_index][image_index][z, :, :].T, data_view,image_index)
+                    self.only_display_slide(self.volumes[data_index].slices[image_index][z, :, :].T, data_view,image_index)
                 else:
-                    self.only_display_slide(self.volume[data_index][image_index][z, :, :], data_view,image_index)
+                    self.only_display_slide(self.volumes[data_index].slices[image_index][z, :, :], data_view,image_index)
         #3d volumes added
         if hasattr(self,"non_mainindex"):
             for i in range(self.non_mainindex+1):
@@ -259,7 +263,7 @@ class LoadMRI(QObject):
             # Always flatten in Fortran order for VTK
             vtk_data = numpy_support.numpy_to_vtk(slice_img.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
             h, w = slice_img.shape
-            spacing = (self.spacing[data_index][2], self.spacing[data_index][1], 1)
+            spacing = (self.volumes[data_index].spacing[2], self.volumes[data_index].spacing[1], 1)
             img_vtk = vtk.vtkImageData()
             img_vtk.SetDimensions(w, h, 1)  # VTK expects width x height x depth
             img_vtk.SetSpacing(spacing)
@@ -327,30 +331,21 @@ class LoadMRI(QObject):
         scale = {}
         fp = {}
         pos = {}
+        vol = self.volumes[data_index]
 
         renderer = self.renderers[image_index][data_view].GetRenderWindow().GetRenderers().GetFirstRenderer()
         camera = renderer.GetActiveCamera()
         scale[data_view] = camera.GetParallelScale()
         fp[data_view] = camera.GetFocalPoint()
         pos[data_view] = camera.GetPosition()
+        vol.timestamp4D[image_index] = int(index)
+        vol.slices[image_index] = vol.array_4d[vol.timestamp4D[image_index], :, :, :].copy() #echo 8
 
-        self.timestamp4D[image_index] = int(index)
-        self.volume[data_index][image_index] = self.volume4D[data_index][self.timestamp4D[image_index], :, :, :].copy() #echo 8
-
-        getattr(self, f"contrastClass_{data_index}").recompute_luttable(image_index,data_index)
-
-        #Refresh views
-        #z, y, x = self.slice_indices[data_index]
-        #viewname -> maybe change for sagittal
-        #if data_view=='sagittal':
-        #    self.setup_vtkdata(self.volume[data_index][image_index][z, :, :].T, self.vtk_widgets[image_index][data_view], data_view,image_index,data_index,cam_reset=False)
-        #else:
-        #    self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], self.vtk_widgets[image_index][data_view], data_view,image_index,data_index,cam_reset=False)
+        self.contrast[data_index].recompute_luttable(image_index,data_index)
 
         camera.SetParallelScale(scale[data_view])
         camera.SetFocalPoint(fp[data_view])
         camera.SetPosition(pos[data_view])
-        #renderer.ResetCameraClippingRange()
 
         self.update_slices(image_index,data_index,data_view)
 

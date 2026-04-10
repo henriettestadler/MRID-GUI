@@ -40,26 +40,26 @@ class Cursor:
         spin_x = lm.cursor_ui[f"spin_x{data_index}"]
         spin_y = lm.cursor_ui[f"spin_y{data_index}"]
         spin_z = lm.cursor_ui[f"spin_z{data_index}"]
-        spin_x.setRange(1, lm.volume[data_index][0].shape[2])
-        spin_y.setRange(1, lm.volume[data_index][0].shape[1])
-        spin_z.setRange(1, lm.volume[data_index][0].shape[0])
+        spin_x.setRange(1, lm.volumes[data_index].slices[0].shape[2])
+        spin_y.setRange(1, lm.volumes[data_index].slices[0].shape[1])
+        spin_z.setRange(1, lm.volumes[data_index].slices[0].shape[0])
         spin_x.valueChanged.connect(lambda val: self.cursor_coord_changed('x', val,data_index,data_view))
         spin_y.valueChanged.connect(lambda val: self.cursor_coord_changed('y', val,data_index,data_view))
         spin_z.valueChanged.connect(lambda val: self.cursor_coord_changed('z', val,data_index,data_view))
 
         # scrollbars
         if self.LoadMRI.vol_dim==3:
-            self.ui["scroll_2"].setRange(0, lm.volume[data_index][0].shape[0]-1)
+            self.ui["scroll_2"].setRange(0, lm.volumes[data_index].slices[0].shape[0]-1)
             self.ui["scroll_2"].setValue(self.LoadMRI.slice_indices[data_index][0])
             self.ui["scroll_2"].valueChanged.connect(lambda val: self.scroll_slice('axial', 0,data_index,val=val))
-            self.ui["scroll_1"].setRange(0, lm.volume[data_index][0].shape[2]-1)
+            self.ui["scroll_1"].setRange(0, lm.volumes[data_index].slices[0].shape[2]-1)
             self.ui["scroll_1"].setValue(self.LoadMRI.slice_indices[data_index][0])
             self.ui["scroll_1"].valueChanged.connect(lambda val: self.scroll_slice('sagittal', 0,data_index,val=val))
-            self.ui["scroll_0"].setRange(0, lm.volume[data_index][0].shape[1]-1)
+            self.ui["scroll_0"].setRange(0, lm.volumes[data_index].slices[0].shape[1]-1)
             self.ui["scroll_0"].setValue(self.LoadMRI.slice_indices[data_index][0])
             self.ui["scroll_0"].valueChanged.connect(lambda val: self.scroll_slice('coronal', 0,data_index,val=val))
         else:
-            self.ui[f"scroll_{data_index}"].setRange(0, lm.volume[data_index][0].shape[0]-1)
+            self.ui[f"scroll_{data_index}"].setRange(0, lm.volumes[data_index].slices[0].shape[0]-1)
             self.ui[f"scroll_{data_index}"].setValue(self.LoadMRI.slice_indices[data_index][0])
             self.ui[f"scroll_{data_index}"].valueChanged.connect(lambda val: self.scroll_slice(data_view, 0,data_index,val=val))
 
@@ -68,7 +68,7 @@ class Cursor:
         Update spinboxes, scrollbar and intensity display based on current cursor position.
         """
         lm = self.LoadMRI
-        if not hasattr(lm, 'slice_indices') or lm.volume is None:
+        if not hasattr(lm, 'slice_indices') or lm.volumes is None:
             return
         indices = lm.slice_indices[data_index].copy()
         x, y, z = indices[2] + 1, indices[1] + 1, indices[0]+ 1
@@ -97,7 +97,7 @@ class Cursor:
             self.ui[f"scroll_{data_index}"].setValue(lm.slice_indices[data_index][0])
 
         if hasattr(self.LoadMRI, f"intensity_table{data_index}"):
-            table_class = getattr(self.LoadMRI, f"intensity_table{data_index}")
+            table_class = self.LoadMRI.intensity_table[data_index] #getattr(self.LoadMRI, f"intensity_table{data_index}")
             table_class.update_intensity_values(data_index)
 
         # Unblock signals
@@ -226,62 +226,62 @@ class Cursor:
         """
         lm = self.LoadMRI
 
-        z = lm.slice_indices[data_index][0]*lm.spacing[data_index][0]
-        y = lm.slice_indices[data_index][1]*lm.spacing[data_index][1]
-        x = lm.slice_indices[data_index][2]*lm.spacing[data_index][2]
+        z = lm.slice_indices[data_index][0]*lm.volumes[data_index].spacing[0]
+        y = lm.slice_indices[data_index][1]*lm.volumes[data_index].spacing[1]
+        x = lm.slice_indices[data_index][2]*lm.volumes[data_index].spacing[2]
 
         if view_name == "axial" or (self.LoadMRI.vol_dim==4 and view_name=="coronal"):
-            if self.LoadMRI.axes_to_flip[data_index][1]==False:
+            if self.LoadMRI.volumes[data_index].axes_to_flip[1]==False:
                 line_h.SetPoint1(0, y, height)
-                line_h.SetPoint2((lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2], y, height)
+                line_h.SetPoint2((lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2], y, height)
             else:
-                line_h.SetPoint1(0, (lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1]-y, height)
-                line_h.SetPoint2((lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2], (lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1]-y, height)
-            if self.LoadMRI.axes_to_flip[data_index][0]==False:
+                line_h.SetPoint1(0, (lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1]-y, height)
+                line_h.SetPoint2((lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2], (lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1]-y, height)
+            if self.LoadMRI.volumes[data_index].axes_to_flip[0]==False:
                 line_v.SetPoint1(x, 0, height)
-                line_v.SetPoint2(x, (lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1], height)
+                line_v.SetPoint2(x, (lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1], height)
             else:
-                line_v.SetPoint1((lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2]-x, 0, height)
-                line_v.SetPoint2((lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2]-x, (lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1], height)
+                line_v.SetPoint1((lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2]-x, 0, height)
+                line_v.SetPoint2((lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2]-x, (lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1], height)
         elif view_name == "coronal":
-            if self.LoadMRI.axes_to_flip[data_index][2]==False:
+            if self.LoadMRI.volumes[data_index].axes_to_flip[2]==False:
                 line_h.SetPoint1(0, z, height)
-                line_h.SetPoint2((lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2], z, height)
+                line_h.SetPoint2((lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2], z, height)
             else:
-                line_v.SetPoint1((lm.volume[data_index][0].shape[0]-1)*lm.spacing[data_index][0]-z, 0, height)
-                line_v.SetPoint2((lm.volume[data_index][0].shape[0]-1)*lm.spacing[data_index][0]-z, (lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1], height)
-            if self.LoadMRI.axes_to_flip[data_index][0]==False:
+                line_v.SetPoint1((lm.volumes[data_index].slices[0].shape[0]-1)*lm.volumes[data_index].spacing[0]-z, 0, height)
+                line_v.SetPoint2((lm.volumes[data_index].slices[0].shape[0]-1)*lm.volumes[data_index].spacing[0]-z, (lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1], height)
+            if self.LoadMRI.volumes[data_index].axes_to_flip[0]==False:
                 line_v.SetPoint1(x, 0, height)
-                line_v.SetPoint2(x, (lm.volume[data_index][0].shape[0]-1)*lm.spacing[data_index][0], height)
+                line_v.SetPoint2(x, (lm.volumes[data_index].slices[0].shape[0]-1)*lm.volumes[data_index].spacing[0], height)
             else:
-                line_v.SetPoint1((lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2]-x, 0, height)
-                line_v.SetPoint2((lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2]-x, (lm.volume[data_index][0].shape[0]-1)*lm.spacing[data_index][0], height)
+                line_v.SetPoint1((lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2]-x, 0, height)
+                line_v.SetPoint2((lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2]-x, (lm.volumes[data_index].slices[0].shape[0]-1)*lm.volumes[data_index].spacing[0], height)
         elif (self.LoadMRI.vol_dim==4 and view_name=="sagittal"):
-            if self.LoadMRI.axes_to_flip[data_index][1]==True:
-                line_v.SetPoint1((lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1]-y,0, height)
-                line_v.SetPoint2((lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1]-y,(lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2], height)
+            if self.LoadMRI.volumes[data_index].axes_to_flip[1]==True:
+                line_v.SetPoint1((lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1]-y,0, height)
+                line_v.SetPoint2((lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1]-y,(lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2], height)
             else:
                 line_v.SetPoint1(y, 0, height)
-                line_v.SetPoint2(y,(lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2], height)
-            if self.LoadMRI.axes_to_flip[data_index][0]==True:
-                line_h.SetPoint1(0,(lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2]-x, height)
-                line_h.SetPoint2((lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1], (lm.volume[data_index][0].shape[2]-1)*lm.spacing[data_index][2]-x, height)
+                line_v.SetPoint2(y,(lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2], height)
+            if self.LoadMRI.volumes[data_index].axes_to_flip[0]==True:
+                line_h.SetPoint1(0,(lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2]-x, height)
+                line_h.SetPoint2((lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1], (lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2]-x, height)
             else:
                 line_h.SetPoint1(0, x, height)
-                line_h.SetPoint2((lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1], x, height)
+                line_h.SetPoint2((lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1], x, height)
         elif view_name == "sagittal":
-            if self.LoadMRI.axes_to_flip[data_index][1]==False:
+            if self.LoadMRI.volumes[data_index].axes_to_flip[1]==False:
                 line_h.SetPoint1(0, y, height)
-                line_h.SetPoint2((lm.volume[data_index][0].shape[0]-1)*lm.spacing[data_index][0], y, height)
+                line_h.SetPoint2((lm.volumes[data_index].slices[0].shape[0]-1)*lm.volumes[data_index].spacing[0], y, height)
             else:
-                line_h.SetPoint1(0, (lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1]-y, height)
-                line_h.SetPoint2((lm.volume[data_index][0].shape[0]-1)*lm.spacing[data_index][0], (lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1]-y, height)
-            if self.LoadMRI.axes_to_flip[data_index][2]==False:
-                line_v.SetPoint1((lm.volume[data_index][0].shape[0]-1)*lm.spacing[data_index][0]-z, 0, height)
-                line_v.SetPoint2((lm.volume[data_index][0].shape[0]-1)*lm.spacing[data_index][0]-z, (lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1], height)
+                line_h.SetPoint1(0, (lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1]-y, height)
+                line_h.SetPoint2((lm.volumes[data_index].slices[0].shape[0]-1)*lm.volumes[data_index].spacing[0], (lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1]-y, height)
+            if self.LoadMRI.volumes[data_index].axes_to_flip[2]==False:
+                line_v.SetPoint1((lm.volumes[data_index].slices[0].shape[0]-1)*lm.volumes[data_index].spacing[0]-z, 0, height)
+                line_v.SetPoint2((lm.volumes[data_index].slices[0].shape[0]-1)*lm.volumes[data_index].spacing[0]-z, (lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1], height)
             else:
                 line_v.SetPoint1(z, 0, height)
-                line_v.SetPoint2(z, (lm.volume[data_index][0].shape[1]-1)*lm.spacing[data_index][1], height)
+                line_v.SetPoint2(z, (lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1], height)
 
         return line_h,line_v
 
@@ -321,49 +321,49 @@ class Cursor:
         if suc:
             pos = picker.GetPickPosition()
             if view_name == "axial" or (self.LoadMRI.vol_dim==4 and view_name=='coronal'):
-                if lm.axes_to_flip[data_index][0]==False:
-                    xi = pos[0]/lm.spacing[data_index][2]
+                if lm.volumes[data_index].axes_to_flip[0]==False:
+                    xi = pos[0]/lm.volumes[data_index].spacing[2]
                 else:
-                    xi = lm.volume[data_index][0].shape[2]-1-pos[0]/lm.spacing[data_index][2]
-                if lm.axes_to_flip[data_index][1]==False:
-                    yi = pos[1]/lm.spacing[data_index][1]
+                    xi = lm.volumes[data_index].slices[0].shape[2]-1-pos[0]/lm.volumes[data_index].spacing[2]
+                if lm.volumes[data_index].axes_to_flip[1]==False:
+                    yi = pos[1]/lm.volumes[data_index].spacing[1]
                 else:
-                    yi = lm.volume[data_index][0].shape[1]-1-pos[1]/lm.spacing[data_index][1]
+                    yi = lm.volumes[data_index].slices[0].shape[1]-1-pos[1]/lm.volumes[data_index].spacing[1]
                 zi = old_indices[0]
             elif (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
-                if lm.axes_to_flip[data_index][0]==False:
-                    xi = pos[1]/lm.spacing[data_index][1]
+                if lm.volumes[data_index].axes_to_flip[0]==False:
+                    xi = pos[1]/lm.volumes[data_index].spacing[1]
                 else:
-                    xi = lm.volume[data_index][0].shape[1]-1-pos[1]/lm.spacing[data_index][1]
-                if lm.axes_to_flip[data_index][1]==False:
-                    yi = pos[0]/lm.spacing[data_index][2]
+                    xi = lm.volumes[data_index].slices[0].shape[1]-1-pos[1]/lm.volumes[data_index].spacing[1]
+                if lm.volumes[data_index].axes_to_flip[1]==False:
+                    yi = pos[0]/lm.volumes[data_index].spacing[2]
                 else:
-                    yi = lm.volume[data_index][0].shape[2]-1-pos[0]/lm.spacing[data_index][2]
+                    yi = lm.volumes[data_index].slices[0].shape[2]-1-pos[0]/lm.volumes[data_index].spacing[2]
                 zi = old_indices[0]
             elif view_name == "sagittal":
                 xi = old_indices[2]
-                if lm.axes_to_flip[data_index][1]==False:
-                    yi = pos[1]/lm.spacing[data_index][1]
+                if lm.volumes[data_index].axes_to_flip[1]==False:
+                    yi = pos[1]/lm.volumes[data_index].spacing[1]
                 else:
-                    yi = lm.volume[data_index][0].shape[1]-1-pos[1]/lm.spacing[data_index][1]
-                if lm.axes_to_flip[data_index][2]==False:
-                    zi = lm.volume[data_index][0].shape[0]-1-pos[0]/lm.spacing[data_index][0]
+                    yi = lm.volumes[data_index].slices[0].shape[1]-1-pos[1]/lm.volumes[data_index].spacing[1]
+                if lm.volumes[data_index].axes_to_flip[2]==False:
+                    zi = lm.volumes[data_index].slices[0].shape[0]-1-pos[0]/lm.volumes[data_index].spacing[0]
                 else:
-                    zi = pos[0]/lm.spacing[data_index][0]
+                    zi = pos[0]/lm.volumes[data_index].spacing[0]
             elif view_name == "coronal":
-                if lm.axes_to_flip[data_index][0]==False:
-                    xi = pos[0]/lm.spacing[data_index][2]
+                if lm.volumes[data_index].axes_to_flip[0]==False:
+                    xi = pos[0]/lm.volumes[data_index].spacing[2]
                 else:
-                    xi = lm.volume[data_index][0].shape[2]-1-pos[0]/lm.spacing[data_index][2]
+                    xi = lm.volumes[data_index].slices[0].shape[2]-1-pos[0]/lm.volumes[data_index].spacing[2]
                 yi = old_indices[1]
-                if lm.axes_to_flip[data_index][2]==False:
-                    zi = pos[1]/lm.spacing[data_index][0]
+                if lm.volumes[data_index].axes_to_flip[2]==False:
+                    zi = pos[1]/lm.volumes[data_index].spacing[0]
                 else:
-                    zi = lm.volume[data_index][0].shape[0]-1-pos[1]/lm.spacing[data_index][0]
+                    zi = lm.volumes[data_index].slices[0].shape[0]-1-pos[1]/lm.volumes[data_index].spacing[0]
 
-            zi = max(0, min(zi, lm.volume[data_index][0].shape[0]-1))
-            yi = max(0, min(yi, lm.volume[data_index][0].shape[1]-1))
-            xi = max(0, min(xi, lm.volume[data_index][0].shape[2]-1))
+            zi = max(0, min(zi, lm.volumes[data_index].slices[0].shape[0]-1))
+            yi = max(0, min(yi, lm.volumes[data_index].slices[0].shape[1]-1))
+            xi = max(0, min(xi, lm.volumes[data_index].slices[0].shape[2]-1))
             lm.slice_indices[data_index] = [int(round(zi)),int(round(yi)),int(round(xi))]
         else:
             actor = lm.actors[0][view_name] #image index
@@ -403,48 +403,48 @@ class Cursor:
             if suc_2:
                 pos = picker.GetPickPosition()
                 if view_name == "axial" or (self.LoadMRI.vol_dim==4 and view_name=='coronal'):
-                    if lm.axes_to_flip[data_index][0]==False:
-                        xi = pos[0]/lm.spacing[data_index][2]
+                    if lm.volumes[data_index].axes_to_flip[0]==False:
+                        xi = pos[0]/lm.volumes[data_index].spacing[2]
                     else:
-                        xi = lm.volume[data_index][0].shape[2]-1-pos[0]/lm.spacing[data_index][2]
-                    if lm.axes_to_flip[data_index][1]==False:
-                        yi = pos[1]/lm.spacing[data_index][1]
+                        xi = lm.volumes[data_index].slices[0].shape[2]-1-pos[0]/lm.volumes[data_index].spacing[2]
+                    if lm.volumes[data_index].axes_to_flip[1]==False:
+                        yi = pos[1]/lm.volumes[data_index].spacing[1]
                     else:
-                        yi = lm.volume[data_index][0].shape[1]-1-pos[1]/lm.spacing[data_index][1]
+                        yi = lm.volumes[data_index].slices[0].shape[1]-1-pos[1]/lm.volumes[data_index].spacing[1]
                     zi = old_indices[0]
                 elif self.LoadMRI.vol_dim==4 and view_name=='sagittal':
-                    if lm.axes_to_flip[data_index][0]==False:
-                        xi = pos[1]/lm.spacing[data_index][1]
+                    if lm.volumes[data_index].axes_to_flip[0]==False:
+                        xi = pos[1]/lm.volumes[data_index].spacing[1]
                     else:
-                        xi = lm.volume[data_index][0].shape[1]-1-pos[1]/lm.spacing[data_index][1]
-                    if lm.axes_to_flip[data_index][1]==False:
-                        yi = pos[0]/lm.spacing[data_index][2]
+                        xi = lm.volumes[data_index].slices[0].shape[1]-1-pos[1]/lm.volumes[data_index].spacing[1]
+                    if lm.volumes[data_index].axes_to_flip[1]==False:
+                        yi = pos[0]/lm.volumes[data_index].spacing[2]
                     else:
-                        yi = lm.volume[data_index][0].shape[2]-1-pos[0]/lm.spacing[data_index][2]
+                        yi = lm.volumes[data_index].slices[0].shape[2]-1-pos[0]/lm.volumes[data_index].spacing[2]
                     zi = old_indices[0]
                 elif view_name == "sagittal":
                     xi = old_indices[2]
-                    if lm.axes_to_flip[data_index][1]==False:
-                        yi = pos[1]/lm.spacing[data_index][1]
+                    if lm.volumes[data_index].axes_to_flip[1]==False:
+                        yi = pos[1]/lm.volumes[data_index].spacing[1]
                     else:
-                        yi = lm.volume[data_index][0].shape[1]-1-pos[1]/lm.spacing[data_index][1]
-                    if lm.axes_to_flip[data_index][2]==False:
-                        zi = lm.volume[data_index][0].shape[0]-1-pos[0]/lm.spacing[data_index][0]
+                        yi = lm.volumes[data_index].slices[0].shape[1]-1-pos[1]/lm.volumes[data_index].spacing[1]
+                    if lm.volumes[data_index].axes_to_flip[2]==False:
+                        zi = lm.volumes[data_index].slices[0].shape[0]-1-pos[0]/lm.volumes[data_index].spacing[0]
                     else:
-                        zi = pos[0]/lm.spacing[data_index][0]
+                        zi = pos[0]/lm.volumes[data_index].spacing[0]
                 elif view_name == "coronal":
-                    if lm.axes_to_flip[data_index][0]==False:
-                        xi = pos[0]/lm.spacing[data_index][2]
+                    if lm.volumes[data_index].axes_to_flip[0]==False:
+                        xi = pos[0]/lm.volumes[data_index].spacing[2]
                     else:
-                        xi = lm.volume[data_index][0].shape[2]-1-pos[0]/lm.spacing[data_index][2]
+                        xi = lm.volumes[data_index].slices[0].shape[2]-1-pos[0]/lm.volumes[data_index].spacing[2]
                     yi = old_indices[1]
-                    if lm.axes_to_flip[data_index][2]==False:
-                        zi = pos[1]/lm.spacing[data_index][0]
+                    if lm.volumes[data_index].axes_to_flip[2]==False:
+                        zi = pos[1]/lm.volumes[data_index].spacing[0]
                     else:
-                        zi = lm.volume[data_index][0].shape[0]-1-pos[1]/lm.spacing[data_index][0]
-                zi = max(0, min(zi, lm.volume[data_index][0].shape[0]-1))
-                yi = max(0, min(yi, lm.volume[data_index][0].shape[1]-1))
-                xi = max(0, min(xi, lm.volume[data_index][0].shape[2]-1))
+                        zi = lm.volumes[data_index].slices[0].shape[0]-1-pos[1]/lm.volumes[data_index].spacing[0]
+                zi = max(0, min(zi, lm.volumes[data_index].slices[0].shape[0]-1))
+                yi = max(0, min(yi, lm.volumes[data_index].slices[0].shape[1]-1))
+                xi = max(0, min(xi, lm.volumes[data_index].slices[0].shape[2]-1))
 
                 lm.slice_indices[data_index] = [int(round(zi)),int(round(yi)),int(round(xi))]
             else:
@@ -470,18 +470,18 @@ class Cursor:
         lm = self.LoadMRI
         if val != -1:
             if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
-                lm.slice_indices[data_index][0] = np.clip(val, 0, lm.volume[data_index][0].shape[0]-1)
+                lm.slice_indices[data_index][0] = np.clip(val, 0, lm.volumes[data_index].slices[0].shape[0]-1)
             elif view_name == 'coronal':
-                lm.slice_indices[data_index][1] = np.clip(val, 0, lm.volume[data_index][0].shape[1]-1)
+                lm.slice_indices[data_index][1] = np.clip(val, 0, lm.volumes[data_index].slices[0].shape[1]-1)
             elif view_name == 'sagittal':
-                lm.slice_indices[data_index][2] = np.clip(val, 0, lm.volume[data_index][0].shape[2]-1)
+                lm.slice_indices[data_index][2] = np.clip(val, 0, lm.volumes[data_index].slices[0].shape[2]-1)
         else:
             if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
-                lm.slice_indices[data_index][0] = np.clip(lm.slice_indices[data_index][0] + delta, 0, lm.volume[data_index][0].shape[0]-1)
+                lm.slice_indices[data_index][0] = np.clip(lm.slice_indices[data_index][0] + delta, 0, lm.volumes[data_index].slices[0].shape[0]-1)
             elif view_name == 'coronal':
-                lm.slice_indices[data_index][1] = np.clip(lm.slice_indices[data_index][1] + delta, 0, lm.volume[data_index][0].shape[1]-1)
+                lm.slice_indices[data_index][1] = np.clip(lm.slice_indices[data_index][1] + delta, 0, lm.volumes[data_index].slices[0].shape[1]-1)
             elif view_name == 'sagittal':
-                lm.slice_indices[data_index][2] = np.clip(lm.slice_indices[data_index][2] + delta, 0, lm.volume[data_index][0].shape[2]-1)
+                lm.slice_indices[data_index][2] = np.clip(lm.slice_indices[data_index][2] + delta, 0, lm.volumes[data_index].slices[0].shape[2]-1)
         # Refresh all
         if lm.vol_dim == 3:
             lm.update_slices(0,data_index,view_name)

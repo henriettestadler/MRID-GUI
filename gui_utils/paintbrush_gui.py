@@ -236,7 +236,7 @@ class PaintbrushGUI:
             self.ui.checkBox_Brush_MRID.setText("Brush ON")
             if not self.LoadMRI.paint:
                 self.LoadMRI.paint = True
-                self.LoadMRI.intensity_table0.update_table("Label",self.LoadMRI.paintbrush.label_volume[0],0,visibility_enabled=False)
+                self.LoadMRI.intensity_table[data_index].update_table("Label",self.LoadMRI.paintbrush.label_volume[0],0,visibility_enabled=False)
             self.LoadMRI.paintbrush.start_paintbrush()
         else:
             self.ui.checkBox_Brush_MRID.setText("Brush OFF")
