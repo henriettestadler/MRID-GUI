@@ -48,7 +48,7 @@ class Cursor:
         spin_z.valueChanged.connect(lambda val: self.cursor_coord_changed('z', val,data_index,data_view))
 
         # scrollbars
-        if self.LoadMRI.vol_dim==3:
+        if not self.LoadMRI.volumes[0].is_4d:
             self.ui["scroll_2"].setRange(0, lm.volumes[data_index].slices[0].shape[0]-1)
             self.ui["scroll_2"].setValue(self.LoadMRI.slice_indices[data_index][0])
             self.ui["scroll_2"].valueChanged.connect(lambda val: self.scroll_slice('axial', 0,data_index,val=val))
@@ -83,7 +83,7 @@ class Cursor:
             self.ui[key].blockSignals(True)
 
         # Block spinBox signals to avoid recursion
-        if self.LoadMRI.vol_dim==3:
+        if not self.LoadMRI.volumes[0].is_4d:
             spin_x.setValue(x)
             spin_y.setValue(y)
             spin_z.setValue(z)
@@ -97,7 +97,7 @@ class Cursor:
             self.ui[f"scroll_{data_index}"].setValue(lm.slice_indices[data_index][0])
 
         if hasattr(self.LoadMRI, f"intensity_table{data_index}"):
-            table_class = self.LoadMRI.intensity_table[data_index] #getattr(self.LoadMRI, f"intensity_table{data_index}")
+            table_class = self.LoadMRI.intensity_table[data_index]
             table_class.update_intensity_values(data_index)
 
         # Unblock signals
@@ -137,7 +137,7 @@ class Cursor:
 
         print('hier in cursor lines',self.cursor_lines, data_view)
 
-        if self.LoadMRI.vol_dim==3:
+        if not self.LoadMRI.volumes[0].is_4d:
             image_index =0
             for view_name in 'coronal','sagittal','axial':
                 self.cursor_lines[view_name] = {}
@@ -204,7 +204,7 @@ class Cursor:
         lm = self.LoadMRI
         for image_index,vtk_widget_image in lm.vtk_widgets.items():
             for idx, (view_name, vtk_widget) in enumerate(vtk_widget_image.items()):
-                if idx == data_index or self.LoadMRI.vol_dim==3: #only change cursor of the corresponding view
+                if idx == data_index or not self.LoadMRI.volumes[0].is_4d: #only change cursor of the corresponding view
                     if image_index not in self.cursor_lines[view_name]:
                         continue
                     line_h = self.cursor_lines[view_name][image_index]['horizontal']['source']
@@ -230,7 +230,7 @@ class Cursor:
         y = lm.slice_indices[data_index][1]*lm.volumes[data_index].spacing[1]
         x = lm.slice_indices[data_index][2]*lm.volumes[data_index].spacing[2]
 
-        if view_name == "axial" or (self.LoadMRI.vol_dim==4 and view_name=="coronal"):
+        if view_name == "axial" or (self.LoadMRI.volumes[0].is_4d and view_name=="coronal"):
             if self.LoadMRI.volumes[data_index].axes_to_flip[1]==False:
                 line_h.SetPoint1(0, y, height)
                 line_h.SetPoint2((lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2], y, height)
@@ -256,7 +256,7 @@ class Cursor:
             else:
                 line_v.SetPoint1((lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2]-x, 0, height)
                 line_v.SetPoint2((lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2]-x, (lm.volumes[data_index].slices[0].shape[0]-1)*lm.volumes[data_index].spacing[0], height)
-        elif (self.LoadMRI.vol_dim==4 and view_name=="sagittal"):
+        elif (self.LoadMRI.volumes[0].is_4d and view_name=="sagittal"):
             if self.LoadMRI.volumes[data_index].axes_to_flip[1]==True:
                 line_v.SetPoint1((lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1]-y,0, height)
                 line_v.SetPoint2((lm.volumes[data_index].slices[0].shape[1]-1)*lm.volumes[data_index].spacing[1]-y,(lm.volumes[data_index].slices[0].shape[2]-1)*lm.volumes[data_index].spacing[2], height)
@@ -292,7 +292,7 @@ class Cursor:
         """
         for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():
             for idx, (view_name, vtk_widget) in enumerate(vtk_widget_image.items()):
-                if data_index==idx or self.LoadMRI.vol_dim==3:
+                if data_index==idx or not self.LoadMRI.volumes[0].is_4d:
                     print(image_index)
                     interactor = vtk_widget.GetRenderWindow().GetInteractor()
                     interactor.SetInteractorStyle(CustomInteractorStyle(self,view_name,image_index,None,data_index))
@@ -320,7 +320,7 @@ class Cursor:
 
         if suc:
             pos = picker.GetPickPosition()
-            if view_name == "axial" or (self.LoadMRI.vol_dim==4 and view_name=='coronal'):
+            if view_name == "axial" or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal'):
                 if lm.volumes[data_index].axes_to_flip[0]==False:
                     xi = pos[0]/lm.volumes[data_index].spacing[2]
                 else:
@@ -330,7 +330,7 @@ class Cursor:
                 else:
                     yi = lm.volumes[data_index].slices[0].shape[1]-1-pos[1]/lm.volumes[data_index].spacing[1]
                 zi = old_indices[0]
-            elif (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+            elif (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                 if lm.volumes[data_index].axes_to_flip[0]==False:
                     xi = pos[1]/lm.volumes[data_index].spacing[1]
                 else:
@@ -402,7 +402,7 @@ class Cursor:
 
             if suc_2:
                 pos = picker.GetPickPosition()
-                if view_name == "axial" or (self.LoadMRI.vol_dim==4 and view_name=='coronal'):
+                if view_name == "axial" or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal'):
                     if lm.volumes[data_index].axes_to_flip[0]==False:
                         xi = pos[0]/lm.volumes[data_index].spacing[2]
                     else:
@@ -412,7 +412,7 @@ class Cursor:
                     else:
                         yi = lm.volumes[data_index].slices[0].shape[1]-1-pos[1]/lm.volumes[data_index].spacing[1]
                     zi = old_indices[0]
-                elif self.LoadMRI.vol_dim==4 and view_name=='sagittal':
+                elif self.LoadMRI.volumes[0].is_4d and view_name=='sagittal':
                     if lm.volumes[data_index].axes_to_flip[0]==False:
                         xi = pos[1]/lm.volumes[data_index].spacing[1]
                     else:
@@ -451,7 +451,7 @@ class Cursor:
                 lm.slice_indices[data_index] = old_indices
 
         # Refresh all
-        if lm.vol_dim== 3:
+        if not lm.volumes[0].is_4d:
             lm.update_slices(0,data_index,view_name)
         else:
             for i in 0,1,2:
@@ -469,21 +469,21 @@ class Cursor:
         """
         lm = self.LoadMRI
         if val != -1:
-            if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+            if view_name == 'axial' or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal') or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                 lm.slice_indices[data_index][0] = np.clip(val, 0, lm.volumes[data_index].slices[0].shape[0]-1)
             elif view_name == 'coronal':
                 lm.slice_indices[data_index][1] = np.clip(val, 0, lm.volumes[data_index].slices[0].shape[1]-1)
             elif view_name == 'sagittal':
                 lm.slice_indices[data_index][2] = np.clip(val, 0, lm.volumes[data_index].slices[0].shape[2]-1)
         else:
-            if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+            if view_name == 'axial' or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal') or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                 lm.slice_indices[data_index][0] = np.clip(lm.slice_indices[data_index][0] + delta, 0, lm.volumes[data_index].slices[0].shape[0]-1)
             elif view_name == 'coronal':
                 lm.slice_indices[data_index][1] = np.clip(lm.slice_indices[data_index][1] + delta, 0, lm.volumes[data_index].slices[0].shape[1]-1)
             elif view_name == 'sagittal':
                 lm.slice_indices[data_index][2] = np.clip(lm.slice_indices[data_index][2] + delta, 0, lm.volumes[data_index].slices[0].shape[2]-1)
         # Refresh all
-        if lm.vol_dim == 3:
+        if not lm.volumes[0].is_4d:
             lm.update_slices(0,data_index,view_name)
         else:
             for i in 0,1,2:
@@ -504,7 +504,7 @@ class Cursor:
             self.LoadMRI.slice_indices[data_index][0] = value -1
 
         # Refresh all
-        if self.LoadMRI.vol_dim == 3:
+        if not self.LoadMRI.volumes[0].is_4d:
             self.LoadMRI.update_slices(0,data_index,view_name)
         else:
             for i in 0,1,2:
@@ -549,7 +549,7 @@ class Cursor:
 
         self.update_cursor_lines(data_index)
         #Add axes to each widget
-        if self.LoadMRI.vol_dim==4:
+        if self.LoadMRI.volumes[0].is_4d:
             if view_name=='coronal':
                  self.LoadMRI.add_axes(renderer, img_vtk, 'axial')
             else:

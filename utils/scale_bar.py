@@ -11,13 +11,12 @@ class Scale:
     - The scale bar dynamically adapts between cm and mm depending on zoom level.
     - Designed to be called per view (axial, coronal, sagittal).
     """
-    def __init__(self,LoadMRI,vol_dim):
+    def __init__(self,LoadMRI):
         self.LoadMRI = LoadMRI
         self.actors = {}
         self.lines = {}
         self.texts = {}
         self.actors = {}
-        self.vol_dim = vol_dim
         self.use_mm = False #bool
         self.unit_changed = False #bool
 

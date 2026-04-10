@@ -11,7 +11,7 @@ class ThresholdSegmentation:
         self.LoadMRI.thres_idx = self.LoadMRI.num_data_max
         self.LoadMRI.volume[self.LoadMRI.thres_idx] = {}
         self.LoadMRI.volume[self.LoadMRI.thres_idx][0] = self.LoadMRI.volume[0][0].astype(np.float32)
-        self.LoadMRI.file_name[self.LoadMRI.thres_idx] = 'Threshold Image'
+        self.LoadMRI.volumes[self.LoadMRI.thres_idx].file_path = 'Threshold Image'
         self.LoadMRI.actors_non_mainimage[self.LoadMRI.thres_idx] = {}
         self.LoadMRI.num_data_max += 1
 

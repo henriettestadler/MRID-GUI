@@ -85,14 +85,14 @@ class Measurement:
 
         # Convert voxel to physical coordinates
         start_point = np.array([
-            self.start_voxel[2] * self.LoadMRI.spacing[0][2],
-            self.start_voxel[1] * self.LoadMRI.spacing[0][1],
-            self.start_voxel[0] * self.LoadMRI.spacing[0][0]
+            self.start_voxel[2] * self.LoadMRI.volumes[0].spacing[2],
+            self.start_voxel[1] * self.LoadMRI.volumes[0].spacing[1],
+            self.start_voxel[0] * self.LoadMRI.volumes[0].spacing[0]
         ])
         end_point = np.array([
-            end_voxel[2] * self.LoadMRI.spacing[0][2],
-            end_voxel[1] * self.LoadMRI.spacing[0][1],
-            end_voxel[0] * self.LoadMRI.spacing[0][0]
+            end_voxel[2] * self.LoadMRI.volumes[0].spacing[2],
+            end_voxel[1] * self.LoadMRI.volumes[0].spacing[1],
+            end_voxel[0] * self.LoadMRI.volumes[0].spacing[0]
         ])
 
         #Create Line
@@ -201,7 +201,7 @@ class Measurement:
             return 0.0
         start = np.array(self.start_voxel)
         end = np.array(self.end_voxel)
-        spacing = np.array(self.LoadMRI.spacing[0][0])
+        spacing = np.array(self.LoadMRI.volumes[0].spacing[0])
         return np.linalg.norm((end - start) * spacing)
 
     def add_to_table(self,view_name:str,distance:float):

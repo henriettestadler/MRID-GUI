@@ -69,7 +69,7 @@ class Minimap:
         if view_name not in self.minimap_actors[image_index]:
             actor = vtk.vtkImageActor()
             actor.GetMapper().SetInputData(img_vtk)
-            contrast_class = getattr(self.LoadMRI, f"contrastClass_{data_index}")
+            contrast_class = self.LoadMRI.contrast[data_index]
             if image_index not in contrast_class.lut_vtk:
                 contrast_class.compute_lut(image_index,data_index)
             actor.GetProperty().SetLookupTable(contrast_class.lut_vtk[image_index])
@@ -181,7 +181,7 @@ class Minimap:
             new_x *= window_width
             new_y *= window_height
 
-            if self.LoadMRI.vol_dim==3:
+            if not self.LoadMRI.volumes[0].is_4d:
                 half_width['axial'] = (display_max['axial'][0] - display_min['axial'][0])/2
                 half_height['axial'] = (display_max['axial'][1] - display_min['axial'][1])/2
                 half_width['sagittal'] = (display_max['sagittal'][0] - display_min['sagittal'][0])/2

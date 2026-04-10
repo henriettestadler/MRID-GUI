@@ -36,9 +36,9 @@ class MRID_tags(QObject):
         self.heatmap_nii = {}
         self.heatmap_slice = {}
         for idx in range(len(self.LoadMRI.vtk_widgets[0])):
-            self.heatmap_sim[idx] = np.zeros((self.LoadMRI.volume[0][0].shape[2], self.LoadMRI.volume[0][0].shape[1],self.LoadMRI.volume[0][0].shape[0]))
-            self.heatmap_nii[idx] = np.zeros((self.LoadMRI.volume[0][0].shape[2], self.LoadMRI.volume[0][0].shape[1],self.LoadMRI.volume[0][0].shape[0]))
-            self.heatmap_slice[idx] = np.zeros((self.LoadMRI.volume[0][0].shape[2], self.LoadMRI.volume[0][0].shape[1],self.LoadMRI.volume[0][0].shape[0]))
+            self.heatmap_sim[idx] = np.zeros((self.LoadMRI.volumes[0].slices[0].shape[2], self.LoadMRI.volumes[0].slices[0].shape[1],self.LoadMRI.volumes[0].slices[0].shape[0]))
+            self.heatmap_nii[idx] = np.zeros((self.LoadMRI.volumes[0].slices[0].shape[2], self.LoadMRI.volumes[0].slices[0].shape[1],self.LoadMRI.volumes[0].slices[0].shape[0]))
+            self.heatmap_slice[idx] = np.zeros((self.LoadMRI.volumes[0].slices[0].shape[2], self.LoadMRI.volumes[0].slices[0].shape[1],self.LoadMRI.volumes[0].slices[0].shape[0]))
         self.center_x = {}
         self.center_y = {}
         self.width = {}
@@ -181,23 +181,23 @@ class MRID_tags(QObject):
                 label_volume[label_volume <= self.num_regions] = 0
                 label_image = sITK.GetImageFromArray(label_volume)
                 size = list(self.LoadMRI.paintbrush.label_volume[data_index].shape[::-1]) + [0]  # Extract 1 time frame
-            ref_image = sITK.ReadImage(self.LoadMRI.file_name[data_index])
+            ref_image = sITK.ReadImage(self.LoadMRI.volumes[data_index].file_path)
 
             reference_image = sITK.Extract(
                 ref_image,
                 size=size,
                 index=[0, 0, 0, 0]  # take time=0 frame
             )
-            label_image = sITK.Flip(label_image, self.LoadMRI.axes_to_flip[data_index], flipAboutOrigin=False)
+            label_image = sITK.Flip(label_image, self.LoadMRI.volumes[data_index].axes_to_flip, flipAboutOrigin=False)
             label_image.CopyInformation(reference_image)
 
             # Suggest a default name (for example, based on the original file name)
             if self.LoadMRI.tag_file:
-                file_name = self.LoadMRI.file_name[data_index][:-7]
+                file_name = self.LoadMRI.volumes[data_index].file_path[:-7]
                 default_name = f"{file_name}-anat.nii.gz"
                 self.progress.setValue(60)
             else:
-                file_name = self.LoadMRI.file_name[data_index][:-7]
+                file_name = self.LoadMRI.volumes[data_index].file_path[:-7]
                 default_name = f"{file_name}-segmentation.nii.gz"
 
             save_path = default_name
@@ -247,13 +247,13 @@ class MRID_tags(QObject):
                     _, self.heatmap_nii[data_index], _ = heatmap.get_relaxation_unsupervised(file_name, sessionpath, basestructs, slice_orientation)
                 self.visualize_heatmap(self.heatmap_nii[data_index][:,:,self.LoadMRI.slice_indices[data_index][0]],True,data_view,data_index)
                 #add to intensity table
-                table_class = getattr(self.MW.LoadMRI, f"intensity_table{data_index}")
+                table_class = self.LoadMRI.intensity_table[data_index]
                 table_class.update_table('Heatmap', self.heatmap_nii[data_index].T,data_index,visibility_enabled=False)
             else:
                 print('wieso bin ich nichz hier????',flush=True)
                 heatmaps, self.heatmap_nii[data_index], slice_idx = heatmap.get_relaxation(os.path.basename(file_name), self.mrid_names, sessionpath, basestructs, slice_orientation)
                 #change volume in intensity table
-                table_class = getattr(self.MW.LoadMRI, f"intensity_table{data_index}")
+                table_class = self.LoadMRI.intensity_table[data_index]
                 for i in range(table_class.table.rowCount()):
                     if table_class.table.item(i,1).text()=='Heatmap':
                         table_class.intensity_volumes[i]=self.heatmap_nii[data_index].T
@@ -287,7 +287,7 @@ class MRID_tags(QObject):
             if roi_index <= self.num_regions:
                 continue
             slice_orientation = view_name.capitalize()
-            flip_axes = tuple(i for i, flip in enumerate(self.LoadMRI.axes_to_flip[data_index][::-1]) if flip)
+            flip_axes = tuple(i for i, flip in enumerate(self.LoadMRI.volumes[data_index].axes_to_flip[::-1]) if flip)
             if view_name=='sagittal':
                 seg_arr = np.swapaxes(self.LoadMRI.paintbrush.label_volume[data_index], 1, 2)
                 segmentation = np.flip(seg_arr, axis=flip_axes)
@@ -303,7 +303,7 @@ class MRID_tags(QObject):
             self.visualize_heatmap(self.heatmap_sim[data_index][:,:,self.LoadMRI.slice_indices[data_index][0]],False,view_name,data_index) #heatmap_nii, z coordinate
 
             #change volume in intensity table
-            table_class = getattr(self.MW.LoadMRI, f"intensity_table{data_index}")
+            table_class = self.LoadMRI.intensity_table[data_index]
             for i in range(table_class.table.rowCount()):
                 if table_class.table.item(i,1).text()=='Heatmap':
                     table_class.intensity_volumes[i] =self.heatmap_sim[data_index].T
@@ -330,7 +330,7 @@ class MRID_tags(QObject):
 
         vtk_data = numpy_support.numpy_to_vtk(img_slice.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
         h, w = img_slice.shape
-        spacing = (self.LoadMRI.spacing[data_index][2], self.LoadMRI.spacing[data_index][1], 1)
+        spacing = (self.LoadMRI.volumes[data_index].spacing[2], self.LoadMRI.volumes[data_index].spacing[1], 1)
 
         if len(self.LoadMRI.renderers)<4:
             reset_camera = True
@@ -482,11 +482,11 @@ class MRID_tags(QObject):
         renderer.SetOcclusionRatio(0.05)
 
         z = self.LoadMRI.slice_indices[data_index][0]
-        image_index = 3
+
         if view_name=='axial' or view_name=='coronal':
-            slice_img = self.LoadMRI.volume[data_index][0][z, :, :]
+            slice_img = self.LoadMRI.volumes[data_index].slices[0][z, :, :]
         elif view_name=='sagittal':
-            slice_img = self.LoadMRI.volume[data_index][0][z, :, :].T
+            slice_img = self.LoadMRI.volumes[data_index].slices[0][z, :, :].T
 
         vtk_data = numpy_support.numpy_to_vtk(slice_img.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
         img_vtk = vtk.vtkImageData()
@@ -509,7 +509,7 @@ class MRID_tags(QObject):
 
         # Attach LUT for contrast and brightness
         prop = actor.GetProperty()
-        contrast_class = getattr(self.LoadMRI, f"contrastClass_{data_index}")
+        contrast_class = self.LoadMRI.contrast[data_index]
         prop.SetLookupTable(contrast_class.lut_vtk[0])
         prop.UseLookupTableScalarRangeOn()  # force LUT range
 

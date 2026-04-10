@@ -1,5 +1,5 @@
 # This Python file uses the following encoding: utf-8
-from core.segmentation import Segmentation, SegmentationInitialization, SegmentationEvolution
+from core.segmentation_utils import Segmentation, SegmentationInitialization, SegmentationEvolution
 from PySide6.QtGui import QStandardItem
 
 
@@ -47,10 +47,10 @@ class SegmentationGUI:
                 self.ui.ScrollBar_lower.setValue(self.LoadMRI.Segmentation.lower)
                 self.ui.doubleSpinBox_upper.setValue(self.LoadMRI.Segmentation.upper)
                 self.ui.ScrollBar_upper.setValue(self.LoadMRI.Segmentation.upper)
-                self.ui.doubleSpinBox_lower.setRange(0,int(self.LoadMRI.volume[0][0].max())+1)
-                self.ui.ScrollBar_lower.setRange(0,int(self.LoadMRI.volume[0][0].max())+1)
-                self.ui.doubleSpinBox_upper.setRange(0,int(self.LoadMRI.volume[0][0].max())+1)
-                self.ui.ScrollBar_upper.setRange(0,int(self.LoadMRI.volume[0][0].max())+1)
+                self.ui.doubleSpinBox_lower.setRange(0,int(self.LoadMRI.volumes[0].slices[0].max())+1)
+                self.ui.ScrollBar_lower.setRange(0,int(self.LoadMRI.volumes[0].slices[0].max())+1)
+                self.ui.doubleSpinBox_upper.setRange(0,int(self.LoadMRI.volumes[0].slices[0].max())+1)
+                self.ui.ScrollBar_upper.setRange(0,int(self.LoadMRI.volumes[0].slices[0].max())+1)
                 self.ui.doubleSpinBox_lower.valueChanged.connect(self.on_spin_changed_lower)
                 self.ui.ScrollBar_lower.valueChanged.connect(self.on_scroll_changed_lower)
                 self.ui.doubleSpinBox_upper.valueChanged.connect(self.on_spin_changed_upper)
@@ -82,7 +82,7 @@ class SegmentationGUI:
                         del self.LoadMRI.actors_non_mainimage[0][view_name]
                         widget.GetRenderWindow().Render()
 
-            #self.LoadMRI.volume[0] = {}
+            #self.LoadMRI.volumes[0].slices = {}
             ##if more files!!!
             #self.LoadMRI.actors_non_mainimage[0] = {}
             #self.LoadMRI.intensity_table.update_table("Threshold",0)
@@ -98,19 +98,19 @@ class SegmentationGUI:
     def update_threshold_display(self):
         """Refresh the thresholded image display according to current mode and bounds."""
         if self.LoadMRI.Segmentation.threshold_mode == 'bounded':
-            self.LoadMRI.th_img = self.LoadMRI.Segmentation.smooth_binary_threshold(self.LoadMRI.volume[0][0], lower=self.LoadMRI.Segmentation.lower, upper=self.LoadMRI.Segmentation.upper)
+            self.LoadMRI.th_img = self.LoadMRI.Segmentation.smooth_binary_threshold(self.LoadMRI.volumes[0].slices[0], lower=self.LoadMRI.Segmentation.lower, upper=self.LoadMRI.Segmentation.upper)
             self.ui.ScrollBar_lower.setEnabled(True)
             self.ui.doubleSpinBox_lower.setEnabled(True)
             self.ui.ScrollBar_upper.setEnabled(True)
             self.ui.doubleSpinBox_upper.setEnabled(True)
         elif self.LoadMRI.Segmentation.threshold_mode == 'lower':
-            self.LoadMRI.th_img = self.LoadMRI.Segmentation.smooth_binary_threshold(self.LoadMRI.volume[0][0], lower=self.LoadMRI.Segmentation.lower, upper=None)
+            self.LoadMRI.th_img = self.LoadMRI.Segmentation.smooth_binary_threshold(self.LoadMRI.volumes[0].slices[0], lower=self.LoadMRI.Segmentation.lower, upper=None)
             self.ui.ScrollBar_lower.setEnabled(True)
             self.ui.doubleSpinBox_lower.setEnabled(True)
             self.ui.ScrollBar_upper.setEnabled(False)
             self.ui.doubleSpinBox_upper.setEnabled(False)
         elif self.LoadMRI.Segmentation.threshold_mode == 'upper':
-            self.LoadMRI.th_img = self.LoadMRI.Segmentation.smooth_binary_threshold(self.LoadMRI.volume[0][0], lower=None, upper=self.LoadMRI.Segmentation.upper)
+            self.LoadMRI.th_img = self.LoadMRI.Segmentation.smooth_binary_threshold(self.LoadMRI.volumes[0].slices[0], lower=None, upper=self.LoadMRI.Segmentation.upper)
             self.ui.ScrollBar_lower.setEnabled(False)
             self.ui.doubleSpinBox_lower.setEnabled(False)
             self.ui.ScrollBar_upper.setEnabled(True)

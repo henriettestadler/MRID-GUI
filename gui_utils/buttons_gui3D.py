@@ -9,7 +9,7 @@ from core.interactor_style import CustomInteractorStyle
 from utils.minimap_handler import Minimap
 from gui_utils.paintbrush_gui import PaintbrushGUI
 from core.registration import Registration
-from core.segmentation import Segmentation
+from core.segmentation_utils import Segmentation
 from gui_utils.segmentation_gui import SegmentationGUI
 
 # This Python file uses the following encoding: utf-8
@@ -37,19 +37,16 @@ class PopupDialog(QDialog):
 
 
 class ButtonsGUI_3D:
-    def __init__(self,MW, vol_dim,data_index):
+    def __init__(self,MW,data_index):
         """
            Initialize the 3D buttons GUI.
 
            Args:
                MW: The main window instance containing UI and MRI data references.
-               vol_dim (int): The number of dimensions of the MRI data (expected 3).
         """
         self.MW = MW
         self.ui = MW.ui
         self.LoadMRI = MW.LoadMRI
-
-        self.vol_dim = vol_dim
 
         self.buttons_3D(data_index)
 
@@ -59,7 +56,7 @@ class ButtonsGUI_3D:
         """
         Set up the UI components, VTK widgets, and basic initialization for 3D mode.
         """
-        file_name = self.LoadMRI.file_name[data_index]
+        file_name = self.LoadMRI.volumes[data_index].file_path
         target = self.ui.file_name_displayed_4d
         target.setPlainText("File loaded: " + os.path.basename(file_name))
         #target.setPlainText(os.path.basename(file_name))
@@ -323,12 +320,12 @@ class ButtonsGUI_3D:
         self.ui.pushButton_done.clicked.connect(self.popup.close)
 
         filename_end = 'resampled100um.nii.gz'
-        file_name = self.LoadMRI.file_name[0][:-7]
+        file_name = self.LoadMRI.volumes[0].file_path[:-7]
         default_name = f"{file_name}_{filename_end}" #"label_volume.nii.gz"
         file_path = os.path.join(self.LoadMRI.session_path, default_name)
         file_path = Path(file_path)
         if file_path.is_file():
-            self.ui.textEdit_resample100.setText(f"A file called \n {file_name} \n already exists. You can directly open this file.")
+            self.ui.textEdit_resample100.setText(f"A file called \n {default_name} \n already exists. You can directly open this file.")
             self.ui.pushButton_openfile100um.setEnabled(True)
             self.LoadMRI.Resample.file_name100um = file_name
 
@@ -337,55 +334,56 @@ class ButtonsGUI_3D:
         file_path = os.path.join(self.LoadMRI.session_path, default_name)
         file_path = Path(file_path)
         if file_path.is_file():
-            self.ui.textEdit_resample25.setText(f"A file called \n {file_name} \n already exists.")
+            self.ui.textEdit_resample25.setText(f"A file called \n {default_name} \n already exists.")
 
 
     def resample100um(self,index):
+        print('index combobox',self.ui.comboBox_resamplefiles.currentIndex(),flush=True)
         self.LoadMRI.Resample.progressbar = self.ui.progressBar_100um
         filename_end = 'resampled100um.nii.gz'
-        file_name = self.LoadMRI.file_name[index][:-7]
-        default_name = f"{file_name}_{filename_end}" #"label_volume.nii.gz"
+        file_name = self.LoadMRI.volumes[index].file_path[:-7]
+        default_name = f"{file_name}_{filename_end}"
         file_path = os.path.join(self.LoadMRI.session_path, default_name)
         file_path = Path(file_path)
 
         if file_path.is_file():
             msg_box = QMessageBox()
-            msg_box.setWindowTitle(f"Overwriting File")
-            msg_box.setText(f"A file called \n {file_name} \n already exists. Are you sure you want to overwrite it?")
+            msg_box.setWindowTitle("Overwriting File")
+            msg_box.setText(f"A file called \n {default_name} \n already exists. Are you sure you want to overwrite it?")
             msg_box.addButton("Yes", QMessageBox.ActionRole)
             btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
             msg_box.exec()
             if msg_box.clickedButton()==btn_cancel:
-                self.ui.textEdit_resample100.setText(f"Existing file \n {file_name}")
+                self.ui.textEdit_resample100.setText(f"Existing file \n {default_name}")
                 self.ui.pushButton_openfile100um.setEnabled(True)
-                self.LoadMRI.Resample.file_name100um = file_name
+                self.LoadMRI.Resample.file_name100um = default_name
                 return
 
-        file_name = self.LoadMRI.Resample.resampling100um(index)
-        self.ui.textEdit_resample100.setText(f"Resampling Done with saved as \n {file_name}")
+        default_name = self.LoadMRI.Resample.resampling100um(index)
+        self.ui.textEdit_resample100.setText(f"Resampling Done with saved as \n {default_name}")
         self.ui.pushButton_openfile100um.setEnabled(True)
 
     def resample25um(self,index):
         self.LoadMRI.Resample.progressbar = self.ui.progressBar_25um
         filename_end = 'resampled.nii.gz'
-        file_name = self.LoadMRI.file_name[index][:-7]
+        file_name = self.LoadMRI.volumes[index].file_path[:-7]
         default_name = f"{file_name}_{filename_end}" #"label_volume.nii.gz"
         file_path = os.path.join(self.LoadMRI.session_path, default_name)
         file_path = Path(file_path)
 
         if file_path.is_file():
             msg_box = QMessageBox()
-            msg_box.setWindowTitle(f"Overwriting File")
-            msg_box.setText(f"A file called {file_name} already exists. Are you sure you want to overwrite it?")
-            btn_yes = msg_box.addButton("Yes", QMessageBox.ActionRole)
+            msg_box.setWindowTitle("Overwriting File")
+            msg_box.setText(f"A file called {default_name} already exists. Are you sure you want to overwrite it?")
+            msg_box.addButton("Yes", QMessageBox.ActionRole)
             btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
             msg_box.exec()
             if msg_box.clickedButton()==btn_cancel:
-                self.ui.textEdit_resample100.setText(f"Existing file \n {file_name}")
+                self.ui.textEdit_resample25.setText(f"Existing file \n {default_name}")
                 return
 
-        file_name = self.LoadMRI.Resample.resampling25um(index)
-        self.ui.textEdit_resample25.setText(f"Resampling Done with saved as \n {file_name}")
+        default_name = self.LoadMRI.Resample.resampling25um(index)
+        self.ui.textEdit_resample25.setText(f"Resampling Done with saved as \n {default_name}")
 
 
     def initialize_registration(self):
@@ -433,7 +431,7 @@ class ButtonsGUI_3D:
         image = sITK.ReadImage(self.LoadMRI.movingimg_filename[index])
         volume = sITK.GetArrayFromImage(image)
         moving_ind = self.LoadMRI.movingimg_filename[index][:-7].split("ind_")[1]
-        fixed_ind = self.MW.LoadMRI.file_name[0][:-7].split("ind_")[1]
+        fixed_ind = self.MW.LoadMRI.volumes[0].file_path[:-7].split("ind_")[1]
         transform_filename = f"transformation_ind_{moving_ind}-to-ind_{fixed_ind}.txt"
         file_path = os.path.join(self.LoadMRI.session_path, 'anat',transform_filename)
         file_path1 = Path(file_path)

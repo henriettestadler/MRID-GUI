@@ -36,19 +36,16 @@ class PopupDialog(QDialog):
 
 class ButtonsGUI_4D:
     """Handles setup of GUI components for 4D MRI data visualization and interaction."""
-    def __init__(self,MW, vol_dim,data_index,data_view):
+    def __init__(self,MW,data_index,data_view):
         """
            Initialize the 4D buttons GUI.
 
            Args:
                MW: The main window instance containing UI and MRI data references.
-               vol_dim (int): The number of dimensions of the MRI data (expected 4).
         """
         self.MW = MW
         self.ui = MW.ui
         self.LoadMRI = MW.LoadMRI
-
-        self.vol_dim = vol_dim
 
         self.buttons_4D(data_index,data_view)
 
@@ -58,7 +55,7 @@ class ButtonsGUI_4D:
         """
         Set up the UI components, VTK widgets, and basic initialization for 4D mode.
         """
-        file_name = self.LoadMRI.file_name[data_index]
+        file_name = self.LoadMRI.volumes[data_index].file_path
         target = self.ui.file_name_displayed_4d
         target.setPlainText("File loaded " + data_view.upper() + ": " + os.path.basename(file_name))
         #target.setPlainText(os.path.basename(file_name))
@@ -163,7 +160,6 @@ class ButtonsGUI_4D:
             new_text = current_text + "\nFile loaded: " + data_view.upper() + ": " + os.path.basename(file_name)
             self.ui.file_name_displayed_4d.setPlainText(new_text)
 
-            self.LoadMRI.file_name[data_index]= file_name
             self.MW.save_info_of_mainimage(data_view,data_index,file_name)
             self.LoadMRI.cursor.init_widgets(data_index,data_view)
             self.initialize_zoom_controls(data_index)
@@ -438,7 +434,7 @@ class ButtonsGUI_4D:
                         data_view = filename_seg[i][1]
                         if not  hasattr(self.LoadMRI,"LoadImage4D"):
                             self.LoadMRI.LoadImage4D = LoadImage4D(self, file_name)
-                        self.LoadMRI.mrid_tags.file_name[i] = self.LoadMRI.file_name[i][:-7]
+                        self.LoadMRI.mrid_tags.file_name[i] = self.LoadMRI.volumes[i].file_path[:-7]
                         vol = self.LoadMRI.LoadImage4D.open_file(file_name,data_view)
                         if vol is not None:
                             #add to intensity table

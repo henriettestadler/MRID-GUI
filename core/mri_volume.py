@@ -27,6 +27,7 @@ class MRIVolume:
             spacing = spacing[1:4]
 
         array_4d = None
+        timestamp4D = []
         if is_4d:
             flipped_volumes = []
             for t in range(image.GetSize()[3]):
@@ -34,12 +35,20 @@ class MRIVolume:
                 flipped_volumes.append(sitk.GetArrayFromImage(img_flipped))
             array_4d = np.stack(flipped_volumes)
             timestamp4D = [0, 4, 7] if array_4d.shape[0] > 7 else [0, 2, 5]
+            slices = {
+                    0: array_4d[timestamp4D[0], :, :, :].copy(),
+                    1: array_4d[timestamp4D[1], :, :, :].copy(),
+                    2: array_4d[timestamp4D[2], :, :, :].copy(),
+                }
         else:
-            timestamp4D = []
+            img_flipped = sitk.Flip(image, axes_to_flip, flipAboutOrigin=False)
+            flipped = sitk.GetArrayFromImage(img_flipped)
+            slices = {0: flipped, 1: flipped, 2: flipped}
+
 
         return cls(
             file_path=file_path,
-            slices={0: array},
+            slices=slices,
             ref_image=image,
             is_4d=(array.ndim == 4),
             axes_to_flip=axes_to_flip,

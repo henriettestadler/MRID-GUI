@@ -38,8 +38,8 @@ class Paintbrush:
         self.label_volume = {}
         self.seg_volume = {}
         for idx in range(len(self.LoadMRI.vtk_widgets[0])):
-            self.label_volume[idx] = np.zeros_like(self.LoadMRI.volume[0][0], dtype=np.uint8)
-            self.seg_volume[idx] = np.zeros_like(self.LoadMRI.volume[0][0], dtype=np.uint8)
+            self.label_volume[idx] = np.zeros_like(self.LoadMRI.volumes[0].slices[0], dtype=np.uint8)
+            self.seg_volume[idx] = np.zeros_like(self.LoadMRI.volumes[0].slices[0], dtype=np.uint8)
 
         self.LoadMRI.heatmap = False #cursor in 4th image visible
         self.LoadMRI.paint = False
@@ -51,7 +51,7 @@ class Paintbrush:
         """
         Initialize label volume and setup overlay tables for each view.
         """
-        if self.LoadMRI.vol_dim==3:
+        if not self.LoadMRI.volumes[0].is_4d:
             z,y,x = self.LoadMRI.slice_indices[0]
             self.setup_table(self.label_volume[0][z, :, :], 'axial',0)
             self.setup_table(self.label_volume[0][:, y, :], 'coronal',0)
@@ -101,7 +101,7 @@ class Paintbrush:
 
 
         if self.brush_type == 'square':
-            if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):  # XY plane, spacing Z ignored
+            if view_name == 'axial' or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal') or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):  # XY plane, spacing Z ignored
                 x0, x1 = max(0, x-half), min(nx - 1, x +half+ (0 if self.size % 2 == 0 else 1))
                 y0, y1 = max(0, y-half), min(ny - 1, y +half+ (0 if self.size % 2 == 0 else 1))
                 # Only overwrite voxels with paintover_value
@@ -151,7 +151,7 @@ class Paintbrush:
             radius_vector = []
             radius_vector.append([0,0])
             if self.size%2==0:
-                if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+                if view_name == 'axial' or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal') or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                     x_new = x+0.5
                     y_new = y+0.5
                     vol_shape_x = self.label_volume[data_index].shape[2]
@@ -162,7 +162,7 @@ class Paintbrush:
                     vol_shape_x = self.label_volume[data_index].shape[2]
                     vol_shape_y = self.label_volume[data_index].shape[0]
                 elif view_name == 'sagittal':
-                    x_new = self.LoadMRI.volume[0][0].shape[0]-z-0.5
+                    x_new = self.LoadMRI.volumes[0].slices[0].shape[0]-z-0.5
                     y_new = y+0.5
                     vol_shape_x = self.label_volume[data_index].shape[0]
                     vol_shape_y = self.label_volume[data_index].shape[1]
@@ -171,7 +171,7 @@ class Paintbrush:
                         if np.sqrt((xx-0.5)**2+(yy-0.5)**2) < self.size/2*0.98:
                             radius_vector.append([xx-0.5,yy-0.5])
             else:
-                if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+                if view_name == 'axial' or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal') or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                     x_new = x
                     y_new = y
                     vol_shape_x = self.label_volume[data_index].shape[2]
@@ -182,7 +182,7 @@ class Paintbrush:
                     vol_shape_x = self.label_volume[data_index].shape[2]
                     vol_shape_y = self.label_volume[data_index].shape[0]
                 elif view_name == 'sagittal':
-                    x_new = self.LoadMRI.volume[0][0].shape[0]-z
+                    x_new = self.LoadMRI.volumes[0].slices[0].shape[0]-z
                     y_new = y
                     vol_shape_x = self.label_volume[data_index].shape[0]
                     vol_shape_y = self.label_volume[data_index].shape[1]
@@ -200,7 +200,7 @@ class Paintbrush:
 
                         # check bounds
                         if 0 <= xi < vol_shape_x and 0 <= yi < vol_shape_y:
-                            if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+                            if view_name == 'axial' or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal') or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                                 if self.label_volume[data_index][z, yi, xi] == paintover_value - 1 or paintover_value == 0:
                                     self.label_volume[data_index][z, yi, xi] = label_value
                                     if label_value > self.LoadMRI.mrid_tags.num_regions:
@@ -215,11 +215,11 @@ class Paintbrush:
                             elif view_name == 'sagittal':
                                 # apply mask
                                 self.label_volume[data_index][:, :, x]
-                                if 0 <= self.LoadMRI.volume[0][0].shape[0]-xi < vol_shape_x:
-                                    if self.label_volume[data_index][self.LoadMRI.volume[0][0].shape[0]-xi, yi, x] == paintover_value - 1 or paintover_value == 0:
-                                        self.label_volume[data_index][self.LoadMRI.volume[0][0].shape[0]-xi, yi, x] = label_value
+                                if 0 <= self.LoadMRI.volumes[0].slices[0].shape[0]-xi < vol_shape_x:
+                                    if self.label_volume[data_index][self.LoadMRI.volumes[0].slices[0].shape[0]-xi, yi, x] == paintover_value - 1 or paintover_value == 0:
+                                        self.label_volume[data_index][self.LoadMRI.volumes[0].slices[0].shape[0]-xi, yi, x] = label_value
                                         if label_value > self.LoadMRI.mrid_tags.num_regions:
-                                           self.seg_volume[data_index][self.LoadMRI.volume[0][0].shape[0]-xi, yi, x] = label_value
+                                           self.seg_volume[data_index][self.LoadMRI.volumes[0].slices[0].shape[0]-xi, yi, x] = label_value
 
         # Update the overlay
         self.update_overlay(data_index) #z, y, x)
@@ -243,7 +243,7 @@ class Paintbrush:
             # Create cube
             self.source = vtk.vtkCubeSource()
             self.source.SetZLength(0.1)  # flat in slice plane
-            if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+            if view_name == 'axial' or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal') or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                 self.source.SetXLength(self.size*LM.volumes[data_index].spacing[2])
                 self.source.SetYLength(self.size*LM.volumes[data_index].spacing[1])
                 if self.size % 2 == 0:
@@ -257,7 +257,7 @@ class Paintbrush:
                     self.source.SetCenter((x - 0.5) * LM.volumes[data_index].spacing[2],(z - 0.5) * LM.volumes[data_index].spacing[0],1 )
                 else:
                     self.source.SetCenter(x * LM.volumes[data_index].spacing[2],z * LM.volumes[data_index].spacing[0],1 )
-            elif (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+            elif (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                 self.source.SetXLength(self.size*LM.volumes[data_index].spacing[1])
                 self.source.SetYLength(self.size*LM.volumes[data_index].spacing[2])
                 if self.size % 2 == 0:
@@ -268,9 +268,9 @@ class Paintbrush:
                 self.source.SetXLength(self.size*LM.volumes[data_index].spacing[0])
                 self.source.SetYLength(self.size*LM.volumes[data_index].spacing[1])
                 if self.size % 2 == 0:
-                    self.source.SetCenter((self.LoadMRI.volume[0][0].shape[0]-z - 0.5) * LM.volumes[data_index].spacing[0],(y - 0.5) * LM.volumes[data_index].spacing[1],1 )
+                    self.source.SetCenter((self.LoadMRI.volumes[0].slices[0].shape[0]-z - 0.5) * LM.volumes[data_index].spacing[0],(y - 0.5) * LM.volumes[data_index].spacing[1],1 )
                 else:
-                    self.source.SetCenter((self.LoadMRI.volume[0][0].shape[0]-z-1) * LM.volumes[data_index].spacing[0],y * LM.volumes[data_index].spacing[1],1)
+                    self.source.SetCenter((self.LoadMRI.volumes[0].slices[0].shape[0]-z-1) * LM.volumes[data_index].spacing[0],y * LM.volumes[data_index].spacing[1],1)
 
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputConnection(self.source.GetOutputPort())
@@ -300,7 +300,7 @@ class Paintbrush:
             radius_vector = []
 
             if self.size%2==0:
-                if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+                if view_name == 'axial' or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal') or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                     x_new = x+0.5
                     y_new = y+ 0.5
                     spacing_x = LM.volumes[data_index].spacing[2]
@@ -311,7 +311,7 @@ class Paintbrush:
                     spacing_x = LM.volumes[data_index].spacing[2]
                     spacing_y = LM.volumes[data_index].spacing[0]
                 elif view_name == 'sagittal':
-                    x_new = self.LoadMRI.volume[0][0].shape[0]-z-1.5
+                    x_new = self.LoadMRI.volumes[0].slices[0].shape[0]-z-1.5
                     y_new = y+ 0.5
                     spacing_x = LM.volumes[data_index].spacing[0]
                     spacing_y = LM.volumes[data_index].spacing[1]
@@ -324,7 +324,7 @@ class Paintbrush:
                             radius_vector.append([xx-0.5,yy-0.5])
                             break
             else:
-                if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+                if view_name == 'axial' or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal') or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                     x_new = x
                     y_new = y
                     spacing_x = LM.volumes[data_index].spacing[2]
@@ -335,7 +335,7 @@ class Paintbrush:
                     spacing_x = LM.volumes[data_index].spacing[2]
                     spacing_y = LM.volumes[data_index].spacing[0]
                 elif view_name == 'sagittal':
-                    x_new = self.LoadMRI.volume[0][0].shape[0]-z-1
+                    x_new = self.LoadMRI.volumes[0].slices[0].shape[0]-z-1
                     y_new = y
                     spacing_x = LM.volumes[data_index].spacing[0]
                     spacing_y = LM.volumes[data_index].spacing[1]
@@ -471,12 +471,12 @@ class Paintbrush:
         z, y, x = self.LoadMRI.slice_indices[data_index]
 
         for view_name, img_vtk in self.vtk_label_images.items():
-            if self.LoadMRI.vol_dim==4:
+            if self.LoadMRI.volumes[0].is_4d:
                 data_view = list(self.LoadMRI.vtk_widgets[0].keys())[data_index]
                 if view_name!=data_view:
                     continue
             # Axial view (XY plane at z)
-            if view_name == 'axial' or (self.LoadMRI.vol_dim==4 and view_name=='coronal') or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
+            if view_name == 'axial' or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal') or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
                 slice_img = self.label_volume[data_index][z, :, :]
             elif view_name == 'coronal':
                 slice_img = self.label_volume[data_index][:, y, :]
@@ -507,7 +507,7 @@ class Paintbrush:
         flip_axes = tuple(i for i, flip in enumerate(self.LoadMRI.volumes[data_index].axes_to_flip[::-1]) if flip)
         vol = np.flip(self.label_volume[data_index], axis=flip_axes)
         #change volume in intensity table
-        table_class = getattr(self.LoadMRI,f"intensity_table{data_index}")
+        table_class = self.LoadMRI.intensity_table[data_index]
         for i in range(table_class.table.rowCount()):
             if table_class.table.item(i,1).text()=='Label':
                 table_class.intensity_volumes[i] =vol
@@ -525,7 +525,7 @@ class Paintbrush:
         img_vtk.SetDimensions(w, h, 1)  # VTK expects width x height x depth
 
         # Correct spacing per view
-        if view_name == "axial" or self.LoadMRI.vol_dim==4:     #x,y
+        if view_name == "axial" or self.LoadMRI.volumes[0].is_4d:     #x,y
             spacing = (self.LoadMRI.volumes[data_index].spacing[2], self.LoadMRI.volumes[data_index].spacing[1], 1)
         elif view_name == "coronal":  #
             spacing = (self.LoadMRI.volumes[data_index].spacing[2], self.LoadMRI.volumes[data_index].spacing[0], 1)
@@ -597,12 +597,12 @@ class Paintbrush:
         else:
             histog_label = self.color_combobox.index(self.histogram_color)
 
-        if self.LoadMRI.vol_dim ==4:
+        if self.LoadMRI.volumes[0].is_4d:
             if histog_label==0:
                 mask = np.zeros_like(self.label_volume[self.label_volume_index], dtype=bool)
                 for i in range(1, self.LoadMRI.mrid_tags.num_regions+1):
                     mask = self.label_volume[self.label_volume_index] == i
-                    intensities = self.LoadMRI.volume[0][0][mask]
+                    intensities = self.LoadMRI.volumes[0].slices[0][mask]
                     # Compute histogram
                     counts, bin_edges = np.histogram(intensities, bins=50)
 
@@ -618,7 +618,7 @@ class Paintbrush:
                 mask = self.label_volume[self.label_volume_index] == histog_label
         else:
             mask = self.label_volume[self.label_volume_index] == histog_label
-        intensities = self.LoadMRI.volume[0][0][mask] ## FOR ALL IMAGES
+        intensities = self.LoadMRI.volumes[0].slices[0][mask] ## FOR ALL IMAGES
 
 
         if intensities.size == 0:

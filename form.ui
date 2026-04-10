@@ -5524,8 +5524,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>376</width>
-                    <height>259</height>
+                    <width>186</width>
+                    <height>164</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -9122,6 +9122,9 @@ background-color: rgb(131, 131, 131);
             <height>40</height>
            </size>
           </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="2" column="2" rowspan="2">
@@ -9144,6 +9147,9 @@ background-color: rgb(131, 131, 131);
             <height>40</height>
            </size>
           </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="2" column="1" rowspan="2">
@@ -9164,6 +9170,9 @@ background-color: rgb(131, 131, 131);
             <height>40</height>
            </size>
           </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="2" column="0" rowspan="2">
@@ -9183,6 +9192,9 @@ background-color: rgb(131, 131, 131);
             <width>40</width>
             <height>40</height>
            </size>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

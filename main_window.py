@@ -9,11 +9,10 @@ from utils.zoom import zoom_notifier
 from PySide6 import QtCore
 from PySide6.QtWidgets import QMessageBox
 from gui_utils.intensity_table import IntensityTable
-import numpy as np
 from gui_utils.buttons_gui3D import ButtonsGUI_3D
 from gui_utils.buttons_gui4D import ButtonsGUI_4D
 from PySide6.QtWidgets import QFileDialog, QDockWidget
-import SimpleITK as sITK
+import SimpleITK as sitk
 from file_handling.loadimage_into3D import LoadImage3D
 from file_handling.loadimage_into4D import LoadImage4D
 from core.cursor import Cursor
@@ -22,7 +21,7 @@ from ephys.init_ephys import InitEphys
 from PySide6.QtCore import Qt, QCoreApplication,QResource
 import qdarkstyle
 from utils.zoom import Zoom
-
+from core.mri_volume import MRIVolume
 
 
 class MainWindow(QMainWindow):
@@ -134,7 +133,7 @@ class MainWindow(QMainWindow):
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Open Main File")
         msg_box.setText(f"Do you want to open the file \n {file_name}?")
-        btn_yes = msg_box.addButton("Yes", QMessageBox.ActionRole)
+        msg_box.addButton("Yes", QMessageBox.ActionRole)
         btn_no = msg_box.addButton("No, other File", QMessageBox.ActionRole)
         btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
         msg_box.exec()
@@ -145,8 +144,8 @@ class MainWindow(QMainWindow):
 
         else:
             #pop up asking for the view if 4D data used
-            image = sITK.ReadImage(file_name)
-            volume = sITK.GetArrayFromImage(image)
+            image = sitk.ReadImage(file_name)
+            volume = sitk.GetArrayFromImage(image)
             if volume.ndim==4:
                 if 'coronal' in file_name or 'Coronal' in file_name:
                     data_view = "coronal"
@@ -174,18 +173,8 @@ class MainWindow(QMainWindow):
                     Clears old renderers, actors, and measurement lines from the GUI.
                 """
                 data_index = 0
-                self.LoadMRI.file_name[data_index] = file_name
-                img = sITK.ReadImage(file_name)
                 #new volume and spacing
-                self.LoadMRI.volume[data_index] = {}
-                self.LoadMRI.volume[data_index][0] = sITK.GetArrayFromImage(img)
-                self.LoadMRI.volume[data_index][1] = sITK.GetArrayFromImage(img)
-                self.LoadMRI.volume[data_index][2] = sITK.GetArrayFromImage(img)
-                self.LoadMRI.ref_image = img
-                self.LoadMRI.spacing = {}
-                self.LoadMRI.spacing[data_index] = []
-                self.LoadMRI.spacing[data_index] = img.GetSpacing()[::-1]
-                self.LoadMRI.vol_dim = self.LoadMRI.volume[data_index][0].ndim
+                self.LoadMRI.volumes[data_index] = MRIVolume.from_file(file_name)
 
                 self.LoadMRI.is_first_slice = False
 
@@ -214,7 +203,7 @@ class MainWindow(QMainWindow):
 
                 for data_index in range(len(self.LoadMRI.vtk_widgets[0])):
                     if hasattr(self.LoadMRI, f"intensity_table{data_index}"):
-                        intensity_class = getattr(self.LoadMRI, f"intensity_table{data_index}")
+                        intensity_class = self.LoadMRI.intensity_table[data_index]
                         intensity_class.table.viewport().removeEventFilter(self)
                         #intensity_class.table = None
 
@@ -231,8 +220,8 @@ class MainWindow(QMainWindow):
 
                 #load file again, update cursor
                 self.LoadMRI = LoadMRI()
-                self.LoadMRI.file_name = {}
-                self.LoadMRI.file_name[0]= file_name
+                #self.LoadMRI.file_name = {}
+                #self.LoadMRI.file_name[0]= file_name
                 self.ui.comboBox_resamplefiles.addItem(os.path.basename(file_name)) #add to combobox for resampling
                 if volume.ndim==4:
                     self.restart_gui(file_name,data_view)
@@ -243,8 +232,8 @@ class MainWindow(QMainWindow):
 
             # Create loader
             self.LoadMRI = LoadMRI()
-            self.LoadMRI.file_name = {}
-            self.LoadMRI.file_name[0]= file_name
+            #self.LoadMRI.file_name = {}
+            #self.LoadMRI.file_name[0]= file_name
 
             self.ui.comboBox_resamplefiles.addItem(os.path.basename(file_name)) #add to combobox for resampling
             if volume.ndim==4:
@@ -286,8 +275,7 @@ class MainWindow(QMainWindow):
 
 
         if hasattr(self, 'LoadMRI'):
-            if hasattr(self.LoadMRI,'minimap'):
-                if self.LoadMRI.vol_dim == 3:
+            if hasattr(self.LoadMRI,'minimap') and not self.LoadMRI.volumes[0].is_4d:
                     img_vtk = self.LoadMRI.img_vtks[0]["axial"]
                     self.LoadMRI.minimap.add_minimap('axial',img_vtk,0,self.LoadMRI.vtk_widgets[0]["axial"],0,data_3d=True)
                     img_vtk = self.LoadMRI.img_vtks[0]["coronal"]
@@ -323,110 +311,58 @@ class MainWindow(QMainWindow):
            Load MRI volume, handle axis orientation, determine dimensionality (3D/4D),
            initialize GUI components, buttons, and tools accordingly.
         """
+        self.prepare_volume(data_index, file_name)
+        self.init_gui(data_view, data_index)
 
-        # Load volume
-        image = sITK.ReadImage(file_name)
-        self.LoadMRI.volume[data_index] = {}
-        self.LoadMRI.volume[data_index][0] = sITK.GetArrayFromImage(image)
+
+    def prepare_volume(self, data_index, file_name):
+        """Pure data preparation — no Qt, no VTK widgets."""
+        self.LoadMRI.volumes[data_index] = MRIVolume.from_file(file_name)
 
         if data_index==0:
-            self.LoadMRI.vol_dim = self.LoadMRI.volume[data_index][0].ndim
-            self.LoadMRI.spacing = {}
             self.LoadMRI.opacity = {}
         self.LoadMRI.opacity[data_index] = 100
-        self.LoadMRI.spacing[data_index] = image.GetSpacing()[::-1]
 
+        # Load file
+        self.LoadMRI.slice_indices[data_index] = [
+            int(self.LoadMRI.volumes[data_index].slices[0].shape[0]/2),
+            int(self.LoadMRI.volumes[data_index].slices[0].shape[1]/2),
+            int(self.LoadMRI.volumes[data_index].slices[0].shape[2]/2)
+        ]
 
-        #TODO: test if img_flipped = sITK.DICOMOrient(image, 'LSA') is better!
-        if self.LoadMRI.volume[data_index][0].ndim == 3:
-            tab_idx = 1
-            #flip image if axes not align
-            img_dir = image.GetDirection()
-            img_dir = np.array(img_dir).reshape(3,3)
-            self.img_dir_max = [max(col, key=abs) for col in zip(*img_dir)]
-            # check signs along axes
-            self.LoadMRI.axes_to_flip = {}
-            self.LoadMRI.axes_to_flip[0] = []
-            for i in range(3): #Code is built on z being negative
-                if (self.img_dir_max[i] < 0 and i!=2) or (self.img_dir_max[i] > 0 and i==2):
-                    self.LoadMRI.axes_to_flip[0].append(True)
-                else:
-                    self.LoadMRI.axes_to_flip[0].append(False)
-            self.LoadMRI.axes_to_flip[data_index][2]=False
-            img_flipped = sITK.Flip(image, self.LoadMRI.axes_to_flip[0], flipAboutOrigin=False)
-            vol = sITK.GetArrayFromImage(img_flipped)
-            self.LoadMRI.volume[data_index][0] = vol
-            self.LoadMRI.volume[data_index][1] = vol
-            self.LoadMRI.volume[data_index][2] = vol
-            self.LoadMRI.axes_to_flip[1]=self.LoadMRI.axes_to_flip[0]
-            self.LoadMRI.axes_to_flip[2]=self.LoadMRI.axes_to_flip[0]
-        else: #4D data
-            tab_idx=0
-            if data_index==0:
-                self.LoadMRI.volume4D = {}
-                for i in 1,2:
-                    #self.LoadMRI.volume[data_index][i] = sITK.GetArrayFromImage(image)
-                    self.LoadMRI.renderers[i] = {}  # store vtkRenderer for each view
-                    self.LoadMRI.actors[i] = {}
-                    self.LoadMRI.img_vtks[i] = {}
-                self.LoadMRI.axes_to_flip = {}
+        if self.LoadMRI.volumes[data_index].is_4d and data_index==0:
+            for i in 1,2:
+                self.LoadMRI.renderers[i] = {}  # store vtkRenderer for each view
+                self.LoadMRI.actors[i] = {}
+                self.LoadMRI.img_vtks[i] = {}
 
-            img_dir = image.GetDirection()
-            img_dir = np.array(img_dir).reshape(4,4)
-            img_dir_max = [img_dir[:, i][np.argmax(np.abs(img_dir[:, i]))] for i in range(4)] #[max(col, key=abs) for col in zip(*img_dir)]
-
-            # check signs along axes
-            self.LoadMRI.axes_to_flip[data_index] = []
-            for i in range(3):
-                if img_dir_max[i] < 0: # and i!=2) or (img_dir_max[i] > 0 and i==2):
-                    self.LoadMRI.axes_to_flip[data_index].append(True)
-                else:
-                    self.LoadMRI.axes_to_flip[data_index].append(False)
-            self.LoadMRI.axes_to_flip[data_index][2]=False
-
-            flipped_volumes = []
-            for t in range(image.GetSize()[3]):
-                img_flipped = sITK.Flip(image[:, :, :,t], self.LoadMRI.axes_to_flip[data_index], flipAboutOrigin=True)
-                flipped_volumes.append(sITK.GetArrayFromImage(img_flipped))
-            self.LoadMRI.volume4D[data_index] = np.stack(flipped_volumes)
-            if self.LoadMRI.volume4D[0].shape[0]>7:
-                self.LoadMRI.timestamp4D = [0,4,7]
-            else:
-                self.LoadMRI.timestamp4D = [0,2,5]
-            self.LoadMRI.volume[data_index][0] = self.LoadMRI.volume4D[data_index][self.LoadMRI.timestamp4D[0],:, :, :].copy()
-            #self.LoadMRI.volume[data_index][image_index] = (self.LoadMRI.volume4D[data_index][t].copy())
-            self.LoadMRI.volume[data_index][1] = self.LoadMRI.volume4D[data_index][self.LoadMRI.timestamp4D[1],:, :, :].copy()
-            self.LoadMRI.volume[data_index][2] = self.LoadMRI.volume4D[data_index][self.LoadMRI.timestamp4D[2],:, :, :].copy()
-            self.LoadMRI.spacing[data_index] = [self.LoadMRI.spacing[data_index][1],self.LoadMRI.spacing[data_index][2],self.LoadMRI.spacing[data_index][3]]
+    def init_gui(self, data_view, data_index):
+        #TODO: test if img_flipped = sitk.DICOMOrient(image, 'LSA') is better!
+        vol = self.LoadMRI.volumes[data_index]
+        tab_idx = 0 if vol.is_4d else 1
 
         self.ui.tabWidget.setCurrentIndex(0)
         self.ui.data_4d_3d.setCurrentIndex(tab_idx)
 
         #Initiate GUI and connect buttons
         if data_index==0:
-            self.LoadMRI.session_path = os.path.dirname(os.path.dirname(self.LoadMRI.file_name[data_index]))
-            if self.LoadMRI.vol_dim==3:
-                self.ButtonsGUI_3D = ButtonsGUI_3D(self,self.LoadMRI.vol_dim,data_index)
+            self.LoadMRI.session_path = os.path.dirname(os.path.dirname(vol.file_path))
+            if not vol.is_4d:
+                self.ButtonsGUI_3D = ButtonsGUI_3D(self,data_index)
             else:
-                self.ButtonsGUI_4D = ButtonsGUI_4D(self,self.LoadMRI.vol_dim,data_index,data_view)
+                self.ButtonsGUI_4D = ButtonsGUI_4D(self,data_index,data_view)
         else:
             self.ButtonsGUI_4D.initialize_contrast(data_index,data_view)
             self.ButtonsGUI_4D.initialize_timestamps(data_index,data_view)
 
-        # Load file
-        self.LoadMRI.slice_indices[data_index] = [int(self.LoadMRI.volume[data_index][0].shape[0]/2),int(self.LoadMRI.volume[data_index][0].shape[1]/2),int(self.LoadMRI.volume[data_index][0].shape[2]/2)]
-
-        self.LoadMRI.load_file(self.LoadMRI.vol_dim,data_view,data_index)
+        self.LoadMRI.load_file(data_view,data_index)
 
         #Set table for images and intensities
-        if self.LoadMRI.vol_dim == 3:
-            table = self.ui.tableintensity_data3d
-            vol =  sITK.GetArrayFromImage(image[:, :, :])
-            self.LoadMRI.intensity_table0 = IntensityTable(self,data_index,table,vol)
+        if not vol.is_4d:
+            self.LoadMRI.intensity_table[data_index] = IntensityTable(self,data_index,self.ui.tableintensity_data3d,vol.slices[0])
         else:
             table = getattr(self.ui, f"tableintensity_data{data_index}")
-            vol = sITK.GetArrayFromImage(image[:, :, :, 0])
-            setattr(self.LoadMRI, f"intensity_table{data_index}", IntensityTable(self,data_index,table,vol))
+            self.LoadMRI.intensity_table[data_index] = IntensityTable(self,data_index,table,vol.slices[0])
 
         if data_index==0: #start cursor interaction
             self.LoadMRI.cursor = Cursor(self.LoadMRI, self.LoadMRI.cursor_ui,data_index,data_view)
@@ -453,7 +389,7 @@ class MainWindow(QMainWindow):
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Add another File")
         msg_box.setText(f"Do you want to add the file \n {file_name}?")
-        btn_yes = msg_box.addButton("Yes", QMessageBox.ActionRole)
+        msg_box.addButton("Yes", QMessageBox.ActionRole)
         btn_no = msg_box.addButton("No, other File", QMessageBox.ActionRole)
         btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
         msg_box.exec()
@@ -462,11 +398,11 @@ class MainWindow(QMainWindow):
         elif msg_box.clickedButton()==btn_no:
             self.add_another_file()
         else:
-            if self.LoadMRI.vol_dim==3:
+            if not self.LoadMRI.volumes[0].is_4d:
                 self.LoadMRI.LoadImage3D = LoadImage3D(self, file_name)
                 vol = self.LoadMRI.LoadImage3D.open_file(file_name)
                 #add to intensity table
-                self.LoadMRI.intensity_table0.update_table(os.path.basename(file_name), vol,0)
+                self.LoadMRI.intensity_table[0].update_table(os.path.basename(file_name), vol,0)
                 #add to registration combobox
                 self.ui.comboBox_movingimg.addItem(os.path.basename(file_name))
                 self.LoadMRI.movingimg_filename.append(file_name)
@@ -498,7 +434,7 @@ class MainWindow(QMainWindow):
                     #add to intensity table
                     keys = list(self.LoadMRI.vtk_widgets[0].keys())
                     idx = keys.index(data_view)
-                    tabclass = getattr(self.LoadMRI, f"intensity_table{idx}")
+                    tabclass = self.LoadMRI.intensity_table[idx]
                     tabclass.update_table(os.path.basename(file_name), vol,idx)
                     self.ui.contrast_data.setItemEnabled(idx, False)
 
@@ -531,10 +467,8 @@ class MainWindow(QMainWindow):
         # Create loader
         self.resize_bool=True
         self.LoadMRI = LoadMRI()
-        self.LoadMRI.file_name = {}
-        self.LoadMRI.file_name[0] = file_name
-        image = sITK.ReadImage(file_name)
-        volume = sITK.GetArrayFromImage(image)
+        image = sitk.ReadImage(file_name)
+        volume = sitk.GetArrayFromImage(image)
         if volume.ndim==4:
             self.ui.groupBox_data0.setTitle(f"View: {data_view.upper()}")
 

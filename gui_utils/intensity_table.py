@@ -64,7 +64,7 @@ class IntensityTable(QObject):
         """
         Initialize and populate the intensity table with the first loaded MRI volume.
         """
-        if self.MW.LoadMRI.vol_dim==3:
+        if not self.MW.LoadMRI.volumes[0].is_4d:
             self.table.customContextMenuRequested.connect(lambda idx: self.show_context_menu(idx,data_index))
         else:
             self.table.customContextMenuRequested.connect(lambda idx: self.show_context_menu(idx,data_index))
@@ -104,7 +104,7 @@ class IntensityTable(QObject):
         self.table.setCellWidget(self.index , 0, btn)
 
         # Column 1: Layer name
-        layer_item = QTableWidgetItem(os.path.basename(self.MW.LoadMRI.file_name[data_index]))
+        layer_item = QTableWidgetItem(os.path.basename(self.MW.LoadMRI.volumes[data_index].file_path))
         layer_item.setFlags(layer_item.flags() & ~Qt.ItemIsEditable)
         layer_item.setToolTip(layer_item.text())
         self.table.setItem(self.index , 1, layer_item)
@@ -141,7 +141,7 @@ class IntensityTable(QObject):
 
         # Layout
         self.original_image.append(None)
-        self.file_name.append(os.path.basename(self.MW.LoadMRI.file_name[data_index]))
+        self.file_name.append(os.path.basename(self.MW.LoadMRI.volumes[data_index].file_path))
 
 
         # Show opactity slidebar
@@ -234,7 +234,7 @@ class IntensityTable(QObject):
         """
         Toggle visibility of a selected layer in all three orthogonal views.
         """
-        if self.MW.LoadMRI.vol_dim==3:
+        if not self.MW.LoadMRI.volumes[0].is_4d:
             for vn in 'axial','coronal','sagittal':
                 if vn=='axial':
                     slice = self.intensity_volumes[row][self.MW.LoadMRI.slice_indices[data_index][0],:,:]
@@ -362,7 +362,7 @@ class IntensityTable(QObject):
 
         row = self.table.currentRow()
         self.opactiy_values[row][0]=value
-        if self.MW.LoadMRI.vol_dim==3:
+        if not self.MW.LoadMRI.volumes[0].is_4d:
             for vn in 'axial','coronal','sagittal':
                 if vn=='axial':
                     slice = self.intensity_volumes[row][self.MW.LoadMRI.slice_indices[data_index][0],:,:]
@@ -456,7 +456,7 @@ class IntensityTable(QObject):
         if img_to_save is None:
             vol_to_save = self.intensity_volumes[row]
             if self.table.item(row,1).text()=='Label':
-                if self.MW.LoadMRI.vol_dim==4:
+                if self.MW.LoadMRI.volumes[0].is_4d:
                     msg_box = QMessageBox()
                     msg_box.setWindowTitle("Choose which data to save")
                     msg_box.setText("Which data do you want to save?")
@@ -481,7 +481,7 @@ class IntensityTable(QObject):
             size = list(self.intensity_volumes[row].shape[::-1]) + [0]
 
             # Extract 1 time frame
-            img = sITK.ReadImage(self.MW.LoadMRI.file_name[0])
+            img = sITK.ReadImage(self.MW.LoadMRI.volumes[0].file_path)
             reference_image = sITK.Extract(
                 img,
                 size=size,

@@ -26,7 +26,7 @@ class Registration:
         filename = self.LoadMRI.movingimg_filename[index] #self.LoadMRI.combo_Regimgname.itemText(0)
         folder = f"{self.LoadMRI.session_path}/anat"
 
-        file_part = self.LoadMRI.file_name[0].split("ind_")[1]  # e.g., '0-resampled100um.nii'
+        file_part = self.LoadMRI.volumes[0].file_path.split("ind_")[1]  # e.g., '0-resampled100um.nii'
         number_str = ""
         for c in file_part:
             if c.isdigit():
@@ -36,7 +36,7 @@ class Registration:
         self.fixed_ind = int(number_str)
         self.moving_ind = int(filename.split("ind_")[1].split(".")[0])
 
-        self.fixed_image = sITK.ReadImage(self.LoadMRI.file_name[0])
+        self.fixed_image = sITK.ReadImage(self.LoadMRI.volumes[0].file_path)
         self.moving_image = sITK.ReadImage(os.path.join(folder, filename))
 
         if len(self.moving_image.GetSize())==4:

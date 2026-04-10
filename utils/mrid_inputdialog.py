@@ -258,7 +258,7 @@ class ANAT_InputDialog(QDialog):
             group_box = QtWidgets.QGroupBox(f"View: {data_view}")
             group_layout = QtWidgets.QVBoxLayout(group_box)
 
-            file_name = self.MW.LoadMRI.file_name[data_index][:-7]
+            file_name = self.MW.LoadMRI.volumes[data_index].file_path[:-7]
 
             if form_index==0 and os.path.exists(os.path.join(self.MW.LoadMRI.session_path,f"{file_name}-anat.nii.gz")):
                 self.file_name[data_index] = [os.path.join(self.MW.LoadMRI.session_path,f"{file_name}-anat.nii.gz"),data_view]
@@ -371,7 +371,7 @@ class TRANSFORM_InputDialog(QDialog):
             group_box = QtWidgets.QGroupBox(f"View: {data_view}")
             group_layout = QtWidgets.QVBoxLayout(group_box)
 
-            index = self.MW.LoadMRI.file_name[data_index][:-7].split("ind_")[1]
+            index = self.MW.LoadMRI.volumes[data_index].file_path[:-7].split("ind_")[1]
             pattern = f"*ind_{index}*.txt"
 
             files = glob.glob(os.path.join(os.path.join(self.MW.LoadMRI.session_path,'anat'), pattern))

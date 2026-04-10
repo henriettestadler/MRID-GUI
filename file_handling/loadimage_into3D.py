@@ -112,7 +112,7 @@ class LoadImage3D:
         if len(img.GetSize())==4:
             img = self.get3Dimage(img)
 
-        ref_img = sITK.ReadImage(self.LoadMRI.file_name[0])
+        ref_img = sITK.ReadImage(self.LoadMRI.volumes[0].file_path)
         resampler = sITK.ResampleImageFilter()
         resampler.SetReferenceImage(ref_img)
         resampler.SetInterpolator(sITK.sitkBSpline) #sitkNearestNeighbor #sitkLinear

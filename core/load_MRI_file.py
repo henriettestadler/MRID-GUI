@@ -49,14 +49,14 @@ class LoadMRI(QObject):
 
 
 
-    def load_file(self,vol_dim:int,data_view,data_index,first_time=True):
+    def load_file(self,data_view,data_index,first_time=True):
         """
         Initialize data structures after data is loaded.
         Emits `fileLoaded` signal once data is loaded.
         """
         # Set-up first slide
         z, y, x = self.slice_indices[data_index]
-        if vol_dim == 3:
+        if not self.volumes[0].is_4d:
             self.setup_vtkdata(self.volumes[data_index].slices[2][z, :, :], self.vtk_widgets[0]["axial"], "axial",0,data_index)
             self.setup_vtkdata(self.volumes[data_index].slices[0][:, y, :], self.vtk_widgets[0]["coronal"], "coronal",0,data_index)
             self.setup_vtkdata(np.fliplr(self.volumes[data_index].slices[1][:, :, x].T), self.vtk_widgets[0]["sagittal"], "sagittal",0,data_index)
@@ -71,17 +71,17 @@ class LoadMRI(QObject):
 
         # Add scale_bar and minimap
         for view_name in 'axial','coronal','sagittal':
-            if vol_dim==4 and data_view!=view_name:
+            if self.volumes[0].is_4d and data_view!=view_name:
                 continue
             elif view_name in self.renderers[data_index]:
                 renderer = self.renderers[data_index][view_name]
                 if view_name not in self.scale_bar:
-                    self.scale_bar[view_name] = Scale(self,self.vol_dim)
+                    self.scale_bar[view_name] = Scale(self)
                 self.scale_bar[view_name].create_bar(renderer,view_name,length_cm=1.0)
 
         if first_time:
             #fit to window to make it look nice
-            if vol_dim==4: #4d
+            if self.volumes[0].is_4d:
                 Zoom.fit_to_window(self.vtk_widgets[0][data_view], self.vtk_widgets.values(), self.scale_bar, self.vtk_widgets, data_index)
             else: #3d
                 Zoom.fit_to_window(self.vtk_widgets[0]["coronal"], self.vtk_widgets.values(), self.scale_bar, self.vtk_widgets, data_index)
@@ -98,7 +98,7 @@ class LoadMRI(QObject):
         img_vtk.SetDimensions(w, h, 1)  # VTK expects width x height x depth
 
         # Correct spacing per view
-        if self.vol_dim==3:
+        if not self.volumes[0].is_4d:
             if view_name == "axial":      # z fixed -> (y,x)
                 spacing = (self.volumes[data_index].spacing[2], self.volumes[data_index].spacing[1], 1)
             elif view_name == "coronal": # y fixed -> (z,x)
@@ -158,9 +158,9 @@ class LoadMRI(QObject):
         if self.is_first_slice:
             renderer.ResetCamera()
             self.zoom_tf[view_name]=False
-            if self.vol_dim==3 and view_name == 'sagittal':
+            if not self.volumes[0].is_4d and view_name == 'sagittal':
                 self.is_first_slice = False
-            elif self.vol_dim==4 and view_name == 'sagittal' and image_index==3:
+            elif self.volumes[0].is_4d and view_name == 'sagittal' and image_index==3:
                 self.is_first_slice = False
 
         # Save actor, renderer, img_vtks to later be used again
@@ -169,7 +169,7 @@ class LoadMRI(QObject):
         self.img_vtks[image_index][view_name] = img_vtk
 
         #Add axes to each widget
-        if self.vol_dim==4:
+        if self.volumes[0].is_4d:
             if view_name=='coronal':
                  self.add_axes(renderer, img_vtk, 'axial')
             else:
@@ -206,7 +206,7 @@ class LoadMRI(QObject):
         if self.threshold_on == True:
             self.Segmentation.only_update_displayed_image()
         else:
-            if self.vol_dim==3:
+            if not self.volumes[0].is_4d:
                 self.only_display_slide(self.volumes[data_index].slices[image_index][:, y, :], "coronal",0)
                 self.only_display_slide(np.fliplr(self.volumes[data_index].slices[image_index][:, :, x].T), "sagittal",0)
                 self.only_display_slide(self.volumes[data_index].slices[image_index][z, :, :], "axial",0)
@@ -232,7 +232,7 @@ class LoadMRI(QObject):
             img_vtk = self.paintbrush.vtk_label_images[data_view]
             #for view_name, img_vtk in self.paintbrush.vtk_label_images.items():
             # Axial view (XY plane at z)
-            if data_view == 'axial' or (self.vol_dim==4 and data_view=="coronal") or self.vol_dim==4 and data_view=="sagittal":
+            if data_view == 'axial' or (self.volumes[0].is_4d and data_view=="coronal") or self.volumes[0].is_4d and data_view=="sagittal":
                 slice_img = self.paintbrush.label_volume[data_index][z, :, :]
             elif data_view == 'coronal':
                 slice_img = self.paintbrush.label_volume[data_index][:, y, :]
@@ -378,7 +378,7 @@ class LoadMRI(QObject):
             actor = vtk.vtkTextActor()
             actor.SetInput(text)
             prop = actor.GetTextProperty()
-            if self.vol_dim == 4 and view_name != 'axial':
+            if self.volumes[0].is_4d and view_name != 'axial':
                 prop.SetFontSize(10)
             else:
                 prop.SetFontSize(16)

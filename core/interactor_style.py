@@ -87,9 +87,9 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                 if picker.Pick(x, y, 0, renderer):
                     pos = picker.GetPickPosition()
                     voxel = [
-                        int(round(pos[2] / self.LoadMRI.spacing[self.interactor_data_index][0])),
-                        int(round(pos[1] / self.LoadMRI.spacing[self.interactor_data_index][1])),
-                        int(round(pos[0] / self.LoadMRI.spacing[self.interactor_data_index][2]))
+                        int(round(pos[2] / self.LoadMRI.volumes[self.interactor_data_index].spacing[0])),
+                        int(round(pos[1] / self.LoadMRI.volumes[self.interactor_data_index].spacing[1])),
+                        int(round(pos[0] / self.LoadMRI.volumes[self.interactor_data_index].spacing[2]))
                     ]
                     self.measurement.add_point(voxel, self.interactor_view_name)
                 else:
@@ -229,7 +229,7 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                 camera.SetPosition(pos[0],pos[1],pos[2])
                 self.LoadMRI.vtk_widgets_heatmap[self.interactor_view_name].GetRenderWindow().Render()
 
-            if self.LoadMRI.vol_dim==3:
+            if not self.LoadMRI.volumes[0].is_4d:
                 camera = self.LoadMRI.renderers[0]['axial'].GetRenderWindow().GetRenderers().GetFirstRenderer().GetActiveCamera()
                 Zoom.update_bounds('axial', camera, self.LoadMRI.renderers[self.image_index][self.interactor_view_name])
                 camera = self.LoadMRI.renderers[0]['coronal'].GetRenderWindow().GetRenderers().GetFirstRenderer().GetActiveCamera()
@@ -247,21 +247,21 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                 old_indices = self.LoadMRI.slice_indices[self.interactor_data_index].copy()
                 pos = picker.GetPickPosition()  # VTK world coordinates
                 # Update slice_indices depending on view
-                if view_name == "axial" or (self.LoadMRI.vol_dim==4 and view_name=='coronal')or (self.LoadMRI.vol_dim==4 and view_name=='sagittal'):
-                    xi = pos[0]/self.LoadMRI.spacing[self.interactor_data_index][2]
-                    yi = pos[1]/self.LoadMRI.spacing[self.interactor_data_index][1]
+                if view_name == "axial" or (self.LoadMRI.volumes[0].is_4d and view_name=='coronal')or (self.LoadMRI.volumes[0].is_4d and view_name=='sagittal'):
+                    xi = pos[0]/self.LoadMRI.volumes[self.interactor_data_index].spacing[2]
+                    yi = pos[1]/self.LoadMRI.volumes[self.interactor_data_index].spacing[1]
                     zi = old_indices[0]
                 elif view_name == "sagittal":
                     xi = old_indices[2]
-                    yi = pos[1]/self.LoadMRI.spacing[self.interactor_data_index][1]
-                    zi = self.LoadMRI.volume[0][0].shape[0]-1-pos[0]/self.LoadMRI.spacing[self.interactor_data_index][0]
+                    yi = pos[1]/self.LoadMRI.volumes[self.interactor_data_index].spacing[1]
+                    zi = self.LoadMRI.volumes[0].slices[0].shape[0]-1-pos[0]/self.LoadMRI.volumes[self.interactor_data_index].spacing[0]
                 elif view_name == "coronal":
-                    xi = pos[0]/self.LoadMRI.spacing[self.interactor_data_index][2]
+                    xi = pos[0]/self.LoadMRI.volumes[self.interactor_data_index].spacing[2]
                     yi = old_indices[1]
-                    zi = pos[1]/self.LoadMRI.spacing[self.interactor_data_index][0]
-                zi = max(0, min(zi, self.LoadMRI.volume[self.interactor_data_index][0].shape[0]-1))
-                yi = max(0, min(yi, self.LoadMRI.volume[self.interactor_data_index][0].shape[1]-1))
-                xi = max(0, min(xi, self.LoadMRI.volume[self.interactor_data_index][0].shape[2]-1))
+                    zi = pos[1]/self.LoadMRI.volumes[self.interactor_data_index].spacing[0]
+                zi = max(0, min(zi, self.LoadMRI.volumes[self.interactor_data_index].slices[0].shape[0]-1))
+                yi = max(0, min(yi, self.LoadMRI.volumes[self.interactor_data_index].slices[0].shape[1]-1))
+                xi = max(0, min(xi, self.LoadMRI.volumes[self.interactor_data_index].slices[0].shape[2]-1))
 
                 self.paintbrush_pos = [int(round(zi)),int(round(yi)),int(round(xi))]
                 self.LoadMRI.paintbrush.mouse_moves(self.paintbrush_pos,self.dragging,self.interactor_view_name,self.interactor_data_index)
@@ -307,7 +307,7 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                 camera.SetFocalPoint(fp_xy[0],fp_xy[1],fp[2])
                 self.LoadMRI.vtk_widgets_heatmap[view_name].GetRenderWindow().Render()
 
-            if self.LoadMRI.vol_dim==3:
+            if not self.LoadMRI.volumes[0].is_4d:
                 camera = self.LoadMRI.renderers[0]['axial'].GetRenderWindow().GetRenderers().GetFirstRenderer().GetActiveCamera()
                 self.LoadMRI.scale_bar['axial'].update_bar(self.LoadMRI.renderers[0]['axial'],'axial',length_cm=1.0)
                 Zoom.update_bounds('axial', camera, self.LoadMRI.renderers[self.image_index][self.interactor_view_name])
@@ -334,9 +334,9 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
                     lm = self.LoadMRI
 
                     voxel = [
-                        int(round(pos[2]/lm.spacing[self.interactor_data_index][0])),
-                        int(round(pos[1]/lm.spacing[self.interactor_data_index][1])),
-                        int(round(pos[0]/lm.spacing[self.interactor_data_index][2]))
+                        int(round(pos[2]/lm.volumes[self.interactor_data_index].spacing[0])),
+                        int(round(pos[1]/lm.volumes[self.interactor_data_index].spacing[1])),
+                        int(round(pos[0]/lm.volumes[self.interactor_data_index].spacing[2]))
                     ]
                     self.measurement.end_voxel_temp = voxel
                     self.measurement.draw_line(self.interactor_view_name, temporary=True)
@@ -347,7 +347,7 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
 
     def on_wheel_forward(self, obj, event):
         """Scroll the slice forward when mouse wheel moves up."""
-        if self.LoadMRI.vol_dim==4:
+        if self.LoadMRI.volumes[0].is_4d:
             self.cursor.scroll_slice(self.interactor_view_name, +1,self.interactor_data_index)
         else:
             self.cursor.scroll_slice(self.interactor_view_name, +3,self.interactor_data_index)
@@ -356,7 +356,7 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleImage):
 
     def on_wheel_backward(self, obj, event):
         """Scroll the slice backward when mouse wheel moves down."""
-        if self.LoadMRI.vol_dim==4:
+        if self.LoadMRI.volumes[0].is_4d:
             self.cursor.scroll_slice(self.interactor_view_name, -1,self.interactor_data_index)
         else:
             self.cursor.scroll_slice(self.interactor_view_name, -3,self.interactor_data_index)

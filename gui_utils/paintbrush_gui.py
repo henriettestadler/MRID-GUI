@@ -35,7 +35,7 @@ class PaintbrushGUI:
         self.ui = MW.ui
         self.LoadMRI = MW.LoadMRI
         self.LoadMRI.paintbrush.size = 5
-        if self.LoadMRI.vol_dim== 3:
+        if not self.LoadMRI.volumes[0].is_4d:
             paint_over = self.paintbrush_function_3D()
             self.paintbrush_gui(paint_over)
             self.brush_3D(state)
@@ -236,7 +236,7 @@ class PaintbrushGUI:
             self.ui.checkBox_Brush_MRID.setText("Brush ON")
             if not self.LoadMRI.paint:
                 self.LoadMRI.paint = True
-                self.LoadMRI.intensity_table[data_index].update_table("Label",self.LoadMRI.paintbrush.label_volume[0],0,visibility_enabled=False)
+                self.LoadMRI.intensity_table[0].update_table("Label",self.LoadMRI.paintbrush.label_volume[0],0,visibility_enabled=False)
             self.LoadMRI.paintbrush.start_paintbrush()
         else:
             self.ui.checkBox_Brush_MRID.setText("Brush OFF")
@@ -261,7 +261,7 @@ class PaintbrushGUI:
             if not self.LoadMRI.paint:
                 self.LoadMRI.paint = True
                 for idx in range(len(self.LoadMRI.vtk_widgets[0])):
-                    table = getattr(self.LoadMRI, f"intensity_table{idx}")
+                    table = self.LoadMRI.intensity_table[data_index]
                     if label:
                         table.update_table("Label",self.LoadMRI.paintbrush.label_volume[idx],idx,visibility_enabled=False)
             self.LoadMRI.paintbrush.start_paintbrush()
@@ -288,7 +288,7 @@ class PaintbrushGUI:
         """
             Populate the label table with color icons and corresponding label names.
         """
-        if self.LoadMRI.vol_dim==3:
+        if not self.LoadMRI.volumes[0].is_4d:
             self.table_lab = self.ui.tableWidget_labels3D
         else:
             self.table_lab = self.ui.tableWidget_labels

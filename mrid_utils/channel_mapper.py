@@ -13,8 +13,6 @@ def map_electrodes_main(fitted_points, mrid_dict, px_size = 25, channel_separati
     """
     ## GET: channel_separation and total_ch and ask for ATLAS directory?
     last_ch_dist = com.get_dist_to_deepest_ch(mrid_dict)
-    print("Distance from last (deepest) CoM to the deepest channel (um):")
-    print(last_ch_dist)
 
     chs_mapped = 0
     ch_coords = []
@@ -106,7 +104,6 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
     pyrChIdx = 0
     pyrLyExists = False
     label_to_region = dict(zip(atlaslabelsdf["Labels"],atlaslabelsdf["Anatomical Regions"]))
-    print('np.size(moving_coordinates)',np.shape(moving_coordinates),flush=True)
     tree = cKDTree(moving_coordinates)
     rows = []
 

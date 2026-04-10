@@ -61,7 +61,7 @@ class LoadImage4D:
 
         #directly visualizing it
         # Refresh all
-        if self.LoadMRI.vol_dim== 3:
+        if not self.LoadMRI.volumes[0].is_4d:
             self.LoadMRI.update_slices(0,idx,data_view)
         else:
             for i in 0,1,2:
@@ -98,7 +98,7 @@ class LoadImage4D:
 
         #directly visualizing it
         # Refresh all
-        if self.LoadMRI.vol_dim== 3:
+        if not self.LoadMRI.volumes[0].is_4d:
             self.LoadMRI.update_slices(0,idx,data_view)
         else:
             for i in 0,1,2:
