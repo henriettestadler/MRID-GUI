@@ -4351,54 +4351,54 @@ class Ui_MainWindow(object):
         self.gridLayout_68.setSpacing(0)
         self.gridLayout_68.setObjectName(u"gridLayout_68")
         self.gridLayout_68.setContentsMargins(4, 4, 4, 4)
-        self.pushButton_slicey = QPushButton(self.frame_32)
-        self.pushButton_slicey.setObjectName(u"pushButton_slicey")
-        icon9 = QIcon()
-        icon9.addFile(u"Icons/ephys/slicing_coronal_front.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_slicey.setIcon(icon9)
-        self.pushButton_slicey.setIconSize(QSize(60, 40))
-
-        self.gridLayout_68.addWidget(self.pushButton_slicey, 3, 5, 1, 1)
-
         self.resetCamera_ephys = QPushButton(self.frame_32)
         self.resetCamera_ephys.setObjectName(u"resetCamera_ephys")
         self.resetCamera_ephys.setEnabled(True)
         self.resetCamera_ephys.setStyleSheet(u"")
-        icon10 = QIcon(QIcon.fromTheme(u"go-home"))
-        self.resetCamera_ephys.setIcon(icon10)
+        icon9 = QIcon(QIcon.fromTheme(u"go-home"))
+        self.resetCamera_ephys.setIcon(icon9)
         self.resetCamera_ephys.setIconSize(QSize(60, 40))
         self.resetCamera_ephys.setAutoDefault(False)
         self.resetCamera_ephys.setFlat(False)
 
-        self.gridLayout_68.addWidget(self.resetCamera_ephys, 2, 0, 2, 2)
-
-        self.pushButton_Noslicing = QPushButton(self.frame_32)
-        self.pushButton_Noslicing.setObjectName(u"pushButton_Noslicing")
-        icon11 = QIcon()
-        icon11.addFile(u"Icons/ephys/no_slicing.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_Noslicing.setIcon(icon11)
-        self.pushButton_Noslicing.setIconSize(QSize(60, 40))
-
-        self.gridLayout_68.addWidget(self.pushButton_Noslicing, 3, 3, 1, 1)
-
-        self.pushButton_slicex = QPushButton(self.frame_32)
-        self.pushButton_slicex.setObjectName(u"pushButton_slicex")
-        icon12 = QIcon()
-        icon12.addFile(u"Icons/ephys/slicing_sagittal_right.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_slicex.setIcon(icon12)
-        self.pushButton_slicex.setIconSize(QSize(60, 40))
-
-        self.gridLayout_68.addWidget(self.pushButton_slicex, 3, 4, 1, 1)
+        self.gridLayout_68.addWidget(self.resetCamera_ephys, 2, 0, 2, 1)
 
         self.change_perspective_ephys = QPushButton(self.frame_32)
         self.change_perspective_ephys.setObjectName(u"change_perspective_ephys")
         self.change_perspective_ephys.setStyleSheet(u"")
-        icon13 = QIcon()
-        icon13.addFile(u"Icons/ephys/projection_parallel.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.change_perspective_ephys.setIcon(icon13)
+        icon10 = QIcon()
+        icon10.addFile(u"Icons/ephys/projection_parallel.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.change_perspective_ephys.setIcon(icon10)
         self.change_perspective_ephys.setIconSize(QSize(60, 40))
 
-        self.gridLayout_68.addWidget(self.change_perspective_ephys, 3, 2, 1, 1)
+        self.gridLayout_68.addWidget(self.change_perspective_ephys, 3, 1, 1, 1)
+
+        self.pushButton_slicey = QPushButton(self.frame_32)
+        self.pushButton_slicey.setObjectName(u"pushButton_slicey")
+        icon11 = QIcon()
+        icon11.addFile(u"Icons/ephys/slicing_coronal_front.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_slicey.setIcon(icon11)
+        self.pushButton_slicey.setIconSize(QSize(60, 40))
+
+        self.gridLayout_68.addWidget(self.pushButton_slicey, 3, 4, 1, 1)
+
+        self.pushButton_Noslicing = QPushButton(self.frame_32)
+        self.pushButton_Noslicing.setObjectName(u"pushButton_Noslicing")
+        icon12 = QIcon()
+        icon12.addFile(u"Icons/ephys/no_slicing.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_Noslicing.setIcon(icon12)
+        self.pushButton_Noslicing.setIconSize(QSize(60, 40))
+
+        self.gridLayout_68.addWidget(self.pushButton_Noslicing, 3, 2, 1, 1)
+
+        self.pushButton_slicex = QPushButton(self.frame_32)
+        self.pushButton_slicex.setObjectName(u"pushButton_slicex")
+        icon13 = QIcon()
+        icon13.addFile(u"Icons/ephys/slicing_sagittal_right.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_slicex.setIcon(icon13)
+        self.pushButton_slicex.setIconSize(QSize(60, 40))
+
+        self.gridLayout_68.addWidget(self.pushButton_slicex, 3, 3, 1, 1)
 
         self.pushButton_slicez = QPushButton(self.frame_32)
         self.pushButton_slicez.setObjectName(u"pushButton_slicez")
@@ -4407,16 +4407,76 @@ class Ui_MainWindow(object):
         self.pushButton_slicez.setIcon(icon14)
         self.pushButton_slicez.setIconSize(QSize(60, 40))
 
-        self.gridLayout_68.addWidget(self.pushButton_slicez, 3, 6, 1, 1)
+        self.gridLayout_68.addWidget(self.pushButton_slicez, 3, 5, 1, 1)
+
+        self.groupBox_6 = QGroupBox(self.frame_32)
+        self.groupBox_6.setObjectName(u"groupBox_6")
+        self.gridLayout_169 = QGridLayout(self.groupBox_6)
+        self.gridLayout_169.setObjectName(u"gridLayout_169")
+        self.groupBox_8 = QGroupBox(self.groupBox_6)
+        self.groupBox_8.setObjectName(u"groupBox_8")
+        self.gridLayout_171 = QGridLayout(self.groupBox_8)
+        self.gridLayout_171.setObjectName(u"gridLayout_171")
+        self.horizontalSlider_OtherRegions = QSlider(self.groupBox_8)
+        self.horizontalSlider_OtherRegions.setObjectName(u"horizontalSlider_OtherRegions")
+        self.horizontalSlider_OtherRegions.setMinimum(0)
+        self.horizontalSlider_OtherRegions.setMaximum(100)
+        self.horizontalSlider_OtherRegions.setSingleStep(0)
+        self.horizontalSlider_OtherRegions.setOrientation(Qt.Horizontal)
+
+        self.gridLayout_171.addWidget(self.horizontalSlider_OtherRegions, 0, 0, 1, 1)
+
+
+        self.gridLayout_169.addWidget(self.groupBox_8, 1, 1, 1, 1)
+
+        self.groupBox_9 = QGroupBox(self.groupBox_6)
+        self.groupBox_9.setObjectName(u"groupBox_9")
+        self.gridLayout_172 = QGridLayout(self.groupBox_9)
+        self.gridLayout_172.setObjectName(u"gridLayout_172")
+        self.horizontalSlider_Background = QSlider(self.groupBox_9)
+        self.horizontalSlider_Background.setObjectName(u"horizontalSlider_Background")
+        self.horizontalSlider_Background.setMaximum(100)
+        self.horizontalSlider_Background.setOrientation(Qt.Horizontal)
+
+        self.gridLayout_172.addWidget(self.horizontalSlider_Background, 0, 0, 1, 1)
+
+
+        self.gridLayout_169.addWidget(self.groupBox_9, 1, 2, 1, 1)
+
+        self.groupBox_11 = QGroupBox(self.groupBox_6)
+        self.groupBox_11.setObjectName(u"groupBox_11")
+        self.gridLayout_170 = QGridLayout(self.groupBox_11)
+        self.gridLayout_170.setObjectName(u"gridLayout_170")
+        self.horizontalSlider_ElectrodeRegion = QSlider(self.groupBox_11)
+        self.horizontalSlider_ElectrodeRegion.setObjectName(u"horizontalSlider_ElectrodeRegion")
+        self.horizontalSlider_ElectrodeRegion.setMaximum(100)
+        self.horizontalSlider_ElectrodeRegion.setOrientation(Qt.Horizontal)
+
+        self.gridLayout_170.addWidget(self.horizontalSlider_ElectrodeRegion, 0, 0, 1, 1)
+
+
+        self.gridLayout_169.addWidget(self.groupBox_11, 1, 0, 1, 1)
+
+        self.gridLayout_169.setColumnStretch(0, 1)
+        self.gridLayout_169.setColumnStretch(1, 1)
+        self.gridLayout_169.setColumnStretch(2, 1)
+
+        self.gridLayout_68.addWidget(self.groupBox_6, 1, 0, 1, 6)
 
         self.vtkWidget_ephys = QVTKRenderWindowInteractor(self.frame_32)
         self.vtkWidget_ephys.setObjectName(u"vtkWidget_ephys")
         self.vtkWidget_ephys.setEnabled(True)
-        self.vtkWidget_ephys.setMinimumSize(QSize(500, 0))
+        self.vtkWidget_ephys.setMinimumSize(QSize(0, 0))
         self.vtkWidget_ephys.setStyleSheet(u"background-color: rgb(200, 177, 176);")
 
-        self.gridLayout_68.addWidget(self.vtkWidget_ephys, 1, 0, 1, 7)
+        self.gridLayout_68.addWidget(self.vtkWidget_ephys, 0, 0, 1, 6)
 
+        self.gridLayout_68.setColumnStretch(0, 1)
+        self.gridLayout_68.setColumnStretch(1, 1)
+        self.gridLayout_68.setColumnStretch(2, 1)
+        self.gridLayout_68.setColumnStretch(3, 1)
+        self.gridLayout_68.setColumnStretch(4, 1)
+        self.gridLayout_68.setColumnStretch(5, 1)
 
         self.gridLayout_46.addWidget(self.frame_32, 0, 0, 1, 1)
 
@@ -4654,7 +4714,7 @@ class Ui_MainWindow(object):
         self.gridLayout_147.setContentsMargins(4, 4, 4, 4)
         self.pushButton_slicey_vis3D = QPushButton(self.frame_33)
         self.pushButton_slicey_vis3D.setObjectName(u"pushButton_slicey_vis3D")
-        self.pushButton_slicey_vis3D.setIcon(icon9)
+        self.pushButton_slicey_vis3D.setIcon(icon11)
         self.pushButton_slicey_vis3D.setIconSize(QSize(40, 40))
 
         self.gridLayout_147.addWidget(self.pushButton_slicey_vis3D, 2, 5, 1, 1)
@@ -4663,7 +4723,7 @@ class Ui_MainWindow(object):
         self.resetCamera_vis3D.setObjectName(u"resetCamera_vis3D")
         self.resetCamera_vis3D.setEnabled(True)
         self.resetCamera_vis3D.setStyleSheet(u"")
-        self.resetCamera_vis3D.setIcon(icon10)
+        self.resetCamera_vis3D.setIcon(icon9)
         self.resetCamera_vis3D.setIconSize(QSize(40, 40))
         self.resetCamera_vis3D.setAutoDefault(False)
         self.resetCamera_vis3D.setFlat(False)
@@ -4672,7 +4732,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_slicex_vis3D = QPushButton(self.frame_33)
         self.pushButton_slicex_vis3D.setObjectName(u"pushButton_slicex_vis3D")
-        self.pushButton_slicex_vis3D.setIcon(icon12)
+        self.pushButton_slicex_vis3D.setIcon(icon13)
         self.pushButton_slicex_vis3D.setIconSize(QSize(40, 40))
 
         self.gridLayout_147.addWidget(self.pushButton_slicex_vis3D, 2, 4, 1, 1)
@@ -4680,7 +4740,7 @@ class Ui_MainWindow(object):
         self.change_perspective_vis3D = QPushButton(self.frame_33)
         self.change_perspective_vis3D.setObjectName(u"change_perspective_vis3D")
         self.change_perspective_vis3D.setStyleSheet(u"")
-        self.change_perspective_vis3D.setIcon(icon13)
+        self.change_perspective_vis3D.setIcon(icon10)
         self.change_perspective_vis3D.setIconSize(QSize(40, 40))
 
         self.gridLayout_147.addWidget(self.change_perspective_vis3D, 2, 2, 1, 1)
@@ -4702,7 +4762,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_Noslicing_vis3D = QPushButton(self.frame_33)
         self.pushButton_Noslicing_vis3D.setObjectName(u"pushButton_Noslicing_vis3D")
-        self.pushButton_Noslicing_vis3D.setIcon(icon11)
+        self.pushButton_Noslicing_vis3D.setIcon(icon12)
         self.pushButton_Noslicing_vis3D.setIconSize(QSize(40, 40))
 
         self.gridLayout_147.addWidget(self.pushButton_Noslicing_vis3D, 2, 3, 1, 1)
@@ -4835,79 +4895,123 @@ class Ui_MainWindow(object):
 
         self.gridLayout_69.addWidget(self.widget_pgEphys, 0, 0, 1, 7)
 
-        self.pushButton_timeline = QPushButton(self.frame)
-        self.pushButton_timeline.setObjectName(u"pushButton_timeline")
-        self.pushButton_timeline.setEnabled(True)
+        self.pushButton_zoomOut = QPushButton(self.frame)
+        self.pushButton_zoomOut.setObjectName(u"pushButton_zoomOut")
+        self.pushButton_zoomOut.setEnabled(True)
+        self.pushButton_zoomOut.setStyleSheet(u"\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
         icon16 = QIcon()
-        icon16.addFile(u"Icons/ephys/select_timeline.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_timeline.setIcon(icon16)
-        self.pushButton_timeline.setIconSize(QSize(40, 20))
-        self.pushButton_timeline.setCheckable(True)
+        icon16.addFile(u"Icons/ephys/zoom-out.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_zoomOut.setIcon(icon16)
+        self.pushButton_zoomOut.setIconSize(QSize(40, 40))
+        self.pushButton_zoomOut.setCheckable(True)
 
-        self.gridLayout_69.addWidget(self.pushButton_timeline, 2, 5, 1, 1)
-
-        self.pushButton_removeTimeline = QPushButton(self.frame)
-        self.pushButton_removeTimeline.setObjectName(u"pushButton_removeTimeline")
-        self.pushButton_removeTimeline.setEnabled(False)
-
-        self.gridLayout_69.addWidget(self.pushButton_removeTimeline, 3, 5, 1, 1)
+        self.gridLayout_69.addWidget(self.pushButton_zoomOut, 4, 3, 1, 1)
 
         self.pushButton_selectTime = QPushButton(self.frame)
         self.pushButton_selectTime.setObjectName(u"pushButton_selectTime")
+        self.pushButton_selectTime.setStyleSheet(u"QPushButton:checked {\n"
+"                background-color: palette(highlight);\n"
+"                color: palette(highlighted-text);\n"
+"            }\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
         icon17 = QIcon()
         icon17.addFile(u"Icons/ephys/select_time.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_selectTime.setIcon(icon17)
         self.pushButton_selectTime.setIconSize(QSize(40, 40))
         self.pushButton_selectTime.setCheckable(True)
 
-        self.gridLayout_69.addWidget(self.pushButton_selectTime, 2, 4, 2, 1)
+        self.gridLayout_69.addWidget(self.pushButton_selectTime, 4, 4, 1, 1)
 
-        self.pushButton_zoomOut = QPushButton(self.frame)
-        self.pushButton_zoomOut.setObjectName(u"pushButton_zoomOut")
-        self.pushButton_zoomOut.setEnabled(True)
-        icon18 = QIcon(QIcon.fromTheme(u"zoom-out"))
-        self.pushButton_zoomOut.setIcon(icon18)
-        self.pushButton_zoomOut.setIconSize(QSize(40, 40))
+        self.pushButton_timeline = QPushButton(self.frame)
+        self.pushButton_timeline.setObjectName(u"pushButton_timeline")
+        self.pushButton_timeline.setEnabled(True)
+        self.pushButton_timeline.setStyleSheet(u"QPushButton:checked {\n"
+"                background-color: palette(highlight);\n"
+"                color: palette(highlighted-text);\n"
+"            }\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon18 = QIcon()
+        icon18.addFile(u"Icons/ephys/select_timeline.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_timeline.setIcon(icon18)
+        self.pushButton_timeline.setIconSize(QSize(40, 40))
+        self.pushButton_timeline.setCheckable(True)
 
-        self.gridLayout_69.addWidget(self.pushButton_zoomOut, 2, 3, 2, 1)
-
-        self.pushButton_zoomReset = QPushButton(self.frame)
-        self.pushButton_zoomReset.setObjectName(u"pushButton_zoomReset")
-        self.pushButton_zoomReset.setEnabled(True)
-        icon19 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ViewFullscreen))
-        self.pushButton_zoomReset.setIcon(icon19)
-        self.pushButton_zoomReset.setIconSize(QSize(40, 40))
-
-        self.gridLayout_69.addWidget(self.pushButton_zoomReset, 2, 2, 2, 1)
-
-        self.pushButtonAmp_plus = QPushButton(self.frame)
-        self.pushButtonAmp_plus.setObjectName(u"pushButtonAmp_plus")
-        icon20 = QIcon()
-        icon20.addFile(u"Icons/ephys/amplitude_plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButtonAmp_plus.setIcon(icon20)
-        self.pushButtonAmp_plus.setIconSize(QSize(40, 40))
-
-        self.gridLayout_69.addWidget(self.pushButtonAmp_plus, 2, 1, 2, 1)
-
-        self.pushButtonAmp_minus = QPushButton(self.frame)
-        self.pushButtonAmp_minus.setObjectName(u"pushButtonAmp_minus")
-        icon21 = QIcon()
-        icon21.addFile(u"Icons/ephys/amplitude_minus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButtonAmp_minus.setIcon(icon21)
-        self.pushButtonAmp_minus.setIconSize(QSize(40, 40))
-
-        self.gridLayout_69.addWidget(self.pushButtonAmp_minus, 2, 0, 2, 1)
+        self.gridLayout_69.addWidget(self.pushButton_timeline, 4, 5, 1, 1)
 
         self.pushButton_measurement = QPushButton(self.frame)
         self.pushButton_measurement.setObjectName(u"pushButton_measurement")
         self.pushButton_measurement.setEnabled(True)
-        icon22 = QIcon()
-        icon22.addFile(u"Icons/Internet/measure.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_measurement.setIcon(icon22)
+        self.pushButton_measurement.setStyleSheet(u"QPushButton:checked {\n"
+"                background-color: palette(highlight);\n"
+"                color: palette(highlighted-text);\n"
+"            }\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon19 = QIcon()
+        icon19.addFile(u"Icons/Internet/measure.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_measurement.setIcon(icon19)
         self.pushButton_measurement.setIconSize(QSize(40, 40))
         self.pushButton_measurement.setCheckable(True)
 
-        self.gridLayout_69.addWidget(self.pushButton_measurement, 2, 6, 2, 1)
+        self.gridLayout_69.addWidget(self.pushButton_measurement, 4, 6, 1, 1)
+
+        self.pushButton_zoomReset = QPushButton(self.frame)
+        self.pushButton_zoomReset.setObjectName(u"pushButton_zoomReset")
+        self.pushButton_zoomReset.setEnabled(True)
+        self.pushButton_zoomReset.setStyleSheet(u"\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon20 = QIcon()
+        icon20.addFile(u"Icons/ephys/zoom-in (1).png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_zoomReset.setIcon(icon20)
+        self.pushButton_zoomReset.setIconSize(QSize(40, 40))
+        self.pushButton_zoomReset.setCheckable(True)
+
+        self.gridLayout_69.addWidget(self.pushButton_zoomReset, 4, 2, 1, 1)
+
+        self.pushButtonAmp_plus = QPushButton(self.frame)
+        self.pushButtonAmp_plus.setObjectName(u"pushButtonAmp_plus")
+        self.pushButtonAmp_plus.setStyleSheet(u"\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon21 = QIcon()
+        icon21.addFile(u"Icons/ephys/amplitude_plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButtonAmp_plus.setIcon(icon21)
+        self.pushButtonAmp_plus.setIconSize(QSize(40, 40))
+        self.pushButtonAmp_plus.setCheckable(True)
+
+        self.gridLayout_69.addWidget(self.pushButtonAmp_plus, 4, 1, 1, 1)
+
+        self.pushButtonAmp_minus = QPushButton(self.frame)
+        self.pushButtonAmp_minus.setObjectName(u"pushButtonAmp_minus")
+        self.pushButtonAmp_minus.setStyleSheet(u"\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon22 = QIcon()
+        icon22.addFile(u"Icons/ephys/amplitude_minus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButtonAmp_minus.setIcon(icon22)
+        self.pushButtonAmp_minus.setIconSize(QSize(40, 40))
+        self.pushButtonAmp_minus.setCheckable(True)
+
+        self.gridLayout_69.addWidget(self.pushButtonAmp_minus, 4, 0, 1, 1)
 
 
         self.gridLayout_75.addWidget(self.frame, 0, 0, 1, 1)
@@ -5538,13 +5642,17 @@ class Ui_MainWindow(object):
         self.pushButton_deselectAll.setText(QCoreApplication.translate("MainWindow", u"Deselect All", None))
         self.pushButton_showChannels.setText(QCoreApplication.translate("MainWindow", u"Show only selected Channels", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_slicey.setToolTip(QCoreApplication.translate("MainWindow", u"Coronal Slicing", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_slicey.setText("")
-#if QT_CONFIG(tooltip)
         self.resetCamera_ephys.setToolTip(QCoreApplication.translate("MainWindow", u"Reset Camera View", None))
 #endif // QT_CONFIG(tooltip)
         self.resetCamera_ephys.setText("")
+#if QT_CONFIG(tooltip)
+        self.change_perspective_ephys.setToolTip(QCoreApplication.translate("MainWindow", u"Change Perspective", None))
+#endif // QT_CONFIG(tooltip)
+        self.change_perspective_ephys.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_slicey.setToolTip(QCoreApplication.translate("MainWindow", u"Coronal Slicing", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_slicey.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_Noslicing.setToolTip(QCoreApplication.translate("MainWindow", u"Exit Slicing Mode", None))
 #endif // QT_CONFIG(tooltip)
@@ -5554,13 +5662,13 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.pushButton_slicex.setText("")
 #if QT_CONFIG(tooltip)
-        self.change_perspective_ephys.setToolTip(QCoreApplication.translate("MainWindow", u"Change Perspective", None))
-#endif // QT_CONFIG(tooltip)
-        self.change_perspective_ephys.setText("")
-#if QT_CONFIG(tooltip)
         self.pushButton_slicez.setToolTip(QCoreApplication.translate("MainWindow", u"Axial Slicing", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_slicez.setText("")
+        self.groupBox_6.setTitle(QCoreApplication.translate("MainWindow", u"Change Opacity of Meshes", None))
+        self.groupBox_8.setTitle(QCoreApplication.translate("MainWindow", u"Atlas", None))
+        self.groupBox_9.setTitle(QCoreApplication.translate("MainWindow", u"Background", None))
+        self.groupBox_11.setTitle(QCoreApplication.translate("MainWindow", u"Region of Intrest", None))
         self.groupBox_anatRegion.setTitle(QCoreApplication.translate("MainWindow", u"Selected Channel ID and Anat Region Label", None))
         self.groupBox_37.setTitle(QCoreApplication.translate("MainWindow", u"Coordinates of selected Channel", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_4), QCoreApplication.translate("MainWindow", u"Anatomy", None))
@@ -5625,18 +5733,21 @@ class Ui_MainWindow(object):
         self.menu4D_Tools.setTitle(QCoreApplication.translate("MainWindow", u"4D Tools", None))
         self.menuElectrode_Localization.setTitle(QCoreApplication.translate("MainWindow", u"Electrode Localization", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_timeline.setToolTip(QCoreApplication.translate("MainWindow", u"Draw Timeline", None))
+        self.pushButton_zoomOut.setToolTip(QCoreApplication.translate("MainWindow", u"Zoom Out", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_timeline.setText("")
-        self.pushButton_removeTimeline.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
+        self.pushButton_zoomOut.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_selectTime.setToolTip(QCoreApplication.translate("MainWindow", u"Select Time", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_selectTime.setText("")
 #if QT_CONFIG(tooltip)
-        self.pushButton_zoomOut.setToolTip(QCoreApplication.translate("MainWindow", u"Zoom Out", None))
+        self.pushButton_timeline.setToolTip(QCoreApplication.translate("MainWindow", u"Draw Timeline", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_zoomOut.setText("")
+        self.pushButton_timeline.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_measurement.setToolTip(QCoreApplication.translate("MainWindow", u"Measure", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_measurement.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_zoomReset.setToolTip(QCoreApplication.translate("MainWindow", u"Reset Zoom", None))
 #endif // QT_CONFIG(tooltip)
@@ -5649,10 +5760,6 @@ class Ui_MainWindow(object):
         self.pushButtonAmp_minus.setToolTip(QCoreApplication.translate("MainWindow", u"Decrease Amplitude", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButtonAmp_minus.setText("")
-#if QT_CONFIG(tooltip)
-        self.pushButton_measurement.setToolTip(QCoreApplication.translate("MainWindow", u"Measure", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_measurement.setText("")
         self.groupBox_3.setTitle("")
         self.lineEdit_2.setText(QCoreApplication.translate("MainWindow", u"Duration (ms)", None))
         self.spinBox_startMs.setSuffix(QCoreApplication.translate("MainWindow", u"ms", None))
