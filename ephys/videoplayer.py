@@ -4,10 +4,39 @@ from PySide6.QtCore import QUrl
 import subprocess
 import json
 from PySide6.QtWidgets import QStyle
+from PySide6.QtWidgets import QMessageBox, QFileDialog
 
 class VideoPlayer:
-    def __init__(self,MW,filename):
+    def __init__(self,MW):
         self.MW = MW
+
+
+    def add_video(self):
+        filename, _ = QFileDialog.getOpenFileName(
+            None,
+            "Open Video File",
+            "",
+            "Video files (*.avi)"
+        )
+
+        #User cancelled
+        if not filename:
+            return
+
+        #pop up asking for the view if 4D data used
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("Open Main File")
+        msg_box.setText(f"Do you want to open the file \n {filename}?")
+        msg_box.addButton("Yes", QMessageBox.ActionRole)
+        btn_no = msg_box.addButton("No, other Video", QMessageBox.ActionRole)
+        btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
+        msg_box.exec()
+        if msg_box.clickedButton()==btn_cancel:
+            return
+        if msg_box.clickedButton()==btn_no:
+            self.add_video()
+
+        ## initiate video class
         self.MW.ui.stackedWidget_video.setCurrentIndex(0)
 
         self.get_frame_rate(filename)

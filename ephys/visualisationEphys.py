@@ -2,24 +2,18 @@
 import numpy as np
 import pyqtgraph as pg
 
-
 class VisualisationEphys:
     def __init__(self,MW,Vis3D,read_data,channels,skipped_ch):
-
-
         self.MW = MW
         self.Vis3D = Vis3D
         self.read_data = read_data
         self.total_ch_visible = 20
         duration = 1.5
 
-        self.t_start = self.read_data.analogsignals[0].t_start
-        self.t_stop = self.read_data.analogsignals[0].t_stop
+        self.MW.ui.spinBox_startMin.setMaximum(int(self.MW.Ephys.ephys_data.t_stop*60))
+        self.MW.ui.spinBox_duration.setMaximum(int((self.MW.Ephys.ephys_data.t_stop-self.MW.Ephys.ephys_data.t_start)*1000))
 
-        self.MW.ui.spinBox_startMin.setMaximum(int(self.t_stop*60))
-        self.MW.ui.spinBox_duration.setMaximum(int((self.t_stop-self.t_start)*1000))
-
-        self.time_start = int(self.t_stop/2)
+        self.time_start = int(self.MW.Ephys.ephys_data.t_stop/2)
         self.time_end = self.time_start + duration
 
         time_start_min = int(self.time_start/60)
@@ -28,11 +22,11 @@ class VisualisationEphys:
         self.MW.ui.spinBox_startMin.setValue(time_start_min) #min
         self.MW.ui.spinBox_startS.setValue(time_start_sec) #sec
         self.MW.ui.spinBox_startMs.setValue(time_start_ms) #ms
-        self.MW.ui.spinBox_startMs.setMaximum(int((float(self.t_stop.magnitude-self.t_start.magnitude))*1000))
-        self.MW.ui.spinBox_startS.setMaximum(int((float(self.t_stop.magnitude-self.t_start.magnitude))*1000))
+        self.MW.ui.spinBox_startMs.setMaximum(int((float(self.MW.Ephys.ephys_data.t_stop.magnitude-self.MW.Ephys.ephys_data.t_start.magnitude))*1000))
+        self.MW.ui.spinBox_startS.setMaximum(int((float(self.MW.Ephys.ephys_data.t_stop.magnitude-self.MW.Ephys.ephys_data.t_start.magnitude))*1000))
 
         self.MW.ui.spinBox_duration.setValue(duration*1000)
-        self.MW.ui.horizontalSlider_ephys.setMaximum(int((float(self.t_stop.magnitude-self.t_start.magnitude)-duration)*1000))
+        self.MW.ui.horizontalSlider_ephys.setMaximum(int((float(self.MW.Ephys.ephys_data.t_stop.magnitude-self.MW.Ephys.ephys_data.t_start.magnitude)-duration)*1000))
         self.MW.ui.horizontalSlider_ephys.setValue(self.time_start*1000) #sec
 
         self.MW.ui.spinBox_startMin.editingFinished.connect(self.change_start_end_time)
@@ -46,7 +40,6 @@ class VisualisationEphys:
         self.MW.ui.pushButton_measurement.clicked.connect(self.MW.ui.widget_pgEphys.plot.activate_measurement)
         self.MW.ui.pushButton_selectTime.clicked.connect(self.MW.ui.widget_pgEphys.plot.select_timeframe)
         self.MW.ui.pushButton_timeline.clicked.connect(self.MW.ui.widget_pgEphys.plot.draw_timeline)
-        self.MW.ui.pushButton_removeTimeline.clicked.connect(self.MW.ui.widget_pgEphys.plot.remove_timeline)
 
         # create and electrode table
         self.Vis3D.table_excel = self.MW.ui.tableWidget_ephys
@@ -58,6 +51,9 @@ class VisualisationEphys:
         if self.time_start==self.time_end or channels==[]:
             if channels==[]:
                 self.MW.ui.widget_pgEphys.plot.clear()
+                self.displayed_channels = channels
+                for index,_ in enumerate(self.all_channels):
+                    self.ephys_lines[index] = None
             return
         signal = self.read_data.analogsignals[0].load(time_slice=(self.time_start,self.time_end),channel_indexes=channels)
         self.MW.ui.widget_pgEphys.xMin = self.time_start
@@ -70,16 +66,15 @@ class VisualisationEphys:
 
 
     def change_start_end_time(self):
-        self.time_start = min(self.MW.ui.spinBox_startMin.value()*60 + self.MW.ui.spinBox_startS.value() + self.MW.ui.spinBox_startMs.value()/1000,self.t_stop.magnitude-self.MW.ui.spinBox_duration.value()/1000)
+        self.time_start = min(self.MW.ui.spinBox_startMin.value()*60 + self.MW.ui.spinBox_startS.value() + self.MW.ui.spinBox_startMs.value()/1000,self.MW.Ephys.ephys_data.t_stop.magnitude-self.MW.ui.spinBox_duration.value()/1000)
 
-        print('change input of sliders',self.time_start,flush=True)
         self.time_end = self.time_start + self.MW.ui.spinBox_duration.value()/1000
 
         self.MW.ui.horizontalSlider_ephys.blockSignals(True)
         self.MW.ui.spinBox_startMin.blockSignals(True)
         self.MW.ui.spinBox_startS.blockSignals(True)
         self.MW.ui.spinBox_startMs.blockSignals(True)
-        self.MW.ui.horizontalSlider_ephys.setMaximum(int((self.t_stop.magnitude-self.t_start.magnitude-self.MW.ui.spinBox_duration.value()/1000)*1000))
+        self.MW.ui.horizontalSlider_ephys.setMaximum(int((self.MW.Ephys.ephys_data.t_stop.magnitude-self.MW.Ephys.ephys_data.t_start.magnitude-self.MW.ui.spinBox_duration.value()/1000)*1000))
         self.MW.ui.horizontalSlider_ephys.setValue(self.time_start*1000) #ms
         time_start_min = int(self.time_start/60)
         time_start_sec = int(self.time_start - time_start_min*60)

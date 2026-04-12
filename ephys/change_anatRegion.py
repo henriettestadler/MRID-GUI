@@ -11,6 +11,7 @@ import os
 class Change_AnatRegion(QDialog):
     def __init__(self, MW,parent=None):
         super().__init__(parent)
+
         self.MW = MW
         self.MW.ui.comboBox_ChangeanatRegion.currentIndexChanged.connect(self.update_combobox_color)
 

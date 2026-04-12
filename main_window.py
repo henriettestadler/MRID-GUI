@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
         self.ui.textEdit_ephys.setText(f"File loaded: {file_name}")
         self.ui.tabWidget.setCurrentIndex(2)
         self.Ephys = InitEphys(self,file_name)
-        self.Ephys.open_dat()
+        self.Ephys.open_dat(file_name)
 
     def resizeEvent(self, event):
         """
@@ -220,8 +220,6 @@ class MainWindow(QMainWindow):
 
                 #load file again, update cursor
                 self.LoadMRI = LoadMRI()
-                #self.LoadMRI.file_name = {}
-                #self.LoadMRI.file_name[0]= file_name
                 self.ui.comboBox_resamplefiles.addItem(os.path.basename(file_name)) #add to combobox for resampling
                 if volume.ndim==4:
                     self.restart_gui(file_name,data_view)
@@ -232,8 +230,6 @@ class MainWindow(QMainWindow):
 
             # Create loader
             self.LoadMRI = LoadMRI()
-            #self.LoadMRI.file_name = {}
-            #self.LoadMRI.file_name[0]= file_name
 
             self.ui.comboBox_resamplefiles.addItem(os.path.basename(file_name)) #add to combobox for resampling
             if volume.ndim==4:
@@ -283,14 +279,6 @@ class MainWindow(QMainWindow):
                     img_vtk = self.LoadMRI.img_vtks[0]["sagittal"]
                     self.LoadMRI.minimap.add_minimap('sagittal',img_vtk,0,self.LoadMRI.vtk_widgets[0]["sagittal"],0,data_3d=True)
             else:
-                #print('i')
-                #for image_index,vtk_widget_image in self.vtk_widgets.items():
-                #    if data_view=='axial':
-                #        self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], vtk_widget_image["axial"], "axial",image_index,data_index)
-                #    elif data_view=='coronal':
-                #        self.setup_vtkdata(self.volume[data_index][image_index][z, :, :], vtk_widget_image["coronal"], "coronal",image_index,data_index)
-                #    elif data_view=='sagittal':
-                #        self.setup_vtkdata(self.volume[data_index][image_index][z, :, :].T, vtk_widget_image["sagittal"], "sagittal",image_index,data_index)
                 if hasattr(self.LoadMRI, 'vtk_widgets'):
                     for data_index in range(len(self.LoadMRI.vtk_widgets[0])):
                         for image_index,vtk_widget_image in self.LoadMRI.vtk_widgets.items():

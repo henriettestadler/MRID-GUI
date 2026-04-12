@@ -6,7 +6,8 @@ import pandas as pd
 import pyvista as pv
 import numpy as np
 import SimpleITK as sITK
-from neo.io import NeuroScopeIO
+from ephys.ephysrecording import EphysRecording
+from ephys.mrid_info import MRIDInfo
 from ephys.visualisationEphys import VisualisationEphys
 import xml.etree.ElementTree as ET
 from ephys.change_anatRegion import Change_AnatRegion
@@ -14,37 +15,81 @@ from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import QTableWidgetItem
 import numpy
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QComboBox, QDialogButtonBox, QLabel
-from PySide6.QtWidgets import QMessageBox, QFileDialog
 from ephys.videoplayer import VideoPlayer
 
 class InitEphys:
-    def __init__(self, MW, filename):
-        self.session_path = os.path.dirname(os.path.dirname(filename))
+    def __init__(self, MW,filename):
         self.MW = MW
         self.MW.ui.pushButton_anatRegion.clicked.connect(self.changeRegion)
         self.first_time = True
-        self.filename = filename
+        self.session_path = os.path.dirname(os.path.dirname(filename))
 
-        self.MW.ui.pushButton_changeTAG.clicked.connect(self.change_mridTAG)
-        self.MW.ui.pushButton_AddVideo.clicked.connect(self.add_video)
+        self.MW.ui.pushButton_changeTAG.clicked.connect(self.change_mridTAG_combobox)
+        self.Video = VideoPlayer(self.MW)
+        self.MW.ui.pushButton_AddVideo.clicked.connect(self.Video.add_video)
 
+    ##TODO
+    #os.path.join(filename[:-4] + '.xml')
+    #xml_file,flush=True)
+    #xml -> mapp, tells you the order
+    #- number of channels
+    #- 16bits -> int16 (plus und minus Werte)
+    #- Hz
+    #- groups… (each has their own visualisation window); ich glaube pro tag 1group
+    #- dead channels (if skip=1), aber option haben
 
-    def get_mrid_tag(self,session_path):
-        mrid_tags = [f.name for f in os.scandir(os.path.join(session_path,"analysed")) if f.is_dir()]
+    def open_dat(self,filename,group_idx=0):
+        self.ephys_data = EphysRecording.from_file(filename)
 
-        self.coordinates = {}
-        for mrid in mrid_tags:
-            coordinates = numpy.load(os.path.join(session_path,"analysed",mrid,"gaussian_centers_3D.npy"))
-            self.coordinates[mrid]=coordinates[0][0]
-        #Atlas Coordinate System: RAS -> higher X = more Right
-        self.coordinates = dict(sorted(self.coordinates.items(), key=lambda item: item[1], reverse=True))
+        if self.first_time:
+            self.ephys_data.all_channels =self.ephys_data.all_channels[0]
+            self.ephys_data.dead_channels = self.ephys_data.dead_channels[0]
+            self.ephys_data.active_channels =self.ephys_data.active_channels[0]
+            self.mrid_info = MRIDInfo.from_file(filename,group_idx)
+            self.Visualisation3D = Visualisation3D(self.session_path,self.MW,self.mrid_info.mrid,self.mrid_info.mrid_tags,chMap=self.ephys_data.all_channels)
+            self.Visualisation3D.initialize_mridTag(self.mrid_info.mrid,chMap=self.ephys_data.all_channels)
+            self.VisEphys = VisualisationEphys(self.MW,self.Visualisation3D,self.ephys_data.read_data,self.ephys_data.all_channels,self.ephys_data.dead_channels)
+        else:
+            self.ephys_data.all_channels =self.ephys_data.all_channels[self.mrid_info.mrid_idx_xml]
+            self.ephys_data.dead_channels = self.ephys_data.dead_channels[self.mrid_info.mrid_idx_xml]
+            self.ephys_data.active_channels =self.ephys_data.active_channels[self.mrid_info.mrid_idx_xml]
+            self.Visualisation3D.index = self.mrid_info.mrid_idx_xml
+            self.mrid_info.mrid = list(self.mrid_info.mrid_coordinates.keys())[self.mrid_info.mrid_idx_xml]
+            self.Visualisation3D.spinbox.blockSignals(True)
+            self.Visualisation3D.table_excel.blockSignals(True)
+            self.Visualisation3D.initialize_mridTag(self.mrid_info.mrid,chMap=self.ephys_data.all_channels)
+            self.Visualisation3D.spinbox.blockSignals(False)
+            self.Visualisation3D.fill_table(self.ephys_data.all_channels,self.ephys_data.dead_channels)
+            self.Visualisation3D.table_excel.blockSignals(False)
 
-        # get coordinates, set to 0 by default
-        self.mrid_idx_xml = 0
-        self.mrid = list(self.coordinates.keys())[self.mrid_idx_xml] #self.coordinates[0][0] #'trio' #A->0
+        print(self.mrid_info.mrid_idx_xml,flush=True)
+        self.MW.ui.widget_pgEphys.init_PgWidget_class(self.VisEphys,self.MW)
 
+        self.VisEphys.visualize_data(self.ephys_data.active_channels)
+        self.Visualisation3D.manually_pick_point(point=[],idx=self.ephys_data.all_channels.index(self.ephys_data.active_channels[0]))
+        if self.first_time:
+            self.Visualisation3D.spinbox.valueChanged.connect(self.Visualisation3D.channel_changed)
+            self.MW.ui.horizontalSlider_ElectrodeRegion.valueChanged.connect(self.Visualisation3D.change_opacityRegionOfInterest)
+            self.MW.ui.horizontalSlider_OtherRegions.valueChanged.connect(self.Visualisation3D.change_opacityOtherRegions)
+            self.MW.ui.horizontalSlider_Background.valueChanged.connect(self.Visualisation3D.change_opacityBackground)
+            self.first_time = False
 
-    def change_mridTAG(self): #,filename,new_tag_index
+        self.Visualisation3D.plotter.enable_parallel_projection()
+
+    def change_xml_file(self,channel_idx:int,skip):
+        tree = ET.parse(self.ephys_data.xml_path)
+        root = tree.getroot()
+
+        for idx, group in enumerate(root.findall('.//group')):
+            if idx == self.mrid_info.mrid_idx_xml:
+                for ch in group.findall('channel'):
+                    if int(ch.text) == int(channel_idx):
+                        ch.set('skip', str(skip))
+                        break
+
+        tree.write(self.ephys_data.xml_path, xml_declaration=True, encoding="utf-8")
+
+    def change_mridTAG_combobox(self): #,filename,new_tag_index
         dialog = QDialog(self.MW)
         dialog.setWindowTitle("Select new MRID TAG")
         layout = QVBoxLayout()
@@ -52,7 +97,7 @@ class InitEphys:
         label = QLabel("Choose:")
         combo = QComboBox()
         combo_items = []
-        for i, mrid in enumerate(self.coordinates):
+        for i, mrid in enumerate(self.mrid_info.mrid_coordinates):
             text = f"{mrid} (Channel Group: {i})"
             combo_items.append(text)
 
@@ -68,133 +113,23 @@ class InitEphys:
         dialog.setLayout(layout)
 
         if dialog.exec_() == QDialog.Accepted:
-            selected = combo.currentIndex()
+            self.change_mridTAG(combo.currentIndex())
 
 
-        self.mrid_idx_xml = selected
-        self.mrid = list(self.coordinates.keys())[self.mrid_idx_xml] #self.coordinates[0][0] #'trio' #A->0
+    def change_mridTAG(self,new_index):
+        self.mrid_info.mrid_idx_xml = new_index
+        self.mrid_info.mrid = list(self.mrid_info.mrid_coordinates.keys())[self.mrid_info.mrid_idx_xml] #'trio' #A->0
 
-        ##something like this?
-        print('NEUES TAG',flush=True)
         del self.Visualisation3D.chMap
-        self.open_dat()
+        self.open_dat(self.ephys_data.file_path)
 
-
-    ##TODO
-    # read data and rhs file
-    # read xml file for channel data
-    # class neo.io.NeuroScopeIO(filename) - extensions = ['xml', 'dat', 'lfp', 'eeg']
-    ## ask if file open okay
-
-    def open_dat(self):
-        all_channels,channels, skipped_ch = self.open_xml_file(self.filename)
-
-        reader = NeuroScopeIO(self.filename)
-        read_data = reader.read_segment(lazy=True)
-        if self.first_time:
-            self.get_mrid_tag(self.session_path)
-            self.Visualisation3D = Visualisation3D(self.session_path,self.MW,self.mrid,chMap=all_channels[self.mrid_idx_xml])
-            self.Visualisation3D.initialize_mridTag(self.mrid,chMap=all_channels[self.mrid_idx_xml])
-            self.VisEphys = VisualisationEphys(self.MW,self.Visualisation3D,read_data,all_channels[self.mrid_idx_xml],skipped_ch[self.mrid_idx_xml])
-        else:
-            self.Visualisation3D.spinbox.blockSignals(True)
-            self.Visualisation3D.initialize_mridTag(self.mrid,chMap=all_channels[self.mrid_idx_xml])
-            self.Visualisation3D.spinbox.blockSignals(False)
-            self.Visualisation3D.fill_table(all_channels[self.mrid_idx_xml],skipped_ch[self.mrid_idx_xml])
-
-        self.VisEphys.all_channels = all_channels[self.mrid_idx_xml]
-        self.MW.ui.widget_pgEphys.init_PgWidget_class(self.VisEphys,self.MW)
-
-        self.VisEphys.visualize_data(channels[self.mrid_idx_xml])
-        self.Visualisation3D.manually_pick_point(point=[],idx=all_channels[self.mrid_idx_xml].index(channels[self.mrid_idx_xml][0]))
-        if self.first_time:
-            self.Visualisation3D.spinbox.valueChanged.connect(self.Visualisation3D.channel_changed)
-            self.first_time = False
-        self.Visualisation3D.plotter.enable_parallel_projection()
-        self.Visualisation3D.skipped_ch = skipped_ch[self.mrid_idx_xml]
-
-
-    def open_xml_file(self,filename):
-        self.xml_path = filename.replace('.dat', '.xml')
-        tree = ET.parse(self.xml_path)
-        root = tree.getroot()
-        active_channels = {}
-        skipped = {}
-        all_channels= {}
-
-        for group_idx, group in enumerate(root.findall('.//group')):
-            active_channels[group_idx] = []
-            skipped[group_idx] = []
-            all_channels[group_idx] = []
-            for ch in group.findall('channel'):
-                ch_id = int(ch.text)
-                skip  = int(ch.get('skip', 0))
-                if skip == 0:
-                    active_channels[group_idx].append(ch_id)
-                else:
-                    skipped[group_idx].append(ch_id)
-                all_channels[group_idx].append(ch_id)
-        return all_channels, active_channels, skipped
-
-    def change_xml_file(self,channel_idx:int,skip):
-        tree = ET.parse(self.xml_path)
-        root = tree.getroot()
-
-        for idx, group in enumerate(root.findall('.//group')):
-            if idx == self.mrid_idx_xml:
-                for ch in group.findall('channel'):
-                    print('CH',int(ch.text),channel_idx,skip,flush=True)
-                    if int(ch.text) == int(channel_idx):
-                        ch.set('skip', str(skip))
-                        break
-
-        tree.write(self.xml_path, xml_declaration=True, encoding="utf-8")
-
-        #os.path.join(filename[:-4] + '.xml')
-        #print(reader.read_params,flush=True)
-        #xml_file,flush=True)
-        #xml -> mapp, tells you the order
-        #- number of channels
-        #- 16bits -> int16 (plus und minus Werte)
-        #- Hz
-        #- groups… (each has their own visualisation window); ich glaube pro tag 1group
-        #- dead channels (if skip=1), aber option haben
-
-
-    def add_video(self):
-        file_name, _ = QFileDialog.getOpenFileName(
-            None,
-            "Open Video File",
-            "",
-            "Video files (*.avi)"
-        )
-
-        #User cancelled
-        if not file_name:
-            return
-
-        #pop up asking for the view if 4D data used
-        msg_box = QMessageBox()
-        msg_box.setWindowTitle("Open Main File")
-        msg_box.setText(f"Do you want to open the file \n {file_name}?")
-        msg_box.addButton("Yes", QMessageBox.ActionRole)
-        btn_no = msg_box.addButton("No, other Video", QMessageBox.ActionRole)
-        btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
-        msg_box.exec()
-        if msg_box.clickedButton()==btn_cancel:
-            return
-        if msg_box.clickedButton()==btn_no:
-            self.add_video()
-
-        ## initiate video class
-        self.Video = VideoPlayer(self.MW,file_name)
 
 
     def changeRegion(self):
         dlg = Change_AnatRegion(self.MW)
         if dlg.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             self.MW.ui.comboBox_anatRegion.setCurrentIndex(self.MW.ui.comboBox_anatRegion.findText(self.MW.ui.comboBox_ChangeanatRegion.currentText().split('(')[0].strip()))
-            points_electrodes_path = os.path.join(os.path.join(self.session_path,"analysed"),self.mrid,'channel_atlas_coordinates.xlsx')
+            points_electrodes_path = os.path.join(os.path.join(self.session_path,"analysed"),self.mrid_info.mrid,'channel_atlas_coordinates.xlsx')
             self.points_data = pd.read_excel(points_electrodes_path,header=0)
 
             new_index = self.MW.ui.comboBox_anatRegion.currentIndex()
@@ -207,12 +142,12 @@ class InitEphys:
             self.points_data.loc[channel_numb,'Channel'] = new_idx
             #save back in excel
             df = pd.DataFrame(self.points_data)
-            excel_path = os.path.join(os.path.join(self.session_path,"analysed"),self.mrid,'channel_atlas_coordinates.xlsx')
+            excel_path = os.path.join(os.path.join(self.session_path,"analysed"),self.mrid_info.mrid,'channel_atlas_coordinates.xlsx')
             df.to_excel(excel_path, index=False)
 
             #change atlas incase new label was added
             if self.check_newlabel(new_idx):
-                self.Visualisation3D.delete_volumes(self.mrid,new_idx,channel_numb)
+                self.Visualisation3D.delete_volumes(self.mrid_info.mrid,new_idx,channel_numb)
 
             #update table with new label and new color table
             max_idx = self.Visualisation3D.atlaslabelsdf['IDX'].max()
@@ -228,15 +163,12 @@ class InitEphys:
             item = self.MW.ui.tableWidget_ephys.item(channel_numb, 3)
             item.setForeground(QBrush(color))
 
-
             # update plot color
             line = self.VisEphys.ephys_lines[channel_numb]
             current_pen = line.opts['pen']
             current_pen.setColor(QColor(int(r*255), int(g*255), int(b*255), int(a*255)))
             #pen = pg.mkPen(color=(int(r*255), int(g*255), int(b*255),int(a*255)), width=0.5)
             line.setPen(current_pen)
-
-
 
 
     def check_newlabel(self,new_idx):
