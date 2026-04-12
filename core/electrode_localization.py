@@ -72,7 +72,7 @@ class ElectrodeLoc:
         """
         for idx in range(len(self.LoadMRI.vtk_widgets[0])):
             data_view = list(self.LoadMRI.vtk_widgets[0].keys())[idx]
-            self.filename = os.path.basename(self.LoadMRI.file_name[idx][:-7])
+            self.filename = os.path.basename(self.LoadMRI.volumes[idx].file_path[:-7])
             roi_names = self.get_roinames(os.path.join(self.sessionpath, "anat", "labels.txt"))
             self.orientation = data_view
 
@@ -174,35 +174,9 @@ class ElectrodeLoc:
                 i+=1
 
         self.progress.setValue(80)
-        ## For loop
-        #fixed_coordinates = np.load(fixed_coordinates_path, mmap_mode="r")
-        #moving_coordinates = np.load(moving_coordinates_path, mmap_mode="r")
-        #nii_dwi=nib.load(dwi_path)
-        #dwi=np.asanyarray(nii_dwi.dataobj)
-        #dwi=dwi[:,:,:,0]
-        #nii_t2s=nib.load(t2s_path)
-        #t2s=np.asanyarray(nii_t2s.dataobj)
-        #nii_mask=nib.load(mask_path)
-        #mask=np.asanyarray(nii_mask.dataobj)
-
-        #for mrid in roi_names: ##different threads for each mrid?
-        #    mrid = mrid.lower()
-        #    savepath = os.path.join(self.sessionpath, 'analysed',mrid)
-        #    fitted_points, regionNames,regionNumbers,df,barcode_r,barcode_d,CA1,dwi1Dsignal,pyrChIdx = chmap.main(mrid_dict,mrid, savepath, self.sessionpath,atlas,atlaslabelsdf,dwi, t2s,mask,fixed_coordinates,moving_coordinates,channel_separation,total_ch)
-        #    totalregionNumbers.extend(regionNumbers)
-        #    totalfitted_points.append(fitted_points)
-        #    totaldf.append(df)
-        #    totalbarcode_r.append(barcode_r)
-        #    totalbarcode_d.append(barcode_d)
-        #    totalmrid.append(mrid)
-        #    totalCA1.append(CA1)
-        #    totaldwi1Dsignal.append(dwi1Dsignal)
-        #    totalregionNames.append(regionNames)
-        #    totalpyrChIdx.append(pyrChIdx)
 
         totalregionNumbers = list(dict.fromkeys(totalregionNumbers))
         totalregionNumbers = list(map(int, totalregionNumbers))
-
 
         # "/home/neurox/Documents/MRID-GUI/Files/Atlas/WHS_SD_rat_atlas_v4.nii.gz"
         file_with_regions = self.atlas_path
@@ -210,7 +184,6 @@ class ElectrodeLoc:
         volume = sitk.GetArrayFromImage(atlas_image)
         volume[~np.isin(volume,totalregionNumbers)]=0
 
-        #label_image = sitk.Flip(label_image, self.LoadMRI.axes_to_flip[data_index], flipAboutOrigin=False)
         label_image = sitk.GetImageFromArray(volume)
         label_image.CopyInformation(atlas_image)
 
@@ -262,7 +235,7 @@ class ElectrodeLoc:
             data_view = list(self.LoadMRI.vtk_widgets[0].keys())[data_index]
             renderer = self.LoadMRI.renderers[0][data_view]
             #
-            filename = self.LoadMRI.file_name[data_index][0:self.LoadMRI.file_name[data_index].find('.')] #[os.path.splitext(f)[0] for f in self.LoadMRI.file_name]
+            filename = self.LoadMRI.volumes[data_index].file_path[0:self.LoadMRI.volumes[data_index].file_path.find('.')]
             filename_4d_warped = ".".join((filename + "-resampled-warped", "nii", "gz"))
             filename_4d_warped_path = os.path.join(self.savepath, filename_4d_warped)
             img_4d= sitk.ReadImage(filename_4d_warped_path)
@@ -272,13 +245,13 @@ class ElectrodeLoc:
             else:
                 img_slice = vol[int(fitted_points[0][2]),:,:]
             spacing_4d = img_4d.GetSpacing() #xyz # #
-            spacing = self.LoadMRI.spacing[data_index]
+            spacing = self.LoadMRI.volumes[data_index].spacing
 
             self.visualize_4Dwarpedslice(img_slice,spacing_4d,data_index,data_view)
 
             for idx in range(len(fitted_points)):
                 if data_view=='sagittal':
-                    x = self.LoadMRI.volume[data_index][0].shape[0]-1-fitted_points[idx][2]
+                    x = self.LoadMRI.volumes[data_index].slices[0].shape[0]-1-fitted_points[idx][2]
                     y = fitted_points[idx][1]
                     spacing = np.array(spacing)
                     spacing[2] = spacing[0]
@@ -287,8 +260,8 @@ class ElectrodeLoc:
                     y = fitted_points[idx][1]
 
                 print(x,y,spacing,flush=True)
-                x=(x)*spacing_4d[2] #/spacing[2]
-                y=(y)*spacing_4d[1] #spacing[1]
+                x=(x)*spacing_4d[2]
+                y=(y)*spacing_4d[1]
                 print(x,y,spacing_4d,flush=True)
                 radius = 0.2
 
@@ -390,7 +363,7 @@ class ElectrodeLoc:
             lut.SetValueRange(0.0, 1.0)
             lut.SetSaturationRange(0.0, 0.0)
             lut.Build()
-            contrast_class = getattr(self.LoadMRI, f"contrastClass_{data_index}")
+            contrast_class = self.LoadMRI.contrast[data_index]
             contrast_class.lut_vtk[3]=lut
 
             # make low values (blue end) transparent

@@ -5524,8 +5524,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>186</width>
-                    <height>164</height>
+                    <width>376</width>
+                    <height>259</height>
                    </rect>
                   </property>
                   <attribute name="label">
@@ -8040,7 +8040,7 @@ background-color: rgb(131, 131, 131);
                   <property name="frameShape">
                    <enum>QFrame::NoFrame</enum>
                   </property>
-                  <layout class="QGridLayout" name="gridLayout_68">
+                  <layout class="QGridLayout" name="gridLayout_68" rowstretch="0,0,0,0" columnstretch="1,1,1,1,1,1" rowminimumheight="0,0,0,0">
                    <property name="leftMargin">
                     <number>4</number>
                    </property>
@@ -8056,27 +8056,7 @@ background-color: rgb(131, 131, 131);
                    <property name="spacing">
                     <number>0</number>
                    </property>
-                   <item row="3" column="5">
-                    <widget class="QPushButton" name="pushButton_slicey">
-                     <property name="toolTip">
-                      <string>Coronal Slicing</string>
-                     </property>
-                     <property name="text">
-                      <string/>
-                     </property>
-                     <property name="icon">
-                      <iconset>
-                       <normaloff>Icons/ephys/slicing_coronal_front.png</normaloff>Icons/ephys/slicing_coronal_front.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>60</width>
-                       <height>40</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="0" rowspan="2" colspan="2">
+                   <item row="2" column="0" rowspan="2">
                     <widget class="QPushButton" name="resetCamera_ephys">
                      <property name="enabled">
                       <bool>true</bool>
@@ -8110,47 +8090,7 @@ background-color: rgb(131, 131, 131);
                      </property>
                     </widget>
                    </item>
-                   <item row="3" column="3">
-                    <widget class="QPushButton" name="pushButton_Noslicing">
-                     <property name="toolTip">
-                      <string>Exit Slicing Mode</string>
-                     </property>
-                     <property name="text">
-                      <string/>
-                     </property>
-                     <property name="icon">
-                      <iconset>
-                       <normaloff>Icons/ephys/no_slicing.png</normaloff>Icons/ephys/no_slicing.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>60</width>
-                       <height>40</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="3" column="4">
-                    <widget class="QPushButton" name="pushButton_slicex">
-                     <property name="toolTip">
-                      <string>Sagittal Slicing</string>
-                     </property>
-                     <property name="text">
-                      <string/>
-                     </property>
-                     <property name="icon">
-                      <iconset>
-                       <normaloff>Icons/ephys/slicing_sagittal_right.png</normaloff>Icons/ephys/slicing_sagittal_right.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>60</width>
-                       <height>40</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="3" column="2">
+                   <item row="3" column="1">
                     <widget class="QPushButton" name="change_perspective_ephys">
                      <property name="toolTip">
                       <string>Change Perspective</string>
@@ -8173,7 +8113,67 @@ background-color: rgb(131, 131, 131);
                      </property>
                     </widget>
                    </item>
-                   <item row="3" column="6">
+                   <item row="3" column="4">
+                    <widget class="QPushButton" name="pushButton_slicey">
+                     <property name="toolTip">
+                      <string>Coronal Slicing</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset>
+                       <normaloff>Icons/ephys/slicing_coronal_front.png</normaloff>Icons/ephys/slicing_coronal_front.png</iconset>
+                     </property>
+                     <property name="iconSize">
+                      <size>
+                       <width>60</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="2">
+                    <widget class="QPushButton" name="pushButton_Noslicing">
+                     <property name="toolTip">
+                      <string>Exit Slicing Mode</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset>
+                       <normaloff>Icons/ephys/no_slicing.png</normaloff>Icons/ephys/no_slicing.png</iconset>
+                     </property>
+                     <property name="iconSize">
+                      <size>
+                       <width>60</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="3">
+                    <widget class="QPushButton" name="pushButton_slicex">
+                     <property name="toolTip">
+                      <string>Sagittal Slicing</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset>
+                       <normaloff>Icons/ephys/slicing_sagittal_right.png</normaloff>Icons/ephys/slicing_sagittal_right.png</iconset>
+                     </property>
+                     <property name="iconSize">
+                      <size>
+                       <width>60</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="5">
                     <widget class="QPushButton" name="pushButton_slicez">
                      <property name="toolTip">
                       <string>Axial Slicing</string>
@@ -8193,14 +8193,86 @@ background-color: rgb(131, 131, 131);
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="0" colspan="7">
+                   <item row="1" column="0" colspan="6">
+                    <widget class="QGroupBox" name="groupBox_6">
+                     <property name="title">
+                      <string>Change Opacity of Meshes</string>
+                     </property>
+                     <layout class="QGridLayout" name="gridLayout_169" columnstretch="1,1,1">
+                      <item row="1" column="1">
+                       <widget class="QGroupBox" name="groupBox_8">
+                        <property name="title">
+                         <string>Atlas</string>
+                        </property>
+                        <layout class="QGridLayout" name="gridLayout_171">
+                         <item row="0" column="0">
+                          <widget class="QSlider" name="horizontalSlider_OtherRegions">
+                           <property name="minimum">
+                            <number>0</number>
+                           </property>
+                           <property name="maximum">
+                            <number>100</number>
+                           </property>
+                           <property name="singleStep">
+                            <number>0</number>
+                           </property>
+                           <property name="orientation">
+                            <enum>Qt::Horizontal</enum>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                      <item row="1" column="2">
+                       <widget class="QGroupBox" name="groupBox_9">
+                        <property name="title">
+                         <string>Background</string>
+                        </property>
+                        <layout class="QGridLayout" name="gridLayout_172">
+                         <item row="0" column="0">
+                          <widget class="QSlider" name="horizontalSlider_Background">
+                           <property name="maximum">
+                            <number>100</number>
+                           </property>
+                           <property name="orientation">
+                            <enum>Qt::Horizontal</enum>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                      <item row="1" column="0">
+                       <widget class="QGroupBox" name="groupBox_11">
+                        <property name="title">
+                         <string>Region of Intrest</string>
+                        </property>
+                        <layout class="QGridLayout" name="gridLayout_170">
+                         <item row="0" column="0">
+                          <widget class="QSlider" name="horizontalSlider_ElectrodeRegion">
+                           <property name="maximum">
+                            <number>100</number>
+                           </property>
+                           <property name="orientation">
+                            <enum>Qt::Horizontal</enum>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item row="0" column="0" colspan="6">
                     <widget class="QVTKRenderWindowInteractor" name="vtkWidget_ephys">
                      <property name="enabled">
                       <bool>true</bool>
                      </property>
                      <property name="minimumSize">
                       <size>
-                       <width>500</width>
+                       <width>0</width>
                        <height>0</height>
                       </size>
                      </property>
@@ -9043,25 +9115,32 @@ background-color: rgb(131, 131, 131);
         <item row="0" column="0" colspan="7">
          <widget class="PgWidget" name="widget_pgEphys" native="true"/>
         </item>
-        <item row="2" column="5">
-         <widget class="QPushButton" name="pushButton_timeline">
+        <item row="4" column="3">
+         <widget class="QPushButton" name="pushButton_zoomOut">
           <property name="enabled">
            <bool>true</bool>
           </property>
           <property name="toolTip">
-           <string>Draw Timeline</string>
+           <string>Zoom Out</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 30);
+                border-radius: 4px;
+            }</string>
           </property>
           <property name="text">
            <string/>
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>Icons/ephys/select_timeline.png</normaloff>Icons/ephys/select_timeline.png</iconset>
+            <normaloff>Icons/ephys/zoom-out.png</normaloff>Icons/ephys/zoom-out.png</iconset>
           </property>
           <property name="iconSize">
            <size>
             <width>40</width>
-            <height>20</height>
+            <height>40</height>
            </size>
           </property>
           <property name="checkable">
@@ -9069,20 +9148,20 @@ background-color: rgb(131, 131, 131);
           </property>
          </widget>
         </item>
-        <item row="3" column="5">
-         <widget class="QPushButton" name="pushButton_removeTimeline">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Remove</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="4" rowspan="2">
+        <item row="4" column="4">
          <widget class="QPushButton" name="pushButton_selectTime">
           <property name="toolTip">
            <string>Select Time</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:checked {
+                background-color: palette(highlight);
+                color: palette(highlighted-text);
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 30);
+                border-radius: 4px;
+            }</string>
           </property>
           <property name="text">
            <string/>
@@ -9102,19 +9181,30 @@ background-color: rgb(131, 131, 131);
           </property>
          </widget>
         </item>
-        <item row="2" column="3" rowspan="2">
-         <widget class="QPushButton" name="pushButton_zoomOut">
+        <item row="4" column="5">
+         <widget class="QPushButton" name="pushButton_timeline">
           <property name="enabled">
            <bool>true</bool>
           </property>
           <property name="toolTip">
-           <string>Zoom Out</string>
+           <string>Draw Timeline</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:checked {
+                background-color: palette(highlight);
+                color: palette(highlighted-text);
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 30);
+                border-radius: 4px;
+            }</string>
           </property>
           <property name="text">
            <string/>
           </property>
           <property name="icon">
-           <iconset theme="zoom-out"/>
+           <iconset>
+            <normaloff>Icons/ephys/select_timeline.png</normaloff>Icons/ephys/select_timeline.png</iconset>
           </property>
           <property name="iconSize">
            <size>
@@ -9127,7 +9217,43 @@ background-color: rgb(131, 131, 131);
           </property>
          </widget>
         </item>
-        <item row="2" column="2" rowspan="2">
+        <item row="4" column="6">
+         <widget class="QPushButton" name="pushButton_measurement">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="toolTip">
+           <string>Measure</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:checked {
+                background-color: palette(highlight);
+                color: palette(highlighted-text);
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 30);
+                border-radius: 4px;
+            }</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>Icons/Internet/measure.png</normaloff>Icons/Internet/measure.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>40</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
          <widget class="QPushButton" name="pushButton_zoomReset">
           <property name="enabled">
            <bool>true</bool>
@@ -9135,11 +9261,19 @@ background-color: rgb(131, 131, 131);
           <property name="toolTip">
            <string>Reset Zoom</string>
           </property>
+          <property name="styleSheet">
+           <string notr="true">
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 30);
+                border-radius: 4px;
+            }</string>
+          </property>
           <property name="text">
            <string/>
           </property>
           <property name="icon">
-           <iconset theme="QIcon::ThemeIcon::ViewFullscreen"/>
+           <iconset>
+            <normaloff>Icons/ephys/zoom-in (1).png</normaloff>Icons/ephys/zoom-in (1).png</iconset>
           </property>
           <property name="iconSize">
            <size>
@@ -9152,10 +9286,17 @@ background-color: rgb(131, 131, 131);
           </property>
          </widget>
         </item>
-        <item row="2" column="1" rowspan="2">
+        <item row="4" column="1">
          <widget class="QPushButton" name="pushButtonAmp_plus">
           <property name="toolTip">
            <string>Increase Amplitude</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 30);
+                border-radius: 4px;
+            }</string>
           </property>
           <property name="text">
            <string/>
@@ -9175,10 +9316,17 @@ background-color: rgb(131, 131, 131);
           </property>
          </widget>
         </item>
-        <item row="2" column="0" rowspan="2">
+        <item row="4" column="0">
          <widget class="QPushButton" name="pushButtonAmp_minus">
           <property name="toolTip">
            <string>Decrease Amplitude</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 30);
+                border-radius: 4px;
+            }</string>
           </property>
           <property name="text">
            <string/>
@@ -9186,32 +9334,6 @@ background-color: rgb(131, 131, 131);
           <property name="icon">
            <iconset>
             <normaloff>Icons/ephys/amplitude_minus.png</normaloff>Icons/ephys/amplitude_minus.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="6" rowspan="2">
-         <widget class="QPushButton" name="pushButton_measurement">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="toolTip">
-           <string>Measure</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>Icons/Internet/measure.png</normaloff>Icons/Internet/measure.png</iconset>
           </property>
           <property name="iconSize">
            <size>

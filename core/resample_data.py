@@ -288,8 +288,6 @@ class ResampleData:
             Clears old renderers, actors, and measurement lines from the GUI.
         """
         data_index = 0
-        #self.LoadMRI.file_name[data_index] = self.file_name100um
-        img = sitk.ReadImage(self.file_name100um)
         #new volume and spacing
         self.LoadMRI.volumes[data_index] = MRIVolume.from_file(self.file_name100um)
         self.LoadMRI.is_first_slice = False
@@ -331,8 +329,6 @@ class ResampleData:
 
         #load file again, update cursor
         self.LoadMRI = LoadMRI()
-        #self.LoadMRI.file_name = {}
-        #self.LoadMRI.file_name[0]= self.file_name100um
 
         MW.ui.comboBox_resamplefiles.addItem(os.path.basename(self.file_name100um)) #add to combobox for resampling
         data_view = "coronal" #for 3d data

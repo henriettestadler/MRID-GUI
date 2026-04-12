@@ -9,7 +9,7 @@ from gui_utils.paintbrush_gui import PaintbrushGUI
 from utils.mrid_inputdialog import MRID_InputDialog, ANAT_InputDialog,TRANSFORM_InputDialog
 from PySide6 import QtWidgets
 from core.electrode_localization import ElectrodeLoc
-from PySide6.QtWidgets import QMessageBox, QFileDialog, QDialog, QDockWidget,QVBoxLayout,QWidget,QTableWidgetItem,QApplication
+from PySide6.QtWidgets import QMessageBox, QFileDialog, QDialog, QDockWidget,QVBoxLayout,QTableWidgetItem
 from PySide6.QtCore import Qt
 import SimpleITK as sITK
 import numpy as np
@@ -440,7 +440,7 @@ class ButtonsGUI_4D:
                             #add to intensity table
                             keys = list(self.LoadMRI.vtk_widgets[0].keys())
                             idx = keys.index(data_view)
-                            tabclass = getattr(self.LoadMRI, f"intensity_table{idx}")
+                            tabclass = self.LoadMRI.intensity_table[idx]
                             tabclass.update_table(os.path.basename(file_name), vol,idx)
                             self.ui.contrast_data.setItemEnabled(idx, False)
                         self.LoadMRI.mrid_tags.heatmap_unsuper = False
@@ -523,7 +523,7 @@ class ButtonsGUI_4D:
                             #add to intensity table
                             keys = list(self.LoadMRI.vtk_widgets[0].keys())
                             idx = keys.index(data_view)
-                            tabclass = getattr(self.LoadMRI, f"intensity_table{idx}")
+                            tabclass = self.LoadMRI.intensity_table[idx]
                             tabclass.update_table(os.path.basename(file_name), vol,idx)
                             self.ui.contrast_data.setItemEnabled(idx, False)
 
@@ -826,7 +826,8 @@ class ButtonsGUI_4D:
             del self.LoadMRI.Visualisation3D.chMap
             self.LoadMRI.Visualisation3D.delete_volumes(self.totalmrid[index],0, 0) #new_label_idx?
         else:
-            self.LoadMRI.Visualisation3D = Visualisation3D(self.LoadMRI.session_path,self.MW,self.totalmrid[index],electrode_localisation=True,index=index)
+            self.LoadMRI.Visualisation3D = Visualisation3D(self.LoadMRI.session_path,self.MW,self.totalmrid[index],self.totalmrid,electrode_localisation=True)
+            self.LoadMRI.Visualisation3D.index = index
             self.LoadMRI.Visualisation3D.initialize_mridTag(self.totalmrid[index],chMap=self.chMap[index])
 
     def contrast_adjustments(self):
