@@ -70,7 +70,6 @@ class Visualisation3D:
             self.table_excel.cellClicked.connect(self.on_table_click)
 
             self.comboBox_mrid.addItems(self.MW.ButtonsGUI_4D.totalmrid)
-
             self.totalatlasCoordinates_pkl = self.MW.ButtonsGUI_4D.totalatlasCoordinates_pkl
             self.mrid_tags = self.MW.ButtonsGUI_4D.totalmrid
             self.index = self.MW.ButtonsGUI_4D.mrid_index

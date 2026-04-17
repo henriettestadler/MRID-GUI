@@ -28,8 +28,8 @@ class ClickablePlotWidget(pg.PlotWidget):
         # Pass event up to main widget
         channel_idx = self.PgWidget.find_closest_line(x, y)
 
-        # highlight line and focus on point
-        self.PgWidget.VisEphys.Vis3D.manually_pick_point(point=[],idx=channel_idx)
+        point = self.PgWidget.VisEphys.Vis3D.coords_list[channel_idx]
+        self.PgWidget.VisEphys.Vis3D.show_coords(point)
         self.PgWidget.VisEphys.highlight_channel(channel_idx)
 
         super().mouseDoubleClickEvent(event)
@@ -106,7 +106,7 @@ class ClickablePlotWidget(pg.PlotWidget):
             if delta.x() != 0:  # horizontal scroll
                 self.PgWidget.VisEphys.time_start = max(0,self.PgWidget.VisEphys.time_start+delta.x()/1000)
                 self.PgWidget.VisEphys.time_end += delta.x()/1000
-                signal = self.PgWidget.VisEphys.read_data.analogsignals[0].load(time_slice=(self.PgWidget.VisEphys.time_start,self.PgWidget.VisEphys.time_end),channel_indexes=self.PgWidget.displayed_channels)
+                signal = self.PgWidget.VisEphys.Ephys.ephys_data.read_data.analogsignals[0].load(time_slice=(self.PgWidget.VisEphys.time_start,self.PgWidget.VisEphys.time_end),channel_indexes=self.PgWidget.displayed_channels)
                 self.PgWidget.VisEphys.displayed_channels,self.PgWidget.VisEphys.ephys_lines = self.PgWidget.plot_ephys(signal.times, signal.magnitude, self.PgWidget.displayed_channels)
 
                 #change slots
@@ -231,7 +231,7 @@ class ClickablePlotWidget(pg.PlotWidget):
         if channels_measurement == [] or abs(t2-t1)<1e-4:
             return
 
-        signal = self.PgWidget.VisEphys.read_data.analogsignals[0].load(time_slice=(t1,t2),channel_indexes=channels_measurement)
+        signal = self.PgWidget.VisEphys.Ephys.ephys_data.read_data.analogsignals[0].load(time_slice=(t1,t2),channel_indexes=channels_measurement)
 
         points_x = []
         points_y = []
@@ -243,7 +243,7 @@ class ClickablePlotWidget(pg.PlotWidget):
             ch_min = np.min(signal_data)
             t_max = signal.times[np.argwhere(signal_data==ch_max)[0][0]]
             t_min = signal.times[np.argwhere(signal_data==ch_min)[0][0]]
-            diff_y_uV = (ch_max-ch_min)*0.192
+            diff_y_uV = (ch_max-ch_min)*0.195
             signal_times, ch_norm, offset = self.PgWidget.lines_values[line_indices[idx]]
             values = ch_norm + offset
             y_max=values[np.argmin(np.abs(signal_times - t_max))]
@@ -266,7 +266,7 @@ class ClickablePlotWidget(pg.PlotWidget):
 
             diff_y = self.PgWidget.yMax -self.PgWidget.yMin #diff_y/20
             print(self.PgWidget.yMin + idx*diff_y/(len(self.PgWidget.MW.Ephys.ephys_data.all_channels) * self.PgWidget.slot_height)*2,flush=True)
-            self.measurement_text[idx].setText(f"Ch {ch_idx}: {mins}:{secs:02d}.{ms:03d}, {(diff_y_uV):.3f} uV")
+            self.measurement_text[idx].setText(f"Ch {ch_idx}: {mins}:{secs:02d}.{ms:03d} min, {(diff_y_uV):.3f} uV")
             self.measurement_text[idx].setPos(self.PgWidget.xMin, self.PgWidget.yMin + idx*diff_y/(len(self.PgWidget.MW.Ephys.ephys_data.all_channels) * self.PgWidget.slot_height)*2) #*0.015
             self.measurement_text[idx].setFont(QtGui.QFont("Arial", self.height()*0.015, QtGui.QFont.Bold))
 
@@ -331,20 +331,14 @@ class PgWidget(QWidget):
         if floating:
             self.MW.ui.dockWidget_ephys.showFullScreen()
 
-    def change_amplitude(self,amplitude_change):
-        #signal = self.VisEphys.read_data.analogsignals[0].load(time_slice=(self.VisEphys.time_start,self.VisEphys.time_end),channel_indexes=self.displayed_channels)
-        self.amplitude = max(0.01,self.amplitude+amplitude_change)
+    def change_amplitude(self,val):
+        self.amplitude = max(0.01,self.amplitude+val)
 
         for index, line in self.lines.items():
             if line is None:
                 continue
             signal_times, ch_norm, offset = self.lines_values[index]
             line.setData(signal_times, ch_norm * self.amplitude + offset)
-
-        ##plot channels new and highlight current selected channel
-        #self.VisEphys.displayed_channels,self.VisEphys.ephys_lines = self.plot_ephys(signal.times, signal.magnitude, self.displayed_channels,clear=False)
-        ##if self.VisEphys.Vis3D.table_excel.currentRow()!=-1:
-        #self.VisEphys.highlight_channel(ch_idx=self.VisEphys.ch_highlight)
 
 
 
@@ -469,6 +463,4 @@ class PgWidget(QWidget):
         self.plot.setLimits(yMin=self.yMin, yMax=self.yMax,xMin=self.xMin,xMax=self.xMax)
         self.plot.setXRange(self.xMin,self.xMax)
         self.plot.setYRange(self.yMin,self.yMax)
-        #if hasattr(self.plot,"measurement_text"):
-        #    self.plot.measurement_text.setPos(self.xMin, self.yMin)
 
