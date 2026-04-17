@@ -17,71 +17,68 @@ import numpy
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QComboBox, QDialogButtonBox, QLabel
 from ephys.videoplayer import VideoPlayer
 
+##TODO
+#os.path.join(filename[:-4] + '.xml')
+#xml_file,flush=True)
+#xml -> mapp, tells you the order
+#- number of channels
+#- 16bits -> int16 (plus und minus Werte)
+#- Hz
+#- groups… (each has their own visualisation window); ich glaube pro tag 1group
+#- dead channels (if skip=1), aber option haben
+
 class InitEphys:
     def __init__(self, MW,filename):
         self.MW = MW
-        self.MW.ui.pushButton_anatRegion.clicked.connect(self.changeRegion)
-        self.first_time = True
+        #self.first_time = True
         self.session_path = os.path.dirname(os.path.dirname(filename))
 
+        self.MW.ui.pushButton_anatRegion.clicked.connect(self.changeRegion)
         self.MW.ui.pushButton_changeTAG.clicked.connect(self.change_mridTAG_combobox)
-        self.Video = VideoPlayer(self.MW)
-        self.MW.ui.pushButton_AddVideo.clicked.connect(self.Video.add_video)
 
-    ##TODO
-    #os.path.join(filename[:-4] + '.xml')
-    #xml_file,flush=True)
-    #xml -> mapp, tells you the order
-    #- number of channels
-    #- 16bits -> int16 (plus und minus Werte)
-    #- Hz
-    #- groups… (each has their own visualisation window); ich glaube pro tag 1group
-    #- dead channels (if skip=1), aber option haben
+        self.MW.ui.pushButton_AddVideo.clicked.connect(self.add_video)
+
+        self.mrid_info = MRIDInfo.from_file(filename,group_idx=0)
+        self.ephys_data = EphysRecording.from_file(filename,group_idx=0)
+
+        self.Visualisation3D = Visualisation3D(self.session_path,self.MW,chMap=self.ephys_data.all_channels,Ephys=self)
+        self.Visualisation3D.initialize_mridTag(self.mrid_info.mrid,chMap=self.ephys_data.all_channels)
+        self.VisEphys = VisualisationEphys(self.MW,self.Visualisation3D,self)
+
+        self.MW.ui.spinBox_channelID.valueChanged.connect(self.Visualisation3D.channel_changed)
+        self.MW.ui.horizontalSlider_ElectrodeRegion.valueChanged.connect(self.Visualisation3D.change_opacityRegionOfInterest)
+        self.MW.ui.horizontalSlider_OtherRegions.valueChanged.connect(self.Visualisation3D.change_opacityOtherRegions)
+        self.MW.ui.horizontalSlider_Background.valueChanged.connect(self.Visualisation3D.change_opacityBackground)
+
+    def open_dat_newly(self,filename):
+        self.ephys_data = EphysRecording.from_file(filename,self.mrid_info.xml_group_idx )
+
+        self.Visualisation3D.index = self.mrid_info.xml_group_idx
+        #self.mrid_info.mrid = list(self.mrid_info.mrid_coordinates.keys())[self.mrid_info.xml_group_idx]
+        self.Visualisation3D.spinbox.blockSignals(True)
+        self.Visualisation3D.table_excel.blockSignals(True)
+        self.Visualisation3D.initialize_mridTag(self.mrid_info.mrid,chMap=self.ephys_data.all_channels)
+        self.Visualisation3D.spinbox.blockSignals(False)
+        self.Visualisation3D.fill_table(self.ephys_data.all_channels,self.ephys_data.dead_channels)
+        self.Visualisation3D.table_excel.blockSignals(False)
+
+        self.open_dat(filename,self.mrid_info.xml_group_idx)
+
 
     def open_dat(self,filename,group_idx=0):
-        self.ephys_data = EphysRecording.from_file(filename)
-
-        if self.first_time:
-            self.ephys_data.all_channels =self.ephys_data.all_channels[0]
-            self.ephys_data.dead_channels = self.ephys_data.dead_channels[0]
-            self.ephys_data.active_channels =self.ephys_data.active_channels[0]
-            self.mrid_info = MRIDInfo.from_file(filename,group_idx)
-            self.Visualisation3D = Visualisation3D(self.session_path,self.MW,self.mrid_info.mrid,self.mrid_info.mrid_tags,chMap=self.ephys_data.all_channels)
-            self.Visualisation3D.initialize_mridTag(self.mrid_info.mrid,chMap=self.ephys_data.all_channels)
-            self.VisEphys = VisualisationEphys(self.MW,self.Visualisation3D,self.ephys_data.read_data,self.ephys_data.all_channels,self.ephys_data.dead_channels)
-        else:
-            self.ephys_data.all_channels =self.ephys_data.all_channels[self.mrid_info.mrid_idx_xml]
-            self.ephys_data.dead_channels = self.ephys_data.dead_channels[self.mrid_info.mrid_idx_xml]
-            self.ephys_data.active_channels =self.ephys_data.active_channels[self.mrid_info.mrid_idx_xml]
-            self.Visualisation3D.index = self.mrid_info.mrid_idx_xml
-            self.mrid_info.mrid = list(self.mrid_info.mrid_coordinates.keys())[self.mrid_info.mrid_idx_xml]
-            self.Visualisation3D.spinbox.blockSignals(True)
-            self.Visualisation3D.table_excel.blockSignals(True)
-            self.Visualisation3D.initialize_mridTag(self.mrid_info.mrid,chMap=self.ephys_data.all_channels)
-            self.Visualisation3D.spinbox.blockSignals(False)
-            self.Visualisation3D.fill_table(self.ephys_data.all_channels,self.ephys_data.dead_channels)
-            self.Visualisation3D.table_excel.blockSignals(False)
-
-        print(self.mrid_info.mrid_idx_xml,flush=True)
         self.MW.ui.widget_pgEphys.init_PgWidget_class(self.VisEphys,self.MW)
 
         self.VisEphys.visualize_data(self.ephys_data.active_channels)
         self.Visualisation3D.manually_pick_point(point=[],idx=self.ephys_data.all_channels.index(self.ephys_data.active_channels[0]))
-        if self.first_time:
-            self.Visualisation3D.spinbox.valueChanged.connect(self.Visualisation3D.channel_changed)
-            self.MW.ui.horizontalSlider_ElectrodeRegion.valueChanged.connect(self.Visualisation3D.change_opacityRegionOfInterest)
-            self.MW.ui.horizontalSlider_OtherRegions.valueChanged.connect(self.Visualisation3D.change_opacityOtherRegions)
-            self.MW.ui.horizontalSlider_Background.valueChanged.connect(self.Visualisation3D.change_opacityBackground)
-            self.first_time = False
-
         self.Visualisation3D.plotter.enable_parallel_projection()
+
 
     def change_xml_file(self,channel_idx:int,skip):
         tree = ET.parse(self.ephys_data.xml_path)
         root = tree.getroot()
 
         for idx, group in enumerate(root.findall('.//group')):
-            if idx == self.mrid_info.mrid_idx_xml:
+            if idx == self.mrid_info.xml_group_idx:
                 for ch in group.findall('channel'):
                     if int(ch.text) == int(channel_idx):
                         ch.set('skip', str(skip))
@@ -89,7 +86,7 @@ class InitEphys:
 
         tree.write(self.ephys_data.xml_path, xml_declaration=True, encoding="utf-8")
 
-    def change_mridTAG_combobox(self): #,filename,new_tag_index
+    def change_mridTAG_combobox(self):
         dialog = QDialog(self.MW)
         dialog.setWindowTitle("Select new MRID TAG")
         layout = QVBoxLayout()
@@ -117,11 +114,11 @@ class InitEphys:
 
 
     def change_mridTAG(self,new_index):
-        self.mrid_info.mrid_idx_xml = new_index
-        self.mrid_info.mrid = list(self.mrid_info.mrid_coordinates.keys())[self.mrid_info.mrid_idx_xml] #'trio' #A->0
+        self.mrid_info.xml_group_idx = new_index
+        self.mrid_info.mrid = list(self.mrid_info.mrid_coordinates.keys())[self.mrid_info.xml_group_idx] #'trio' #A->0
 
         del self.Visualisation3D.chMap
-        self.open_dat(self.ephys_data.file_path)
+        self.open_dat_newly(self.ephys_data.file_path)
 
 
 
@@ -180,16 +177,14 @@ class InitEphys:
         if (old_labels == new_idx).any() and (new_labels == old_idx).any():
             return False
         else:
-            #new atlas with the new label
-            atlas_image = sITK.ReadImage(os.path.join(os.path.dirname(os.path.dirname((__file__))), "Files",'Atlas','WHS_SD_rat_atlas_v4.nii.gz'))
-            volume = sITK.GetArrayFromImage(atlas_image)
-            volume[~np.isin(volume,new_labels)]=0
-            label_image = sITK.GetImageFromArray(volume)
-            label_image.CopyInformation(atlas_image)
-            save_path = os.path.join(self.session_path,'analysed','atlas-regions.nii.gz')
-            sITK.WriteImage(label_image, save_path)
+            self.Visualisation3D.create_atlas_region_file(self.mrid_info.mrid)
             return True
 
+
+
+    def add_video(self):
+        self.Video = VideoPlayer(self.MW)
+        self.Video.add_video()
 
 
 

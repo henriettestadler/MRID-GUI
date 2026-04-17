@@ -11,7 +11,6 @@ import os
 class Change_AnatRegion(QDialog):
     def __init__(self, MW,parent=None):
         super().__init__(parent)
-
         self.MW = MW
         self.MW.ui.comboBox_ChangeanatRegion.currentIndexChanged.connect(self.update_combobox_color)
 
@@ -68,7 +67,7 @@ class Change_AnatRegion(QDialog):
         labels = labels[labels != 0]
 
         voxel_sizes = np.sqrt((affine[:3, :3] ** 2).sum(axis=0))
-        atlas_labels = np.unique(self.MW.Ephys.Visualisation3D.points_data.iloc[:, 1].values)
+        #atlas_labels = np.unique(self.MW.Ephys.Visualisation3D.points_data.iloc[:, 1].values)
 
         ##limit to 4mm (sqrt(2.52²*3)=4.36mm)
         radius_mm = 2.52

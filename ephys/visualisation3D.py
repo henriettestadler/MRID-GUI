@@ -18,29 +18,24 @@ from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt
 import vtk
 from concurrent.futures import ThreadPoolExecutor
-
+import colorsys
 
 class Visualisation3D:
-    def __init__(self,session_path,MW,mrid,mrid_tags,electrode_localisation=False,chMap=None):
-
+    def __init__(self,session_path,MW,electrode_localisation=False,chMap=None,Ephys=None):
         self.electrode_localisation=electrode_localisation
         self.MW = MW
-        self.filepath_atlas = os.path.join(session_path,"analysed",'atlas-regions.nii.gz')
-        self.filepath_atlas_channels = os.path.join(os.path.join(session_path,"analysed"))
         self.ui = MW.ui
         self.enable_picking = False
         self.norm_vec = None
         self.parallel_projection = True
-        self.slice_z= 'top'
-        self.slice_x= 'right'
-        self.slice_y= 'front'
         self.poly_otherMrids = {}
         self.opacityBackground = 0.2
         self.opacityRegions = 0.9
         self.opacityRoI = 0.9
+        self.session_path = session_path
 
-        self.list_of_good_colors = [(1.0,1.0,1.0),(0.224,1.0,0.078),(1.0,0.078,0.576),(0.0,1.0,1.0),(1.0,0.647,0.0),(1.0,1.0,0.0),
-            (0.0,0.588,1.0),(1.0,0.196,0.196),(0.749,0.0,1.0),(0.0,1.0,0.588),(1.0,0.392,1.0),(0.392,1.0,1.0),(1.0,0.784,0.0),
+        self.list_of_good_colors = [(1.0,1.0,1.0),(0.224,1.0,0.078),(1.0,0.078,0.576),(0.0,1.0,1.0),(1.0,0.647,0.0),(0.0,0.588,1.0),
+            (1.0,1.0,0.0),(0.749,0.0,1.0),(0.0,1.0,0.588),(1.0,0.196,0.196),(1.0,0.392,1.0),(0.392,1.0,1.0),(1.0,0.784,0.0),
             (0.196,1.0,0.784),(1.0,0.314,0.0),(0.706,1.0,0.0),(0.0,0.784,1.0),(1.0,0.0,0.392),(0.588,0.196,1.0),(0.0,1.0,0.314),(1.0,0.627,0.196)
         ]
 
@@ -48,6 +43,7 @@ class Visualisation3D:
 
         #set up layout
         pv.global_theme.background = 'black'
+
         if electrode_localisation:
             self.ui.tabWidget_visualisation.tabBar().setVisible(True)
             layout = QVBoxLayout(self.ui.vtkWidget_vis3D)
@@ -76,8 +72,10 @@ class Visualisation3D:
             self.comboBox_mrid.addItems(self.MW.ButtonsGUI_4D.totalmrid)
 
             self.totalatlasCoordinates_pkl = self.MW.ButtonsGUI_4D.totalatlasCoordinates_pkl
-            self.mrid_tags = mrid_tags #self.MW.ButtonsGUI_4D.totalmrid
+            self.mrid_tags = self.MW.ButtonsGUI_4D.totalmrid
+            self.index = self.MW.ButtonsGUI_4D.mrid_index
         else:
+            self.Ephys = Ephys
             layout = QVBoxLayout(self.ui.vtkWidget_ephys)
             layout.setContentsMargins(0, 0, 0, 0)
             self.plotter = QtInteractor(self.ui.vtkWidget_ephys)
@@ -98,7 +96,7 @@ class Visualisation3D:
             self.ui.pushButton_Noslicing.clicked.connect(self.no_slicing)
 
             combo_items = []
-            for i, mrid in enumerate(self.MW.Ephys.mrid_info.mrid_coordinates):
+            for i, mrid in enumerate(self.Ephys.mrid_info.mrid_coordinates):
                 text = f"{mrid} (Channel Group: {i})"
                 combo_items.append(text)
             self.comboBox_mrid.addItems(combo_items)
@@ -111,11 +109,11 @@ class Visualisation3D:
             self.MW.ui.horizontalSlider_OtherRegions.setValue(self.opacityRegions*100)
             self.MW.ui.horizontalSlider_Background.setValue(self.opacityBackground*100)
 
-            self.mrid_tags = mrid_tags
-            self.index = self.MW.Ephys.mrid_info.mrid_idx_xml
-            self.totalatlasCoordinates_pkl = self.MW.Ephys.mrid_info.totalatlasCoordinates_pkl
+            self.mrid_tags = self.Ephys.mrid_info.mrid_tags
+            self.index = self.Ephys.mrid_info.xml_group_idx
+            self.totalatlasCoordinates_pkl = self.Ephys.mrid_info.totalatlasCoordinates_pkl
 
-        print(self.filepath_atlas_channels,flush=True)
+        self.create_atlas_region_file(self.mrid_tags[self.index])
 
         self.btn_slicex.clicked.connect(self.slice_vol_x)
         self.btn_slicey.clicked.connect(self.slice_vol_y)
@@ -132,6 +130,7 @@ class Visualisation3D:
         self.hover_label.GetTextProperty().SetFontSize(14)
         self.hover_label.GetTextProperty().SetColor(1, 1, 1)  # white
         self.plotter.renderer.AddActor2D(self.hover_label)
+
 
 
     def initialize_mridTag(self,mrid,chMap=None):
@@ -173,6 +172,7 @@ class Visualisation3D:
             mesh = actor.mapper.dataset
             idx = mesh.find_closest_cell(point)
             nifti_value = mesh.cell_data['NIFTI'][idx]
+            #nifti_value = int(round(mesh.point_data['NIFTI'][idx]))
         elif actor==self.plotter.actors['atlas']:
             mesh = actor.mapper.dataset
             idx = mesh.find_closest_cell(point)
@@ -197,7 +197,7 @@ class Visualisation3D:
                 closest_idx = self.poly_otherMrids[i].find_closest_point(point)
                 closest_pt = self.poly_otherMrids[i].points[closest_idx]
                 if np.allclose(closest_pt, point, atol=1.0):  # tune tolerance
-                    self.MW.Ephys.change_mridTAG(i)
+                    self.Ephys.change_mridTAG(i)
                     return
         else:
             self.show_coords(point)
@@ -209,8 +209,9 @@ class Visualisation3D:
         if len(idx)==0:
             return
 
-        if self.chMap[idx[0]] in self.MW.Ephys.ephys_data.dead_channels:
-            return
+        if not self.electrode_localisation:
+            if self.chMap[idx[0]] in self.Ephys.ephys_data.dead_channels:
+                return
 
         if len(idx):
             row = self.points_data.iloc[idx[0]]
@@ -226,23 +227,23 @@ class Visualisation3D:
                 self.combobox.setCurrentIndex(index)
 
             if self.clipped_meshes:
-                self.MW.ui.horizontalSlider_Background.blockSignals(True)
-                self.MW.ui.horizontalSlider_ElectrodeRegion.blockSignals(True)
-                self.MW.ui.horizontalSlider_OtherRegions.blockSignals(True)
-                self.opacityBackground = 0.2
-                self.opacityRegions = 0.9
-                self.opacityRoI = 0.9
-                self.MW.ui.horizontalSlider_Background.setValue(self.opacityBackground*100)
-                self.MW.ui.horizontalSlider_ElectrodeRegion.setValue(self.opacityRoI*100)
-                self.MW.ui.horizontalSlider_OtherRegions.setValue(self.opacityRegions*100)
-                self.MW.ui.horizontalSlider_Background.blockSignals(False)
-                self.MW.ui.horizontalSlider_ElectrodeRegion.blockSignals(False)
-                self.MW.ui.horizontalSlider_Background.blockSignals(False)
-                self.add_background(self.background_mesh)
-
-            self.manually_pick_point(point,idx=idx[0])
+                self.render_clipped(self.render_normal)
+                self.plotter.add_points(
+                    point,
+                    color="red",
+                    point_size=20,
+                    name="picked_point",
+                    render_points_as_spheres=True,
+                    reset_camera=False,
+                    render=False
+                )
+                self.plotter.set_focus(point)
+            else:
+                self.manually_pick_point(point,idx=idx[0])
 
     def delete_volumes(self,mrid,new_label_idx, point_idx):
+        self.plotter.iren.remove_observer(self.on_hover)
+
         self.norm_vec = None
         ## load atlas new
         img = nib.load(self.filepath_atlas)
@@ -265,15 +266,18 @@ class Visualisation3D:
         self.background_small = self.background_small.threshold(value=0.5)
         for val in self.unique_vals:
             self.background_small = self.background_small.threshold(value=[val - 0.5, val + 0.5],invert=True)
-
+        idx_colors = 0
         if np.all(self.rgba[new_label_idx, :3] == [0, 0, 0]): #self.rgba[new_label_idx, :3] == [0 0 0]:
-            self.rgba[new_label_idx, :3] = self.list_of_good_colors[self.idx_colors]
+            self.rgba[new_label_idx, :3] = self.list_of_good_colors[idx_colors]
             self.rgba[new_label_idx, 3] = 1
-            self.idx_colors += 1
+            idx_colors += 1
             self.cmap = ListedColormap(self.rgba)
 
         #load new
         self.manually_pick_point([],idx=point_idx)
+
+        self.plotter.iren.remove_observer(self.on_hover)
+
 
     def change_perspective(self):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -361,6 +365,8 @@ class Visualisation3D:
 
         #look at point and render
         self.focus_on_point(point,idx)
+        #self.table_excel.verticalScrollBar().setValue(idx / (len(self.Ephys.ephys_data.all_channels)-1)*self.table_excel.verticalScrollBar().maximum())
+
 
     def load_atlas(self,filepath):
         # Define the two independent loading tasks
@@ -381,21 +387,15 @@ class Visualisation3D:
                                            "Files", 'Atlas', 'WHS_SD_rat_atlas_v4.nii.gz')
 
             img = nib.load(background_path)
-            data = img.get_fdata().astype(int)[::6, ::6, ::6]
-            mesh = pv.ImageData()
-            mesh.dimensions = np.array(data.shape) + 1
-            mesh.spacing = tuple(s * 6 for s in img.header.get_zooms()[:6])
-            mesh.origin = (0.0, 0.0, 0.0)
-            mesh.cell_data['NIFTI'] = data.flatten(order='F')
-
-            data = img.get_fdata().astype(int)[::10, ::10, ::10]
+            scale_background= 3
+            data = img.get_fdata().astype(int)[::scale_background, ::scale_background, ::scale_background]
             mesh_small = pv.ImageData()
             mesh_small.dimensions = np.array(data.shape) + 1
-            mesh_small.spacing = tuple(s * 10 for s in img.header.get_zooms()[:10])
+            mesh_small.spacing = tuple(s * scale_background for s in img.header.get_zooms()[:3])
             mesh_small.origin = (0.0, 0.0, 0.0)
             mesh_small.cell_data['NIFTI'] = data.flatten(order='F')
 
-            return mesh,mesh_small
+            return mesh_small
 
         def load_labels():
             labels_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
@@ -412,26 +412,36 @@ class Visualisation3D:
             future_labels = executor.submit(load_labels)
 
             vol_small,self.unique_vals = future_atlas.result()
-            background_mesh,background_small = future_background.result()
+            background_mesh = future_background.result()
             self.atlaslabelsdf = future_labels.result()
             self.background_mesh = background_mesh
 
-            background_small = background_small.threshold(value=0.5)
+            background_small = background_mesh.threshold(value=0.5)
             for val in self.unique_vals:
                 background_small = background_small.threshold(value=[val - 0.5, val + 0.5],invert=True)
             self.background_small = background_small
+
 
         if 'background' not in self.plotter.actors:
             self.add_background(background_mesh)  # pass mesh directly
         max_idx = int(self.atlaslabelsdf['IDX'].max())
         self.rgba = np.zeros((max_idx + 1, 4))
-        self.idx_colors = 0
+        rgba_background = np.zeros((max_idx + 1, 4))
+        #rgba_background[:] = [0.9, 0.9, 0.9, 1]
+        idx_colors = 0
         for _, row in self.atlaslabelsdf.iterrows():
             if row['IDX'] in self.unique_vals:
-                self.rgba[int(row['IDX']), :3] = self.list_of_good_colors[self.idx_colors] #[row['R']/255, row['G']/255, row['B']/255, row['A']/255]
+                self.rgba[int(row['IDX']), :3] = self.list_of_good_colors[idx_colors]
                 self.rgba[int(row['IDX']), 3] = 1
-                self.idx_colors += 1
+                idx_colors += 1
+            else:
+                r, g, b = row['R']/255, row['G']/255, row['B']/255
+                r, g, b = self.desaturate((r, g, b), 0.25)  # 0=grey, 1=full color
+                rgba_background[int(row['IDX'])] = [r, g, b, 1]
+                #rgba_background[int(row['IDX']), :] = [row['R']/255, row['G']/255, row['B']/255, 0.1]
+
         self.cmap = ListedColormap(self.rgba)
+        self.cmap_background = ListedColormap(rgba_background)
 
         self.combobox.addItems(self.atlaslabelsdf['LABEL'].values)
         self.opacity = np.full(len(self.atlaslabelsdf), 0.5)
@@ -445,6 +455,11 @@ class Visualisation3D:
         self.mesh_atlas = vol_small
         self.mesh_atlas = self.mesh_atlas.threshold(value=[1, 502], scalars='NIFTI')
 
+    def desaturate(self,rgb, factor):
+        r, g, b = rgb
+        h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        s *= factor  # reduce saturation
+        return colorsys.hsv_to_rgb(h, s, v)
 
 
     def update_electrode_points(self,filepath,mrid):
@@ -452,7 +467,7 @@ class Visualisation3D:
             img = sITK.ReadImage(filepath)
             self.spacing = img.GetSpacing()[0]
 
-        points_electrodes_path = os.path.join(self.filepath_atlas_channels,mrid,'channel_atlas_coordinates.xlsx')
+        points_electrodes_path = os.path.join(os.path.join(os.path.join(self.session_path,"analysed")),mrid,'channel_atlas_coordinates.xlsx')
         self.points_data = pd.read_excel(points_electrodes_path,header=0)
         self.coords_list = self.points_data.iloc[:, -3:].values*self.spacing
 
@@ -580,7 +595,7 @@ class Visualisation3D:
             self.plotter.enable_parallel_projection()
 
         if not self.electrode_localisation:
-            self.MW.Ephys.VisEphys.highlight_channel(index)
+            self.Ephys.VisEphys.highlight_channel(index)
         else:
             self.table_excel.selectRow(index)
 
@@ -605,183 +620,40 @@ class Visualisation3D:
 
 
     def slice_vol_x(self,val):
-        x0 = (self.coord_x.value()-1)*self.spacing
-        y0 = (self.coord_y.value()-1)*self.spacing
-        z0 = (self.coord_z.value()-1)*self.spacing
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        clipped_poly_otherMrids = {}
-
-        if self.slice_x== 'right':
-            clipped_background = self.background_small.clip(normal='-x', origin=(x0, y0, z0))
-            clipped_atlas = self.mesh_atlas.clip(normal='-x', origin=(x0, y0, z0))
-            clipped_poly = self.points_poly.clip(normal='-x', origin=(x0, y0, z0))
-            mask = self.points_poly.points[:, 0] >= x0
-            clipped_labels = np.array(self.points_poly['Labels'])[mask]
-            clipped_poly['Labels'] = clipped_labels
-            self.btn_slicex.setIcon(QIcon(os.path.join(base_dir, "Icons", "ephys","slicing_sagittal_left.png")))
-            self.slice_x= 'left'
-            vector = [-1,0,0]
-            self.plotter.camera.up = (0, 0, 1)
-            roll_angle = 90
-            for i in range(len(self.totalatlasCoordinates_pkl)):
-                if i == self.index:
-                    clipped_poly_otherMrids[i] = None
-                    continue
-                clipped_poly_otherMrids[i] = self.poly_otherMrids[i].clip(normal='-x', origin=(x0, y0, z0))
+        if self.btn_slicex.isChecked():
+            normal = '-x'
+            self.btn_slicez.setIcon(QIcon(os.path.join(base_dir, "Icons", "ephys","slicing_coronal_back.png")))
         else:
-            clipped_background = self.background_small.clip(normal='x', origin=(x0, y0, z0))
-            clipped_atlas = self.mesh_atlas.clip(normal='x', origin=(x0, y0, z0))
-            clipped_poly = self.points_poly.clip(normal='x', origin=(x0, y0, z0))
-            mask = self.points_poly.points[:,0] <= x0
-            clipped_labels = np.array(self.points_poly['Labels'])[mask]
-            clipped_poly['Labels'] = clipped_labels
-            self.slice_x= 'right'
-            self.btn_slicex.setIcon(QIcon(os.path.join(base_dir, "Icons", "ephys","slicing_sagittal_right.png")))
-            vector = [1,0,0]
-            self.plotter.camera.up = (0, 0, 1)
-            roll_angle = -90
-            for i in range(len(self.totalatlasCoordinates_pkl)):
-                if i == self.index:
-                    clipped_poly_otherMrids[i] = None
-                    continue
-                clipped_poly_otherMrids[i] = self.poly_otherMrids[i].clip(normal='x', origin=(x0, y0, z0))
+            normal = 'x'
+            self.btn_slicez.setIcon(QIcon(os.path.join(base_dir, "Icons", "ephys","slicing_coronal_front.png")))
 
-        self.render_clipped(clipped_background, clipped_atlas,clipped_poly,clipped_poly_otherMrids)
-
-        # set camera so that slice is in 2D view
-        focal_point = self.plotter.camera.focal_point
-        # Preserve viewing direction
-        if self.parallel_projection==True:
-            self.plotter.disable_parallel_projection()
-        distance = 40
-        new_pos = np.array(focal_point) + np.array(vector) * distance  # distance controls how close
-        self.plotter.set_position(new_pos)
-
-        self.plotter.camera.roll = roll_angle
-
-        if self.parallel_projection==True:
-            self.plotter.enable_parallel_projection()
-
+        self.render_clipped(normal)
 
 
     def slice_vol_y(self,val):
-        x0 = (self.coord_x.value()-1)*self.spacing
-        y0 = (self.coord_y.value()-1)*self.spacing
-        z0 = (self.coord_z.value()-1)*self.spacing
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        clipped_poly_otherMrids = {}
-
-        if self.slice_y== 'front':
-            clipped_background = self.background_small.clip(normal='-y', origin=(x0, y0, z0))
-            clipped_atlas = self.mesh_atlas.clip(normal='-y', origin=(x0, y0, z0))
-            clipped_poly = self.points_poly.clip(normal='-y', origin=(x0, y0, z0))
-            mask = self.points_poly.points[:, 1] >= y0
-            clipped_labels = np.array(self.points_poly['Labels'])[mask]
-            clipped_poly['Labels'] = clipped_labels
-            self.btn_slicey.setIcon(QIcon(os.path.join(base_dir, "Icons", "ephys","slicing_coronal_back.png")))
-            self.slice_y= 'back'
-            vector = [0,-1,0]
-            self.plotter.camera.up = (0, 0, 1)
-            roll_angle = 0
-            #if hasattr(self.MW,'ButtonsGUI_4D'):
-            for i in range(len(self.totalatlasCoordinates_pkl)):
-                if i == self.index:
-                    clipped_poly_otherMrids[i] = None
-                    continue
-                clipped_poly_otherMrids[i] = self.poly_otherMrids[i].clip(normal='-y', origin=(x0, y0, z0))
+        if self.btn_slicey.isChecked():
+            normal = '-y'
+            self.btn_slicez.setIcon(QIcon(os.path.join(base_dir, "Icons", "ephys","slicing_coronal_back.png")))
         else:
-            clipped_background = self.background_small.clip(normal='y', origin=(x0, y0, z0))
-            clipped_atlas = self.mesh_atlas.clip(normal='y', origin=(x0, y0, z0))
-            clipped_poly = self.points_poly.clip(normal='y', origin=(x0, y0, z0))
-            mask = self.points_poly.points[:, 1] <= y0
-            clipped_labels = np.array(self.points_poly['Labels'])[mask]
-            clipped_poly['Labels'] = clipped_labels
-            self.btn_slicey.setIcon(QIcon(os.path.join(base_dir, "Icons", "ephys","slicing_coronal_front.png")))
-            self.slice_y= 'front'
-            vector = [0,1,0]
-            self.plotter.camera.up = (0, 0, 1)
-            roll_angle = 180
-            #if hasattr(self.MW,'ButtonsGUI_4D'):
-            for i in range(len(self.totalatlasCoordinates_pkl)):
-                if i == self.index:
-                    clipped_poly_otherMrids[i] = None
-                    continue
-                clipped_poly_otherMrids[i] = self.poly_otherMrids[i].clip(normal='y', origin=(x0, y0, z0))
+            normal = 'y'
+            self.btn_slicez.setIcon(QIcon(os.path.join(base_dir, "Icons", "ephys","slicing_coronal_front.png")))
 
-        self.render_clipped(clipped_background, clipped_atlas,clipped_poly,clipped_poly_otherMrids)
-
-        # set camera so that slice is in 2D view
-        focal_point = self.plotter.camera.focal_point
-        # Preserve viewing direction
-        if self.parallel_projection==True:
-            self.plotter.disable_parallel_projection()
-        distance = 40
-        new_pos = np.array(focal_point) + np.array(vector) * distance  # distance controls how close
-        self.plotter.set_position(new_pos)
-        self.plotter.camera.roll = roll_angle
-        if self.parallel_projection==True:
-            self.plotter.enable_parallel_projection()
-
+        self.render_clipped(normal)
 
 
     def slice_vol_z(self,val):
-        x0 = (self.coord_x.value()-1)*self.spacing
-        y0 = (self.coord_y.value()-1)*self.spacing
-        z0 = (self.coord_z.value()-1)*self.spacing
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        clipped_poly_otherMrids = {}
-
-        if self.slice_z== 'top':
-            clipped_background = self.background_small.clip(normal='-z', origin=(x0, y0, z0))
-            clipped_atlas = self.mesh_atlas.clip(normal='-z', origin=(x0, y0, z0),crinkle=True)
-            clipped_poly = self.points_poly.clip(normal='-z', origin=(x0, y0, z0))
-            mask = self.points_poly.points[:, 2] >= z0
-            clipped_labels = np.array(self.points_poly['Labels'])[mask]
-            clipped_poly['Labels'] = clipped_labels
+        if self.btn_slicez.isChecked():
+            normal = '-z'
             self.btn_slicez.setIcon(QIcon(os.path.join(base_dir, "Icons", "ephys","slicing_axial_bottom.png")))
-            self.slice_z= 'bottom'
-            vector = [0,0,-1]
-            self.plotter.camera.up = (0, 1,0)
-            roll_angle = 0
-            #if hasattr(self.MW,'ButtonsGUI_4D'):
-            for i in range(len(self.totalatlasCoordinates_pkl)):
-                if i == self.index:
-                    clipped_poly_otherMrids[i] = None
-                    continue
-                clipped_poly_otherMrids[i] = self.poly_otherMrids[i].clip(normal='-z', origin=(x0, y0, z0))
         else:
-            clipped_background = self.background_small.clip(normal='z', origin=(x0, y0, z0))
-            clipped_atlas = self.mesh_atlas.clip(normal='z', origin=(x0, y0, z0),crinkle=True)
-            clipped_poly = self.points_poly.clip(normal='z', origin=(x0, y0, z0))
-            mask = self.points_poly.points[:, 2] <= z0
-            clipped_labels = np.array(self.points_poly['Labels'])[mask]
-            clipped_poly['Labels'] = clipped_labels
+            normal = 'z'
             self.btn_slicez.setIcon(QIcon(os.path.join(base_dir, "Icons", "ephys","slicing_axial_top.png")))
-            self.slice_z= 'top'
-            vector = [0,0,1]
-            self.plotter.camera.up = (0, 1, 0)
-            roll_angle = 180
-            #if hasattr(self.MW,'ButtonsGUI_4D'):
-            for i in range(len(self.totalatlasCoordinates_pkl)):
-                if i == self.index:
-                    clipped_poly_otherMrids[i] = None
-                    continue
-                clipped_poly_otherMrids[i] = self.poly_otherMrids[i].clip(normal='z', origin=(x0, y0, z0))
 
-        self.render_clipped(clipped_background, clipped_atlas,clipped_poly,clipped_poly_otherMrids)
+        self.render_clipped(normal)
 
-        # set camera so that slice is in 2D view
-        focal_point = self.plotter.camera.focal_point
-        # Preserve viewing direction
-        if self.parallel_projection==True:
-            self.plotter.disable_parallel_projection()
-        distance = 60
-        new_pos = np.array(focal_point) + np.array(vector) * distance  # distance controls how close
-        self.plotter.set_position(new_pos)
-
-        self.plotter.camera.roll = roll_angle
-        if self.parallel_projection==True:
-            self.plotter.enable_parallel_projection()
 
     def no_slicing(self,val):
         # reset opacity
@@ -796,7 +668,7 @@ class Visualisation3D:
         self.MW.ui.horizontalSlider_OtherRegions.setValue(self.opacityRegions*100)
         self.MW.ui.horizontalSlider_Background.blockSignals(False)
         self.MW.ui.horizontalSlider_ElectrodeRegion.blockSignals(False)
-        self.MW.ui.horizontalSlider_Background.blockSignals(False)
+        self.MW.ui.horizontalSlider_OtherRegions.blockSignals(False)
         self.MW.ui.horizontalSlider_ElectrodeRegion.setEnabled(True)
 
         self.hover_label.SetInput("")
@@ -807,10 +679,79 @@ class Visualisation3D:
             row = items[0].row()
             self.manually_pick_point(point=[],idx=row,resetTo3D=True)
 
+        self.update_electrode_points(self.filepath_atlas,self.Ephys.mrid_info.mrid)
+        self.add_other_mrids()
 
+    def render_clipped(self,normal):
+        self.render_normal = normal
 
-    def render_clipped(self,clipped_background, clipped_atlas,clipped_poly,clipped_poly_otherMrids):
-        clipped_background = clipped_background.extract_surface(algorithm='dataset_surface').smooth_taubin(n_iter=50, pass_band=0.1)
+        x0 = (self.coord_x.value()-1)*self.spacing
+        y0 = (self.coord_y.value()-1)*self.spacing
+        z0 = (self.coord_z.value()-1)*self.spacing
+        #base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+        axis_map = {'x': 0, 'y': 1, 'z': 2}
+        axis = normal.lstrip('-')
+        col = axis_map[axis]
+        coord = {'x': x0, 'y': y0, 'z': z0}[axis]
+
+        if normal.startswith('-'):
+            mask = self.points_poly.points[:, col] >= coord
+            roll_angle = 0
+            print(col,flush=True)
+            if col==0:
+                vector = [-1,0,0]
+                self.plotter.camera.up = (0, 1,0)
+                roll_angle = 90
+            elif col==1:
+                vector = [0,-1,0]
+                self.plotter.camera.up = (0, 0,1)
+                roll_angle = 0
+            elif col==2:
+                vector = [0,0,-1]
+                self.plotter.camera.up = (0, 1,0)
+                roll_angle = 0
+        else:
+            mask = self.points_poly.points[:, col] <= coord
+            if col==0:
+                vector = [1,0,0]
+                self.plotter.camera.up = (0, -1,0)
+                roll_angle = -90
+            elif col==1:
+                vector = [0,1,0]
+                self.plotter.camera.up = (0, 0,-1)
+                roll_angle = 180
+            elif col==2:
+                vector = [0,0,1]
+                self.plotter.camera.up = (0, -1,0)
+                roll_angle = 0
+
+        # set camera so that slice is in 2D view
+        focal_point = self.plotter.camera.focal_point
+        # Preserve viewing direction
+        if self.parallel_projection==True:
+            self.plotter.disable_parallel_projection()
+        distance = 60
+        new_pos = np.array(focal_point) + np.array(vector) * distance  # distance controls how close
+        self.plotter.set_position(new_pos)
+
+        self.plotter.camera.roll = roll_angle
+        if self.parallel_projection==True:
+            self.plotter.enable_parallel_projection()
+
+        clipped_poly_otherMrids = {}
+        clipped_background = self.background_small.clip(normal=normal, origin=(x0, y0, z0))
+        clipped_atlas = self.mesh_atlas.clip(normal=normal, origin=(x0, y0, z0),crinkle=True)
+        clipped_poly = self.points_poly.clip(normal=normal, origin=(x0, y0, z0))
+
+        clipped_labels = np.array(self.points_poly['Labels'])[mask]
+        clipped_poly['Labels'] = clipped_labels
+
+        for i in range(len(self.totalatlasCoordinates_pkl)):
+            if i == self.index:
+                clipped_poly_otherMrids[i] = None
+                continue
+            clipped_poly_otherMrids[i] = self.poly_otherMrids[i].clip(normal=normal, origin=(x0, y0, z0))
 
         self.MW.ui.horizontalSlider_Background.blockSignals(True)
         self.MW.ui.horizontalSlider_ElectrodeRegion.blockSignals(True)
@@ -822,12 +763,18 @@ class Visualisation3D:
         self.MW.ui.horizontalSlider_ElectrodeRegion.blockSignals(False)
         self.MW.ui.horizontalSlider_ElectrodeRegion.setEnabled(False)
 
+        nifti_vals = np.round(clipped_background.cell_data['NIFTI']).astype(int)
+        colors = np.array([self.cmap_background.colors[int(v)] for v in nifti_vals])
+        clipped_background.cell_data['colors'] = (colors[:, :3] * 255).astype(np.uint8)
+
+        clipped_background = clipped_background.extract_surface(algorithm='dataset_surface')
+        clipped_background = clipped_background.smooth_taubin(n_iter=50, pass_band=0.1)
+
         self.plotter.add_mesh(
             clipped_background,
-            scalars='NIFTI',
-            cmap='nuuk', #bone'
+            scalars='colors',
+            rgb=True,
             show_scalar_bar=False,
-            clim=[clipped_background.cell_data['NIFTI'].min(), clipped_background.cell_data['NIFTI'].max()],
             opacity=self.opacityBackground,
             style='surface',
             line_width=0.5,
@@ -837,7 +784,6 @@ class Visualisation3D:
             render=False,
         )
 
-        #clipped_atlas = clipped_atlas.threshold(value=0.5)
         clipped_atlas = clipped_atlas.extract_surface(algorithm='dataset_surface').smooth_taubin(n_iter=50, pass_band=0.1)
 
         self.plotter.add_mesh(
@@ -853,8 +799,8 @@ class Visualisation3D:
             render=False,
         )
 
-        self.plotter.remove_actor('atlas_region')
-
+        if 'atlas_region' in self.plotter.actors:
+            self.plotter.remove_actor('atlas_region')
 
         self.plotter.add_mesh(
             clipped_poly,
@@ -894,6 +840,8 @@ class Visualisation3D:
             )
 
         self.clipped_meshes = True
+
+
 
 
     def fill_table(self,channels,dead_channels):
@@ -937,7 +885,6 @@ class Visualisation3D:
                     item.setForeground(color)
                     checkbox_item.setCheckState(Qt.Unchecked)
                     checkbox_item.setFlags(checkbox_item.flags() & ~Qt.ItemIsEnabled)
-            #checkbox_item.stateChanged.connect(lambda state, r=row_idx: self.on_channel_toggled(r, state))
 
         self.table_excel.resizeColumnsToContents()
         self.table_excel.resizeRowsToContents()
@@ -963,19 +910,20 @@ class Visualisation3D:
 
         channel_number = int(self.table_excel.item(row, 1).text())
         # add logic here
-        if checked:
-            #add channel to plot, but keeping the indices the same
-            idx = next((self.MW.Ephys.VisEphys.displayed_channels.index(v) for v in self.MW.Ephys.VisEphys.all_channels[:self.MW.Ephys.VisEphys.all_channels.index(channel_number)][::-1] if v in self.MW.Ephys.VisEphys.displayed_channels), None)
-            if idx is None:
-                self.MW.Ephys.VisEphys.displayed_channels.insert(0, channel_number)
+        if not self.electrode_localisation:
+            if checked:
+                #add channel to plot, but keeping the indices the same
+                idx = next((self.Ephys.VisEphys.displayed_channels.index(v) for v in self.Ephys.ephys_data.all_channels[:self.Ephys.ephys_data.all_channels.index(channel_number)][::-1] if v in self.Ephys.VisEphys.displayed_channels), None)
+                if idx is None:
+                    self.Ephys.VisEphys.displayed_channels.insert(0, channel_number)
+                else:
+                    self.Ephys.VisEphys.displayed_channels.insert(idx + 1, channel_number)
+                self.Ephys.VisEphys.visualize_data(self.Ephys.VisEphys.displayed_channels)
             else:
-                self.MW.Ephys.VisEphys.displayed_channels.insert(idx + 1, channel_number)
-            self.MW.Ephys.VisEphys.visualize_data(self.MW.Ephys.VisEphys.displayed_channels)
-        else:
-            #remove channel from plot
-            if channel_number in self.MW.Ephys.VisEphys.displayed_channels:
-                self.MW.Ephys.VisEphys.displayed_channels.remove(channel_number)
-                self.MW.Ephys.VisEphys.visualize_data(self.MW.Ephys.VisEphys.displayed_channels)
+                #remove channel from plot
+                if channel_number in self.Ephys.VisEphys.displayed_channels:
+                    self.Ephys.VisEphys.displayed_channels.remove(channel_number)
+                    self.Ephys.VisEphys.visualize_data(self.Ephys.VisEphys.displayed_channels)
 
     def on_table_right_click(self, position):
         menu = QMenu()
@@ -1009,13 +957,13 @@ class Visualisation3D:
                 item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
                 item.setForeground(color)
             #remove channel from plot
-            idx = next((self.MW.Ephys.ephys_data.dead_channels.index(v) for v in self.MW.Ephys.VisEphys.all_channels[:self.MW.Ephys.VisEphys.all_channels.index(channel_number)][::-1] if v in self.MW.Ephys.ephys_data.dead_channels), None)
+            idx = next((self.Ephys.ephys_data.dead_channels.index(v) for v in self.Ephys.ephys_data.all_channels[:self.Ephys.ephys_data.all_channels.index(channel_number)][::-1] if v in self.Ephys.ephys_data.dead_channels), None)
             if idx is None:
-                self.MW.Ephys.ephys_data.dead_channels.insert(0, channel_number)
+                self.Ephys.ephys_data.dead_channels.insert(0, channel_number)
             else:
-                self.MW.Ephys.ephys_data.dead_channels.insert(idx + 1, channel_number)
+                self.Ephys.ephys_data.dead_channels.insert(idx + 1, channel_number)
 
-            self.MW.Ephys.change_xml_file(channel_number,1)
+            self.Ephys.change_xml_file(channel_number,1)
         else:
             checkbox_item.setCheckState(Qt.Checked)
             checkbox_item.setFlags(checkbox_item.flags() | Qt.ItemIsEnabled)
@@ -1028,8 +976,8 @@ class Visualisation3D:
                 item = self.table_excel.item(row, col_idx)
                 item.setFlags(item.flags() | Qt.ItemIsEnabled)
                 item.setForeground(color)
-            self.MW.Ephys.ephys_data.dead_channels.remove(channel_number)
-            self.MW.Ephys.change_xml_file(channel_number,0)
+            self.Ephys.ephys_data.dead_channels.remove(channel_number)
+            self.Ephys.change_xml_file(channel_number,0)
 
 
 
@@ -1043,11 +991,13 @@ class Visualisation3D:
         if item_clicked.checkState() != Qt.Checked and row!=0:
             item_clicked.setCheckState(Qt.Checked)
 
-        self.manually_pick_point(point=[],idx=row)
+        point = self.coords_list[row]
+        self.show_coords(point)
+
         if self.electrode_localisation:
             self.table_excel.selectRow(row)
         else:
-            self.MW.Ephys.VisEphys.highlight_channel(row)
+            self.Ephys.VisEphys.highlight_channel(row)
 
 
     def toggle_all_channels(self,state):
@@ -1061,22 +1011,19 @@ class Visualisation3D:
                     channels.append(int(self.table_excel.item(row_idx, 1).text()))
         self.table_excel.blockSignals(False)
 
-        self.MW.Ephys.VisEphys.visualize_data(channels=channels)
+        self.Ephys.VisEphys.visualize_data(channels=channels)
 
 
     def show_only_selected_channels(self,checked):
         if checked:
             self.MW.ui.pushButton_showChannels.setText('Show only selected Channels')
-            self.MW.ui.widget_pgEphys.yMax = len(self.MW.Ephys.VisEphys.all_channels) * self.MW.ui.widget_pgEphys.slot_height
+            self.MW.ui.widget_pgEphys.yMax = len(self.Ephys.ephys_data.all_channels) * self.MW.ui.widget_pgEphys.slot_height
         else:
             self.MW.ui.pushButton_showChannels.setText('Show with deselected Channels')
-            self.MW.ui.widget_pgEphys.yMax = len(self.MW.Ephys.VisEphys.displayed_channels) * self.MW.ui.widget_pgEphys.slot_height
+            self.MW.ui.widget_pgEphys.yMax = len(self.Ephys.VisEphys.displayed_channels) * self.MW.ui.widget_pgEphys.slot_height
 
         self.MW.ui.widget_pgEphys.yMin = -self.MW.ui.widget_pgEphys.slot_height
-        self.MW.Ephys.VisEphys.visualize_data(self.MW.Ephys.VisEphys.displayed_channels)
-        #signal = self.MW.Ephys.VisEphys.read_data.analogsignals[0].load(time_slice=(self.MW.Ephys.VisEphys.time_start,self.MW.Ephys.VisEphys.time_end),channel_indexes=self.MW.Ephys.VisEphys.displayed_channels)
-        #self.MW.Ephys.VisEphys.displayed_channels,self.MW.Ephys.VisEphys.ephys_lines = self.MW.ui.widget_pgEphys.plot_ephys(signal.times, signal.magnitude, self.MW.Ephys.VisEphys.displayed_channels,show_all=show_all)
-
+        self.Ephys.VisEphys.visualize_data(self.Ephys.VisEphys.displayed_channels)
 
 
     def change_opacityBackground(self,val):
@@ -1094,4 +1041,23 @@ class Visualisation3D:
         actor.GetProperty().SetOpacity(val/100)
         self.opacityRegions = val/100
 
+    def create_atlas_region_file(self,mrid):
+        #new atlas with the new label
+        self.filepath_atlas = os.path.join(self.session_path,"analysed",'atlas-regions.nii.gz')
+        points_electrodes_path = os.path.join(os.path.join(self.session_path,"analysed"),mrid,'channel_atlas_coordinates.xlsx')
 
+        if os.path.exists(self.filepath_atlas):
+            mesh = pv.read(self.filepath_atlas)
+            old_labels = np.unique(mesh.point_data['NIFTI'])
+            new_labels = np.unique(pd.read_excel(points_electrodes_path,header=0).iloc[:, 1].values)
+            if np.array_equal(old_labels[old_labels != 0], new_labels[new_labels != 0]):
+                print(old_labels,new_labels,flush=True)
+                return
+
+        atlas_image = sITK.ReadImage(os.path.join(os.path.dirname(os.path.dirname((__file__))), "Files",'Atlas','WHS_SD_rat_atlas_v4.nii.gz'))
+        volume = sITK.GetArrayFromImage(atlas_image)
+        volume[~np.isin(volume,np.unique(pd.read_excel(points_electrodes_path,header=0).iloc[:, 1].values))]=0
+        label_image = sITK.GetImageFromArray(volume)
+        label_image.CopyInformation(atlas_image)
+        save_path = os.path.join(self.session_path,'analysed','atlas-regions.nii.gz')
+        sITK.WriteImage(label_image, save_path)
