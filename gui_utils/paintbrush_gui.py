@@ -210,22 +210,10 @@ class PaintbrushGUI:
                 model = self.ui.comboBox_paintOver_Post.model()
                 item = model.item(i)
                 item.setFlags(item.flags() | Qt.ItemIsEnabled) #paint over all labels
-                if i ==0 or i > self.LoadMRI.mrid_tags.num_regions+1:
-                    if index_item is not None:
-                        index_item.setFlags(index_item.flags() | Qt.ItemIsEnabled)
-                        icon_item.setFlags(icon_item.flags() | Qt.ItemIsEnabled)
-                        label_item.setFlags(label_item.flags()| Qt.ItemIsEnabled)
-                else:
-                    if i > self.LoadMRI.mrid_tags.num_regions:
-                        if index_item is not None:
-                            index_item.setFlags(index_item.flags() | Qt.ItemIsEnabled)
-                            icon_item.setFlags(icon_item.flags() | Qt.ItemIsEnabled)
-                            label_item.setFlags(label_item.flags()| Qt.ItemIsEnabled)
-                    else:
-                        if index_item is not None:
-                            index_item.setFlags(index_item.flags() & ~Qt.ItemIsEnabled)
-                            icon_item.setFlags(icon_item.flags() & ~Qt.ItemIsEnabled)
-                            label_item.setFlags(label_item.flags() & ~Qt.ItemIsEnabled)
+                if index_item is not None:
+                    index_item.setFlags(index_item.flags() | Qt.ItemIsEnabled)
+                    icon_item.setFlags(icon_item.flags() | Qt.ItemIsEnabled)
+                    label_item.setFlags(label_item.flags()| Qt.ItemIsEnabled)
 
     def brush_3D(self,state:bool):
         """
@@ -261,7 +249,7 @@ class PaintbrushGUI:
             if not self.LoadMRI.paint:
                 self.LoadMRI.paint = True
                 for idx in range(len(self.LoadMRI.vtk_widgets[0])):
-                    table = self.LoadMRI.intensity_table[data_index]
+                    table = self.LoadMRI.intensity_table[0]
                     if label:
                         table.update_table("Label",self.LoadMRI.paintbrush.label_volume[idx],idx,visibility_enabled=False)
             self.LoadMRI.paintbrush.start_paintbrush()
