@@ -97,11 +97,12 @@ class MainWindow(QMainWindow):
             return
         elif msg_box.clickedButton()==btn_no:
             self.open_ephys_data()
+            return
 
         self.ui.dockWidget_ephys.setVisible(True)
         self.ui.stackedWidget_video.setCurrentIndex(1)
         self.ui.textEdit_ephys.setText(f"File loaded: {file_name}")
-        self.ui.tabWidget.setCurrentIndex(2)
+        self.ui.tabWidget.setCurrentIndex(3)
         self.Ephys = InitEphys(self,file_name)
         self.Ephys.open_dat(file_name)
 
@@ -118,6 +119,7 @@ class MainWindow(QMainWindow):
         """
         Open the initial User Dialog when the application starts.
         """
+
         file_name, _ = QFileDialog.getOpenFileName(
             None,
             "Open NIfTI File",
@@ -141,6 +143,7 @@ class MainWindow(QMainWindow):
             return
         elif msg_box.clickedButton()==btn_no:
             self.open_user_dialog()
+            return
 
         else:
             #pop up asking for the view if 4D data used
@@ -385,6 +388,7 @@ class MainWindow(QMainWindow):
             return
         elif msg_box.clickedButton()==btn_no:
             self.add_another_file()
+            return
         else:
             if not self.LoadMRI.volumes[0].is_4d:
                 self.LoadMRI.LoadImage3D = LoadImage3D(self, file_name)

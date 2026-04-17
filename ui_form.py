@@ -90,6 +90,8 @@ class Ui_MainWindow(object):
         self.actionMeasurement.setObjectName(u"actionMeasurement")
         self.actionVisualize_3D_data = QAction(MainWindow)
         self.actionVisualize_3D_data.setObjectName(u"actionVisualize_3D_data")
+        self.actionStart_SAMRI_process = QAction(MainWindow)
+        self.actionStart_SAMRI_process.setObjectName(u"actionStart_SAMRI_process")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_34 = QGridLayout(self.centralwidget)
@@ -115,6 +117,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setMouseTracking(False)
         self.tabWidget.setContextMenuPolicy(Qt.NoContextMenu)
         self.tabWidget.setStyleSheet(u"")
+        self.tabWidget.setTabBarAutoHide(False)
         self.PostSurgery = QWidget()
         self.PostSurgery.setObjectName(u"PostSurgery")
         self.gridLayout_70 = QGridLayout(self.PostSurgery)
@@ -3076,7 +3079,7 @@ class Ui_MainWindow(object):
         self.contrast_data.setEnabled(True)
         self.contrast_data0 = QWidget()
         self.contrast_data0.setObjectName(u"contrast_data0")
-        self.contrast_data0.setGeometry(QRect(0, 0, 376, 259))
+        self.contrast_data0.setGeometry(QRect(0, 0, 186, 164))
         self.gridLayout_115 = QGridLayout(self.contrast_data0)
         self.gridLayout_115.setObjectName(u"gridLayout_115")
         self.tabWidget_3 = QTabWidget(self.contrast_data0)
@@ -3880,26 +3883,86 @@ class Ui_MainWindow(object):
 
         self.gridLayout_104.addWidget(self.groupBox_paintbrush_3d, 1, 4, 1, 1)
 
-        self.groupBox_paintbrush = QGroupBox(self.tab_15)
+        self.tabWidget.addTab(self.tab_15, "")
+        self.tab_6 = QWidget()
+        self.tab_6.setObjectName(u"tab_6")
+        self.gridLayout_173 = QGridLayout(self.tab_6)
+        self.gridLayout_173.setObjectName(u"gridLayout_173")
+        self.groupBox_paintbrush = QGroupBox(self.tab_6)
         self.groupBox_paintbrush.setObjectName(u"groupBox_paintbrush")
         self.groupBox_paintbrush.setEnabled(True)
-        self.groupBox_paintbrush.setMinimumSize(QSize(300, 0))
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.groupBox_paintbrush.sizePolicy().hasHeightForWidth())
+        self.groupBox_paintbrush.setSizePolicy(sizePolicy5)
+        self.groupBox_paintbrush.setMinimumSize(QSize(300, 250))
         self.groupBox_paintbrush.setMaximumSize(QSize(16777215, 16777215))
         self.gridLayout_43 = QGridLayout(self.groupBox_paintbrush)
         self.gridLayout_43.setObjectName(u"gridLayout_43")
-        self.stackedWidget_mrid = QStackedWidget(self.groupBox_paintbrush)
-        self.stackedWidget_mrid.setObjectName(u"stackedWidget_mrid")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.stackedWidget_mrid.sizePolicy().hasHeightForWidth())
-        self.stackedWidget_mrid.setSizePolicy(sizePolicy5)
-        self.stackedWidget_mrid.setMinimumSize(QSize(0, 0))
-        self.page_5 = QWidget()
-        self.page_5.setObjectName(u"page_5")
-        self.gridLayout_137 = QGridLayout(self.page_5)
-        self.gridLayout_137.setObjectName(u"gridLayout_137")
-        self.checkBox_Brush_MRID = QCheckBox(self.page_5)
+        self.stackedWidget_4D = QStackedWidget(self.groupBox_paintbrush)
+        self.stackedWidget_4D.setObjectName(u"stackedWidget_4D")
+        self.stackedWidget_4D.setMinimumSize(QSize(0, 0))
+        self.stackedWidget_4D.setMaximumSize(QSize(16777215, 16777215))
+        self.page_8 = QWidget()
+        self.page_8.setObjectName(u"page_8")
+        self.gridLayout = QGridLayout(self.page_8)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.pushButton_anatOK = QPushButton(self.page_8)
+        self.pushButton_anatOK.setObjectName(u"pushButton_anatOK")
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.pushButton_anatOK.sizePolicy().hasHeightForWidth())
+        self.pushButton_anatOK.setSizePolicy(sizePolicy6)
+        self.pushButton_anatOK.setMinimumSize(QSize(100, 80))
+        font8 = QFont()
+        font8.setBold(False)
+        font8.setStyleStrategy(QFont.PreferDefault)
+        self.pushButton_anatOK.setFont(font8)
+        self.pushButton_anatOK.setStyleSheet(u"background-color: rgb(237, 51, 59);")
+
+        self.gridLayout.addWidget(self.pushButton_anatOK, 1, 1, 1, 1)
+
+        self.plainTextEdit_MRID_2 = QPlainTextEdit(self.page_8)
+        self.plainTextEdit_MRID_2.setObjectName(u"plainTextEdit_MRID_2")
+        self.plainTextEdit_MRID_2.setMinimumSize(QSize(0, 80))
+        self.plainTextEdit_MRID_2.setMaximumSize(QSize(16777215, 16777215))
+        self.plainTextEdit_MRID_2.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.plainTextEdit_MRID_2.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.plainTextEdit_MRID_2.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        self.plainTextEdit_MRID_2.setReadOnly(True)
+
+        self.gridLayout.addWidget(self.plainTextEdit_MRID_2, 0, 1, 1, 1)
+
+        self.stackedWidget_4D.addWidget(self.page_8)
+        self.page_9 = QWidget()
+        self.page_9.setObjectName(u"page_9")
+        self.gridLayout_80 = QGridLayout(self.page_9)
+        self.gridLayout_80.setObjectName(u"gridLayout_80")
+        self.pushButton_segOK = QPushButton(self.page_9)
+        self.pushButton_segOK.setObjectName(u"pushButton_segOK")
+        self.pushButton_segOK.setMinimumSize(QSize(100, 80))
+        self.pushButton_segOK.setStyleSheet(u"background-color: rgb(237, 51, 59);")
+
+        self.gridLayout_80.addWidget(self.pushButton_segOK, 1, 1, 1, 1)
+
+        self.plainTextEdit_MRID_4 = QPlainTextEdit(self.page_9)
+        self.plainTextEdit_MRID_4.setObjectName(u"plainTextEdit_MRID_4")
+        self.plainTextEdit_MRID_4.setMinimumSize(QSize(0, 0))
+        self.plainTextEdit_MRID_4.setMaximumSize(QSize(16777215, 16777215))
+        self.plainTextEdit_MRID_4.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.plainTextEdit_MRID_4.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.plainTextEdit_MRID_4.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        self.plainTextEdit_MRID_4.setReadOnly(True)
+
+        self.gridLayout_80.addWidget(self.plainTextEdit_MRID_4, 0, 1, 1, 1)
+
+        self.stackedWidget_4D.addWidget(self.page_9)
+
+        self.gridLayout_43.addWidget(self.stackedWidget_4D, 1, 0, 3, 1)
+
+        self.checkBox_Brush_MRID = QCheckBox(self.groupBox_paintbrush)
         self.checkBox_Brush_MRID.setObjectName(u"checkBox_Brush_MRID")
         self.checkBox_Brush_MRID.setEnabled(True)
         self.checkBox_Brush_MRID.setMaximumSize(QSize(16777215, 16777215))
@@ -3907,11 +3970,106 @@ class Ui_MainWindow(object):
         self.checkBox_Brush_MRID.setIconSize(QSize(16, 16))
         self.checkBox_Brush_MRID.setChecked(True)
 
-        self.gridLayout_137.addWidget(self.checkBox_Brush_MRID, 0, 0, 1, 1)
+        self.gridLayout_43.addWidget(self.checkBox_Brush_MRID, 0, 0, 1, 1)
 
-        self.groupBox_33 = QGroupBox(self.page_5)
+        self.groupBox_28 = QGroupBox(self.groupBox_paintbrush)
+        self.groupBox_28.setObjectName(u"groupBox_28")
+        self.groupBox_28.setMaximumSize(QSize(16777215, 16777215))
+        self.gridLayout_41 = QGridLayout(self.groupBox_28)
+        self.gridLayout_41.setObjectName(u"gridLayout_41")
+        self.groupBox_29 = QGroupBox(self.groupBox_28)
+        self.groupBox_29.setObjectName(u"groupBox_29")
+        self.groupBox_29.setMaximumSize(QSize(16777215, 100))
+        self.gridLayout_40 = QGridLayout(self.groupBox_29)
+        self.gridLayout_40.setObjectName(u"gridLayout_40")
+        self.paint_square_Post = QToolButton(self.groupBox_29)
+        self.paint_square_Post.setObjectName(u"paint_square_Post")
+        self.paint_square_Post.setFont(font)
+        self.paint_square_Post.setStyleSheet(u"")
+        self.paint_square_Post.setIcon(icon6)
+        self.paint_square_Post.setIconSize(QSize(20, 20))
+        self.paint_square_Post.setCheckable(True)
+        self.paint_square_Post.setChecked(True)
+        self.paint_square_Post.setAutoExclusive(False)
+
+        self.gridLayout_40.addWidget(self.paint_square_Post, 0, 0, 1, 1)
+
+        self.paint_round_Post = QToolButton(self.groupBox_29)
+        self.paint_round_Post.setObjectName(u"paint_round_Post")
+        self.paint_round_Post.setEnabled(True)
+        self.paint_round_Post.setIcon(icon7)
+        self.paint_round_Post.setIconSize(QSize(20, 20))
+        self.paint_round_Post.setCheckable(True)
+        self.paint_round_Post.setAutoExclusive(False)
+
+        self.gridLayout_40.addWidget(self.paint_round_Post, 0, 1, 1, 1)
+
+
+        self.gridLayout_41.addWidget(self.groupBox_29, 0, 1, 1, 3)
+
+        self.groupBox_31 = QGroupBox(self.groupBox_28)
+        self.groupBox_31.setObjectName(u"groupBox_31")
+        self.groupBox_31.setMaximumSize(QSize(16777215, 250))
+        self.gridLayout_42 = QGridLayout(self.groupBox_31)
+        self.gridLayout_42.setObjectName(u"gridLayout_42")
+        self.sizeSlider_labelOcc = QSlider(self.groupBox_31)
+        self.sizeSlider_labelOcc.setObjectName(u"sizeSlider_labelOcc")
+        self.sizeSlider_labelOcc.setMinimum(1)
+        self.sizeSlider_labelOcc.setMaximum(100)
+        self.sizeSlider_labelOcc.setSingleStep(1)
+        self.sizeSlider_labelOcc.setPageStep(1)
+        self.sizeSlider_labelOcc.setValue(1)
+        self.sizeSlider_labelOcc.setOrientation(Qt.Horizontal)
+
+        self.gridLayout_42.addWidget(self.sizeSlider_labelOcc, 0, 1, 1, 1)
+
+        self.doubleSpinBox_labelOcc = QDoubleSpinBox(self.groupBox_31)
+        self.doubleSpinBox_labelOcc.setObjectName(u"doubleSpinBox_labelOcc")
+        self.doubleSpinBox_labelOcc.setMaximum(1.000000000000000)
+        self.doubleSpinBox_labelOcc.setSingleStep(0.050000000000000)
+
+        self.gridLayout_42.addWidget(self.doubleSpinBox_labelOcc, 0, 0, 1, 1)
+
+
+        self.gridLayout_41.addWidget(self.groupBox_31, 2, 1, 1, 3)
+
+        self.groupBox_30 = QGroupBox(self.groupBox_28)
+        self.groupBox_30.setObjectName(u"groupBox_30")
+        self.gridLayout_39 = QGridLayout(self.groupBox_30)
+        self.gridLayout_39.setObjectName(u"gridLayout_39")
+        self.brush_size4d = QDoubleSpinBox(self.groupBox_30)
+        self.brush_size4d.setObjectName(u"brush_size4d")
+        self.brush_size4d.setMaximumSize(QSize(16777215, 30))
+        self.brush_size4d.setWrapping(False)
+        self.brush_size4d.setFrame(True)
+        self.brush_size4d.setButtonSymbols(QAbstractSpinBox.UpDownArrows)
+        self.brush_size4d.setDecimals(0)
+        self.brush_size4d.setMinimum(1.000000000000000)
+        self.brush_size4d.setMaximum(20.000000000000000)
+        self.brush_size4d.setSingleStep(1.000000000000000)
+
+        self.gridLayout_39.addWidget(self.brush_size4d, 0, 0, 1, 1)
+
+        self.brush_sizeSlider4d = QSlider(self.groupBox_30)
+        self.brush_sizeSlider4d.setObjectName(u"brush_sizeSlider4d")
+        self.brush_sizeSlider4d.setMinimum(1)
+        self.brush_sizeSlider4d.setMaximum(20)
+        self.brush_sizeSlider4d.setSingleStep(1)
+        self.brush_sizeSlider4d.setPageStep(1)
+        self.brush_sizeSlider4d.setValue(1)
+        self.brush_sizeSlider4d.setOrientation(Qt.Horizontal)
+
+        self.gridLayout_39.addWidget(self.brush_sizeSlider4d, 0, 1, 1, 1)
+
+
+        self.gridLayout_41.addWidget(self.groupBox_30, 1, 1, 1, 3)
+
+
+        self.gridLayout_43.addWidget(self.groupBox_28, 0, 1, 4, 1)
+
+        self.groupBox_33 = QGroupBox(self.groupBox_paintbrush)
         self.groupBox_33.setObjectName(u"groupBox_33")
-        self.groupBox_33.setMaximumSize(QSize(500, 500))
+        self.groupBox_33.setMaximumSize(QSize(16777215, 16777215))
         self.gridLayout_38 = QGridLayout(self.groupBox_33)
         self.gridLayout_38.setObjectName(u"gridLayout_38")
         self.groupBox_35 = QGroupBox(self.groupBox_33)
@@ -3957,12 +4115,12 @@ class Ui_MainWindow(object):
         self.gridLayout_38.addWidget(self.groupBox_47, 1, 0, 1, 1)
 
 
-        self.gridLayout_137.addWidget(self.groupBox_33, 0, 2, 4, 1)
+        self.gridLayout_43.addWidget(self.groupBox_33, 0, 4, 4, 1)
 
-        self.groupBox_36 = QGroupBox(self.page_5)
+        self.groupBox_36 = QGroupBox(self.groupBox_paintbrush)
         self.groupBox_36.setObjectName(u"groupBox_36")
         self.groupBox_36.setEnabled(True)
-        self.groupBox_36.setMaximumSize(QSize(16777215, 500))
+        self.groupBox_36.setMaximumSize(QSize(16777215, 16777215))
         self.gridLayout_44 = QGridLayout(self.groupBox_36)
         self.gridLayout_44.setObjectName(u"gridLayout_44")
         self.widget_histogram = PlotWidget(self.groupBox_36)
@@ -3991,347 +4149,24 @@ class Ui_MainWindow(object):
         self.gridLayout_44.addWidget(self.groupBox_48, 0, 0, 1, 1)
 
 
-        self.gridLayout_137.addWidget(self.groupBox_36, 0, 3, 4, 1)
-
-        self.groupBox_28 = QGroupBox(self.page_5)
-        self.groupBox_28.setObjectName(u"groupBox_28")
-        self.groupBox_28.setMaximumSize(QSize(16777215, 250))
-        self.gridLayout_41 = QGridLayout(self.groupBox_28)
-        self.gridLayout_41.setObjectName(u"gridLayout_41")
-        self.groupBox_31 = QGroupBox(self.groupBox_28)
-        self.groupBox_31.setObjectName(u"groupBox_31")
-        self.groupBox_31.setMaximumSize(QSize(16777215, 250))
-        self.gridLayout_42 = QGridLayout(self.groupBox_31)
-        self.gridLayout_42.setObjectName(u"gridLayout_42")
-        self.sizeSlider_labelOcc = QSlider(self.groupBox_31)
-        self.sizeSlider_labelOcc.setObjectName(u"sizeSlider_labelOcc")
-        self.sizeSlider_labelOcc.setMinimum(1)
-        self.sizeSlider_labelOcc.setMaximum(100)
-        self.sizeSlider_labelOcc.setSingleStep(1)
-        self.sizeSlider_labelOcc.setPageStep(1)
-        self.sizeSlider_labelOcc.setValue(1)
-        self.sizeSlider_labelOcc.setOrientation(Qt.Horizontal)
-
-        self.gridLayout_42.addWidget(self.sizeSlider_labelOcc, 0, 1, 1, 1)
-
-        self.doubleSpinBox_labelOcc = QDoubleSpinBox(self.groupBox_31)
-        self.doubleSpinBox_labelOcc.setObjectName(u"doubleSpinBox_labelOcc")
-        self.doubleSpinBox_labelOcc.setMaximum(1.000000000000000)
-        self.doubleSpinBox_labelOcc.setSingleStep(0.050000000000000)
-
-        self.gridLayout_42.addWidget(self.doubleSpinBox_labelOcc, 0, 0, 1, 1)
+        self.gridLayout_43.addWidget(self.groupBox_36, 0, 5, 4, 1)
 
 
-        self.gridLayout_41.addWidget(self.groupBox_31, 2, 0, 1, 3)
+        self.gridLayout_173.addWidget(self.groupBox_paintbrush, 0, 0, 1, 1)
 
-        self.groupBox_30 = QGroupBox(self.groupBox_28)
-        self.groupBox_30.setObjectName(u"groupBox_30")
-        self.gridLayout_39 = QGridLayout(self.groupBox_30)
-        self.gridLayout_39.setObjectName(u"gridLayout_39")
-        self.brush_size4d = QDoubleSpinBox(self.groupBox_30)
-        self.brush_size4d.setObjectName(u"brush_size4d")
-        self.brush_size4d.setMaximumSize(QSize(16777215, 30))
-        self.brush_size4d.setWrapping(False)
-        self.brush_size4d.setFrame(True)
-        self.brush_size4d.setButtonSymbols(QAbstractSpinBox.UpDownArrows)
-        self.brush_size4d.setDecimals(0)
-        self.brush_size4d.setMinimum(1.000000000000000)
-        self.brush_size4d.setMaximum(20.000000000000000)
-        self.brush_size4d.setSingleStep(1.000000000000000)
-
-        self.gridLayout_39.addWidget(self.brush_size4d, 0, 0, 1, 1)
-
-        self.brush_sizeSlider4d = QSlider(self.groupBox_30)
-        self.brush_sizeSlider4d.setObjectName(u"brush_sizeSlider4d")
-        self.brush_sizeSlider4d.setMinimum(1)
-        self.brush_sizeSlider4d.setMaximum(20)
-        self.brush_sizeSlider4d.setSingleStep(1)
-        self.brush_sizeSlider4d.setPageStep(1)
-        self.brush_sizeSlider4d.setValue(1)
-        self.brush_sizeSlider4d.setOrientation(Qt.Horizontal)
-
-        self.gridLayout_39.addWidget(self.brush_sizeSlider4d, 0, 1, 1, 1)
-
-
-        self.gridLayout_41.addWidget(self.groupBox_30, 1, 0, 1, 3)
-
-
-        self.gridLayout_137.addWidget(self.groupBox_28, 1, 0, 1, 2)
-
-        self.stackedWidget_4D = QStackedWidget(self.page_5)
-        self.stackedWidget_4D.setObjectName(u"stackedWidget_4D")
-        self.stackedWidget_4D.setMinimumSize(QSize(0, 0))
-        self.stackedWidget_4D.setMaximumSize(QSize(16777215, 120))
-        self.page_7 = QWidget()
-        self.page_7.setObjectName(u"page_7")
-        self.stackedWidget_4D.addWidget(self.page_7)
-        self.page_8 = QWidget()
-        self.page_8.setObjectName(u"page_8")
-        self.gridLayout = QGridLayout(self.page_8)
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.pushButton_anatOK = QPushButton(self.page_8)
-        self.pushButton_anatOK.setObjectName(u"pushButton_anatOK")
-        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy6.setHorizontalStretch(0)
-        sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(self.pushButton_anatOK.sizePolicy().hasHeightForWidth())
-        self.pushButton_anatOK.setSizePolicy(sizePolicy6)
-        self.pushButton_anatOK.setMinimumSize(QSize(100, 80))
-        font8 = QFont()
-        font8.setBold(False)
-        font8.setStyleStrategy(QFont.PreferDefault)
-        self.pushButton_anatOK.setFont(font8)
-        self.pushButton_anatOK.setStyleSheet(u"background-color: rgb(237, 51, 59);")
-
-        self.gridLayout.addWidget(self.pushButton_anatOK, 0, 1, 1, 1)
-
-        self.plainTextEdit_MRID_2 = QPlainTextEdit(self.page_8)
-        self.plainTextEdit_MRID_2.setObjectName(u"plainTextEdit_MRID_2")
-        self.plainTextEdit_MRID_2.setMinimumSize(QSize(0, 80))
-        self.plainTextEdit_MRID_2.setMaximumSize(QSize(16777215, 16777215))
-        self.plainTextEdit_MRID_2.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.plainTextEdit_MRID_2.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.plainTextEdit_MRID_2.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-        self.plainTextEdit_MRID_2.setReadOnly(True)
-
-        self.gridLayout.addWidget(self.plainTextEdit_MRID_2, 0, 0, 1, 1)
-
-        self.stackedWidget_4D.addWidget(self.page_8)
-        self.page_9 = QWidget()
-        self.page_9.setObjectName(u"page_9")
-        self.gridLayout_80 = QGridLayout(self.page_9)
-        self.gridLayout_80.setObjectName(u"gridLayout_80")
-        self.pushButton_segOK = QPushButton(self.page_9)
-        self.pushButton_segOK.setObjectName(u"pushButton_segOK")
-        self.pushButton_segOK.setMinimumSize(QSize(100, 80))
-        self.pushButton_segOK.setStyleSheet(u"background-color: rgb(237, 51, 59);")
-
-        self.gridLayout_80.addWidget(self.pushButton_segOK, 0, 1, 1, 1)
-
-        self.plainTextEdit_MRID_4 = QPlainTextEdit(self.page_9)
-        self.plainTextEdit_MRID_4.setObjectName(u"plainTextEdit_MRID_4")
-        self.plainTextEdit_MRID_4.setMinimumSize(QSize(0, 0))
-        self.plainTextEdit_MRID_4.setMaximumSize(QSize(16777215, 16777215))
-        self.plainTextEdit_MRID_4.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.plainTextEdit_MRID_4.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.plainTextEdit_MRID_4.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-        self.plainTextEdit_MRID_4.setReadOnly(True)
-
-        self.gridLayout_80.addWidget(self.plainTextEdit_MRID_4, 0, 0, 1, 1)
-
-        self.stackedWidget_4D.addWidget(self.page_9)
-        self.page_10 = QWidget()
-        self.page_10.setObjectName(u"page_10")
-        self.gridLayout_81 = QGridLayout(self.page_10)
-        self.gridLayout_81.setObjectName(u"gridLayout_81")
-        self.stackedWidget_4D.addWidget(self.page_10)
-        self.page_11 = QWidget()
-        self.page_11.setObjectName(u"page_11")
-        self.gridLayout_142 = QGridLayout(self.page_11)
-        self.gridLayout_142.setObjectName(u"gridLayout_142")
-        self.plainTextEdit_MRID_7 = QPlainTextEdit(self.page_11)
-        self.plainTextEdit_MRID_7.setObjectName(u"plainTextEdit_MRID_7")
-        self.plainTextEdit_MRID_7.setMaximumSize(QSize(16777215, 50))
-        self.plainTextEdit_MRID_7.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.plainTextEdit_MRID_7.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.plainTextEdit_MRID_7.setReadOnly(True)
-
-        self.gridLayout_142.addWidget(self.plainTextEdit_MRID_7, 0, 0, 1, 1)
-
-        self.pushButton_Next = QPushButton(self.page_11)
-        self.pushButton_Next.setObjectName(u"pushButton_Next")
-        self.pushButton_Next.setMinimumSize(QSize(100, 80))
-        self.pushButton_Next.setStyleSheet(u"background-color: rgb(237, 51, 59);")
-
-        self.gridLayout_142.addWidget(self.pushButton_Next, 0, 1, 1, 1)
-
-        self.stackedWidget_4D.addWidget(self.page_11)
-        self.page_2 = QWidget()
-        self.page_2.setObjectName(u"page_2")
-        self.gridLayout_136 = QGridLayout(self.page_2)
-        self.gridLayout_136.setObjectName(u"gridLayout_136")
-        self.pushButton_Gaussian = QPushButton(self.page_2)
-        self.pushButton_Gaussian.setObjectName(u"pushButton_Gaussian")
-        self.pushButton_Gaussian.setMinimumSize(QSize(100, 80))
-        self.pushButton_Gaussian.setStyleSheet(u"background-color: rgb(237, 51, 59);")
-
-        self.gridLayout_136.addWidget(self.pushButton_Gaussian, 0, 1, 1, 1)
-
-        self.textEdit = QTextEdit(self.page_2)
-        self.textEdit.setObjectName(u"textEdit")
-        self.textEdit.setReadOnly(True)
-
-        self.gridLayout_136.addWidget(self.textEdit, 0, 0, 1, 1)
-
-        self.stackedWidget_4D.addWidget(self.page_2)
-        self.page_4 = QWidget()
-        self.page_4.setObjectName(u"page_4")
-        self.gridLayout_90 = QGridLayout(self.page_4)
-        self.gridLayout_90.setObjectName(u"gridLayout_90")
-        self.textEdit_2 = QTextEdit(self.page_4)
-        self.textEdit_2.setObjectName(u"textEdit_2")
-        self.textEdit_2.setReadOnly(True)
-
-        self.gridLayout_90.addWidget(self.textEdit_2, 0, 0, 1, 1)
-
-        self.stackedWidget_4D.addWidget(self.page_4)
-
-        self.gridLayout_137.addWidget(self.stackedWidget_4D, 3, 0, 1, 2)
-
-        self.gridLayout_137.setColumnStretch(0, 1)
-        self.gridLayout_137.setColumnStretch(3, 1)
-        self.stackedWidget_mrid.addWidget(self.page_5)
-        self.page_6 = QWidget()
-        self.page_6.setObjectName(u"page_6")
-        self.gridLayout_139 = QGridLayout(self.page_6)
-        self.gridLayout_139.setObjectName(u"gridLayout_139")
-        self.groupBox_trans1 = QGroupBox(self.page_6)
-        self.groupBox_trans1.setObjectName(u"groupBox_trans1")
-        self.gridLayout_140 = QGridLayout(self.groupBox_trans1)
-        self.gridLayout_140.setObjectName(u"gridLayout_140")
-        self.pushButton_trans1 = QPushButton(self.groupBox_trans1)
-        self.pushButton_trans1.setObjectName(u"pushButton_trans1")
-        icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentOpen))
-        self.pushButton_trans1.setIcon(icon8)
-        self.pushButton_trans1.setIconSize(QSize(40, 40))
-
-        self.gridLayout_140.addWidget(self.pushButton_trans1, 0, 0, 1, 1)
-
-        self.textEdit_trans1 = QTextEdit(self.groupBox_trans1)
-        self.textEdit_trans1.setObjectName(u"textEdit_trans1")
-        self.textEdit_trans1.setReadOnly(True)
-
-        self.gridLayout_140.addWidget(self.textEdit_trans1, 0, 1, 1, 1)
-
-
-        self.gridLayout_139.addWidget(self.groupBox_trans1, 0, 1, 1, 1)
-
-        self.groupBox_trans0 = QGroupBox(self.page_6)
-        self.groupBox_trans0.setObjectName(u"groupBox_trans0")
-        self.gridLayout_138 = QGridLayout(self.groupBox_trans0)
-        self.gridLayout_138.setObjectName(u"gridLayout_138")
-        self.pushButton_trans0 = QPushButton(self.groupBox_trans0)
-        self.pushButton_trans0.setObjectName(u"pushButton_trans0")
-        self.pushButton_trans0.setIcon(icon8)
-        self.pushButton_trans0.setIconSize(QSize(40, 40))
-
-        self.gridLayout_138.addWidget(self.pushButton_trans0, 0, 0, 1, 1)
-
-        self.textEdit_trans0 = QTextEdit(self.groupBox_trans0)
-        self.textEdit_trans0.setObjectName(u"textEdit_trans0")
-        self.textEdit_trans0.setReadOnly(True)
-
-        self.gridLayout_138.addWidget(self.textEdit_trans0, 0, 1, 1, 1)
-
-
-        self.gridLayout_139.addWidget(self.groupBox_trans0, 0, 0, 1, 1)
-
-        self.groupBox_trans2 = QGroupBox(self.page_6)
-        self.groupBox_trans2.setObjectName(u"groupBox_trans2")
-        self.gridLayout_141 = QGridLayout(self.groupBox_trans2)
-        self.gridLayout_141.setObjectName(u"gridLayout_141")
-        self.pushButton_trans2 = QPushButton(self.groupBox_trans2)
-        self.pushButton_trans2.setObjectName(u"pushButton_trans2")
-        self.pushButton_trans2.setIcon(icon8)
-        self.pushButton_trans2.setIconSize(QSize(40, 40))
-
-        self.gridLayout_141.addWidget(self.pushButton_trans2, 0, 0, 1, 1)
-
-        self.textEdit_trans2 = QTextEdit(self.groupBox_trans2)
-        self.textEdit_trans2.setObjectName(u"textEdit_trans2")
-        self.textEdit_trans2.setReadOnly(True)
-
-        self.gridLayout_141.addWidget(self.textEdit_trans2, 0, 1, 1, 1)
-
-
-        self.gridLayout_139.addWidget(self.groupBox_trans2, 0, 2, 1, 1)
-
-        self.stackedWidget_mrid.addWidget(self.page_6)
-
-        self.gridLayout_43.addWidget(self.stackedWidget_mrid, 0, 1, 1, 1)
-
-        self.groupBox_29 = QGroupBox(self.groupBox_paintbrush)
-        self.groupBox_29.setObjectName(u"groupBox_29")
-        self.groupBox_29.setMaximumSize(QSize(16777215, 100))
-        self.gridLayout_40 = QGridLayout(self.groupBox_29)
-        self.gridLayout_40.setObjectName(u"gridLayout_40")
-        self.paint_square_Post = QToolButton(self.groupBox_29)
-        self.paint_square_Post.setObjectName(u"paint_square_Post")
-        self.paint_square_Post.setFont(font)
-        self.paint_square_Post.setStyleSheet(u"")
-        self.paint_square_Post.setIcon(icon6)
-        self.paint_square_Post.setIconSize(QSize(20, 20))
-        self.paint_square_Post.setCheckable(True)
-        self.paint_square_Post.setChecked(True)
-        self.paint_square_Post.setAutoExclusive(False)
-
-        self.gridLayout_40.addWidget(self.paint_square_Post, 0, 0, 1, 1)
-
-        self.paint_round_Post = QToolButton(self.groupBox_29)
-        self.paint_round_Post.setObjectName(u"paint_round_Post")
-        self.paint_round_Post.setEnabled(True)
-        self.paint_round_Post.setIcon(icon7)
-        self.paint_round_Post.setIconSize(QSize(20, 20))
-        self.paint_round_Post.setCheckable(True)
-        self.paint_round_Post.setAutoExclusive(False)
-
-        self.gridLayout_40.addWidget(self.paint_round_Post, 0, 1, 1, 1)
-
-
-        self.gridLayout_43.addWidget(self.groupBox_29, 0, 0, 1, 1)
-
-
-        self.gridLayout_104.addWidget(self.groupBox_paintbrush, 1, 5, 1, 1)
-
-        self.tabWidget.addTab(self.tab_15, "")
+        self.tabWidget.addTab(self.tab_6, "")
         self.tab_ephys = QWidget()
         self.tab_ephys.setObjectName(u"tab_ephys")
         self.gridLayout_22 = QGridLayout(self.tab_ephys)
         self.gridLayout_22.setObjectName(u"gridLayout_22")
-        self.pushButton_anatRegion = QPushButton(self.tab_ephys)
-        self.pushButton_anatRegion.setObjectName(u"pushButton_anatRegion")
-        self.pushButton_anatRegion.setMinimumSize(QSize(0, 72))
-        self.pushButton_anatRegion.setFont(font1)
-        self.pushButton_anatRegion.setStyleSheet(u"color: rgb(224, 27, 36);")
+        self.textEdit_ephys = QTextEdit(self.tab_ephys)
+        self.textEdit_ephys.setObjectName(u"textEdit_ephys")
+        self.textEdit_ephys.setMaximumSize(QSize(16777215, 50))
+        self.textEdit_ephys.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.textEdit_ephys.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.textEdit_ephys.setReadOnly(True)
 
-        self.gridLayout_22.addWidget(self.pushButton_anatRegion, 2, 4, 1, 1)
-
-        self.frame_2 = QFrame(self.tab_ephys)
-        self.frame_2.setObjectName(u"frame_2")
-        self.frame_2.setFrameShape(QFrame.StyledPanel)
-        self.frame_2.setFrameShadow(QFrame.Raised)
-        self.gridLayout_168 = QGridLayout(self.frame_2)
-        self.gridLayout_168.setObjectName(u"gridLayout_168")
-        self.pushButton_selectAll = QPushButton(self.frame_2)
-        self.pushButton_selectAll.setObjectName(u"pushButton_selectAll")
-
-        self.gridLayout_168.addWidget(self.pushButton_selectAll, 0, 0, 1, 1)
-
-        self.pushButton_deselectAll = QPushButton(self.frame_2)
-        self.pushButton_deselectAll.setObjectName(u"pushButton_deselectAll")
-
-        self.gridLayout_168.addWidget(self.pushButton_deselectAll, 0, 1, 1, 1)
-
-        self.tableWidget_ephys = QTableWidget(self.frame_2)
-        self.tableWidget_ephys.setObjectName(u"tableWidget_ephys")
-        self.tableWidget_ephys.setFont(font2)
-        self.tableWidget_ephys.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-        self.tableWidget_ephys.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.tableWidget_ephys.setSelectionMode(QAbstractItemView.ContiguousSelection)
-        self.tableWidget_ephys.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.tableWidget_ephys.horizontalHeader().setCascadingSectionResizes(False)
-
-        self.gridLayout_168.addWidget(self.tableWidget_ephys, 2, 0, 1, 2)
-
-        self.pushButton_showChannels = QPushButton(self.frame_2)
-        self.pushButton_showChannels.setObjectName(u"pushButton_showChannels")
-        self.pushButton_showChannels.setCheckable(True)
-        self.pushButton_showChannels.setChecked(True)
-
-        self.gridLayout_168.addWidget(self.pushButton_showChannels, 1, 0, 1, 2)
-
-
-        self.gridLayout_22.addWidget(self.frame_2, 0, 4, 2, 1)
+        self.gridLayout_22.addWidget(self.textEdit_ephys, 0, 0, 1, 3)
 
         self.tabWidget_2 = QTabWidget(self.tab_ephys)
         self.tabWidget_2.setObjectName(u"tabWidget_2")
@@ -4354,9 +4189,13 @@ class Ui_MainWindow(object):
         self.resetCamera_ephys = QPushButton(self.frame_32)
         self.resetCamera_ephys.setObjectName(u"resetCamera_ephys")
         self.resetCamera_ephys.setEnabled(True)
-        self.resetCamera_ephys.setStyleSheet(u"")
-        icon9 = QIcon(QIcon.fromTheme(u"go-home"))
-        self.resetCamera_ephys.setIcon(icon9)
+        self.resetCamera_ephys.setStyleSheet(u"\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon8 = QIcon(QIcon.fromTheme(u"go-home"))
+        self.resetCamera_ephys.setIcon(icon8)
         self.resetCamera_ephys.setIconSize(QSize(60, 40))
         self.resetCamera_ephys.setAutoDefault(False)
         self.resetCamera_ephys.setFlat(False)
@@ -4365,47 +4204,74 @@ class Ui_MainWindow(object):
 
         self.change_perspective_ephys = QPushButton(self.frame_32)
         self.change_perspective_ephys.setObjectName(u"change_perspective_ephys")
-        self.change_perspective_ephys.setStyleSheet(u"")
-        icon10 = QIcon()
-        icon10.addFile(u"Icons/ephys/projection_parallel.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.change_perspective_ephys.setIcon(icon10)
+        self.change_perspective_ephys.setStyleSheet(u"\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon9 = QIcon()
+        icon9.addFile(u"Icons/ephys/projection_parallel.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.change_perspective_ephys.setIcon(icon9)
         self.change_perspective_ephys.setIconSize(QSize(60, 40))
 
         self.gridLayout_68.addWidget(self.change_perspective_ephys, 3, 1, 1, 1)
 
         self.pushButton_slicey = QPushButton(self.frame_32)
         self.pushButton_slicey.setObjectName(u"pushButton_slicey")
-        icon11 = QIcon()
-        icon11.addFile(u"Icons/ephys/slicing_coronal_front.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_slicey.setIcon(icon11)
+        self.pushButton_slicey.setStyleSheet(u"\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon10 = QIcon()
+        icon10.addFile(u"Icons/ephys/slicing_coronal_front.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_slicey.setIcon(icon10)
         self.pushButton_slicey.setIconSize(QSize(60, 40))
+        self.pushButton_slicey.setCheckable(True)
 
         self.gridLayout_68.addWidget(self.pushButton_slicey, 3, 4, 1, 1)
 
         self.pushButton_Noslicing = QPushButton(self.frame_32)
         self.pushButton_Noslicing.setObjectName(u"pushButton_Noslicing")
-        icon12 = QIcon()
-        icon12.addFile(u"Icons/ephys/no_slicing.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_Noslicing.setIcon(icon12)
+        self.pushButton_Noslicing.setStyleSheet(u"\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon11 = QIcon()
+        icon11.addFile(u"Icons/ephys/no_slicing.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_Noslicing.setIcon(icon11)
         self.pushButton_Noslicing.setIconSize(QSize(60, 40))
 
         self.gridLayout_68.addWidget(self.pushButton_Noslicing, 3, 2, 1, 1)
 
         self.pushButton_slicex = QPushButton(self.frame_32)
         self.pushButton_slicex.setObjectName(u"pushButton_slicex")
-        icon13 = QIcon()
-        icon13.addFile(u"Icons/ephys/slicing_sagittal_right.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_slicex.setIcon(icon13)
+        self.pushButton_slicex.setStyleSheet(u"\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon12 = QIcon()
+        icon12.addFile(u"Icons/ephys/slicing_sagittal_right.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_slicex.setIcon(icon12)
         self.pushButton_slicex.setIconSize(QSize(60, 40))
+        self.pushButton_slicex.setCheckable(True)
 
         self.gridLayout_68.addWidget(self.pushButton_slicex, 3, 3, 1, 1)
 
         self.pushButton_slicez = QPushButton(self.frame_32)
         self.pushButton_slicez.setObjectName(u"pushButton_slicez")
-        icon14 = QIcon()
-        icon14.addFile(u"Icons/ephys/slicing_axial_top.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_slicez.setIcon(icon14)
+        self.pushButton_slicez.setStyleSheet(u"\n"
+"            QPushButton:hover {\n"
+"                background-color: rgba(255, 255, 255, 30);\n"
+"                border-radius: 4px;\n"
+"            }")
+        icon13 = QIcon()
+        icon13.addFile(u"Icons/ephys/slicing_axial_top.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_slicez.setIcon(icon13)
         self.pushButton_slicez.setIconSize(QSize(60, 40))
+        self.pushButton_slicez.setCheckable(True)
 
         self.gridLayout_68.addWidget(self.pushButton_slicez, 3, 5, 1, 1)
 
@@ -4560,8 +4426,8 @@ class Ui_MainWindow(object):
 
         self.pushButton_videoPlay = QPushButton(self.page_12)
         self.pushButton_videoPlay.setObjectName(u"pushButton_videoPlay")
-        icon15 = QIcon(QIcon.fromTheme(u"media-playback-start"))
-        self.pushButton_videoPlay.setIcon(icon15)
+        icon14 = QIcon(QIcon.fromTheme(u"media-playback-start"))
+        self.pushButton_videoPlay.setIcon(icon14)
         self.pushButton_videoPlay.setIconSize(QSize(40, 40))
 
         self.gridLayout_167.addWidget(self.pushButton_videoPlay, 1, 0, 1, 1)
@@ -4595,6 +4461,51 @@ class Ui_MainWindow(object):
 
         self.gridLayout_22.addWidget(self.tabWidget_2, 1, 0, 2, 4)
 
+        self.pushButton_anatRegion = QPushButton(self.tab_ephys)
+        self.pushButton_anatRegion.setObjectName(u"pushButton_anatRegion")
+        self.pushButton_anatRegion.setMinimumSize(QSize(0, 72))
+        self.pushButton_anatRegion.setFont(font1)
+        self.pushButton_anatRegion.setStyleSheet(u"color: rgb(224, 27, 36);")
+
+        self.gridLayout_22.addWidget(self.pushButton_anatRegion, 2, 4, 1, 1)
+
+        self.frame_2 = QFrame(self.tab_ephys)
+        self.frame_2.setObjectName(u"frame_2")
+        self.frame_2.setFrameShape(QFrame.StyledPanel)
+        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.gridLayout_168 = QGridLayout(self.frame_2)
+        self.gridLayout_168.setObjectName(u"gridLayout_168")
+        self.pushButton_selectAll = QPushButton(self.frame_2)
+        self.pushButton_selectAll.setObjectName(u"pushButton_selectAll")
+
+        self.gridLayout_168.addWidget(self.pushButton_selectAll, 1, 0, 1, 1)
+
+        self.tableWidget_ephys = QTableWidget(self.frame_2)
+        self.tableWidget_ephys.setObjectName(u"tableWidget_ephys")
+        self.tableWidget_ephys.setFont(font2)
+        self.tableWidget_ephys.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        self.tableWidget_ephys.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tableWidget_ephys.setSelectionMode(QAbstractItemView.ContiguousSelection)
+        self.tableWidget_ephys.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tableWidget_ephys.horizontalHeader().setCascadingSectionResizes(False)
+
+        self.gridLayout_168.addWidget(self.tableWidget_ephys, 0, 0, 1, 2)
+
+        self.pushButton_deselectAll = QPushButton(self.frame_2)
+        self.pushButton_deselectAll.setObjectName(u"pushButton_deselectAll")
+
+        self.gridLayout_168.addWidget(self.pushButton_deselectAll, 1, 1, 1, 1)
+
+        self.pushButton_showChannels = QPushButton(self.frame_2)
+        self.pushButton_showChannels.setObjectName(u"pushButton_showChannels")
+        self.pushButton_showChannels.setCheckable(True)
+        self.pushButton_showChannels.setChecked(True)
+
+        self.gridLayout_168.addWidget(self.pushButton_showChannels, 2, 0, 1, 2)
+
+
+        self.gridLayout_22.addWidget(self.frame_2, 0, 4, 2, 1)
+
         self.groupBox_5 = QGroupBox(self.tab_ephys)
         self.groupBox_5.setObjectName(u"groupBox_5")
         self.gridLayout_165 = QGridLayout(self.groupBox_5)
@@ -4619,17 +4530,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_22.addWidget(self.groupBox_5, 0, 3, 1, 1)
 
-        self.textEdit_ephys = QTextEdit(self.tab_ephys)
-        self.textEdit_ephys.setObjectName(u"textEdit_ephys")
-        self.textEdit_ephys.setMaximumSize(QSize(16777215, 50))
-        self.textEdit_ephys.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.textEdit_ephys.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.textEdit_ephys.setReadOnly(True)
-
-        self.gridLayout_22.addWidget(self.textEdit_ephys, 0, 0, 1, 3)
-
-        self.gridLayout_22.setColumnStretch(1, 2)
-        self.gridLayout_22.setColumnStretch(4, 2)
         self.tabWidget.addTab(self.tab_ephys, "")
         self.tab = QWidget()
         self.tab.setObjectName(u"tab")
@@ -4714,7 +4614,7 @@ class Ui_MainWindow(object):
         self.gridLayout_147.setContentsMargins(4, 4, 4, 4)
         self.pushButton_slicey_vis3D = QPushButton(self.frame_33)
         self.pushButton_slicey_vis3D.setObjectName(u"pushButton_slicey_vis3D")
-        self.pushButton_slicey_vis3D.setIcon(icon11)
+        self.pushButton_slicey_vis3D.setIcon(icon10)
         self.pushButton_slicey_vis3D.setIconSize(QSize(40, 40))
 
         self.gridLayout_147.addWidget(self.pushButton_slicey_vis3D, 2, 5, 1, 1)
@@ -4723,7 +4623,7 @@ class Ui_MainWindow(object):
         self.resetCamera_vis3D.setObjectName(u"resetCamera_vis3D")
         self.resetCamera_vis3D.setEnabled(True)
         self.resetCamera_vis3D.setStyleSheet(u"")
-        self.resetCamera_vis3D.setIcon(icon9)
+        self.resetCamera_vis3D.setIcon(icon8)
         self.resetCamera_vis3D.setIconSize(QSize(40, 40))
         self.resetCamera_vis3D.setAutoDefault(False)
         self.resetCamera_vis3D.setFlat(False)
@@ -4732,7 +4632,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_slicex_vis3D = QPushButton(self.frame_33)
         self.pushButton_slicex_vis3D.setObjectName(u"pushButton_slicex_vis3D")
-        self.pushButton_slicex_vis3D.setIcon(icon13)
+        self.pushButton_slicex_vis3D.setIcon(icon12)
         self.pushButton_slicex_vis3D.setIconSize(QSize(40, 40))
 
         self.gridLayout_147.addWidget(self.pushButton_slicex_vis3D, 2, 4, 1, 1)
@@ -4740,14 +4640,14 @@ class Ui_MainWindow(object):
         self.change_perspective_vis3D = QPushButton(self.frame_33)
         self.change_perspective_vis3D.setObjectName(u"change_perspective_vis3D")
         self.change_perspective_vis3D.setStyleSheet(u"")
-        self.change_perspective_vis3D.setIcon(icon10)
+        self.change_perspective_vis3D.setIcon(icon9)
         self.change_perspective_vis3D.setIconSize(QSize(40, 40))
 
         self.gridLayout_147.addWidget(self.change_perspective_vis3D, 2, 2, 1, 1)
 
         self.pushButton_slicez_vis3D = QPushButton(self.frame_33)
         self.pushButton_slicez_vis3D.setObjectName(u"pushButton_slicez_vis3D")
-        self.pushButton_slicez_vis3D.setIcon(icon14)
+        self.pushButton_slicez_vis3D.setIcon(icon13)
         self.pushButton_slicez_vis3D.setIconSize(QSize(40, 40))
 
         self.gridLayout_147.addWidget(self.pushButton_slicez_vis3D, 2, 6, 1, 1)
@@ -4762,7 +4662,7 @@ class Ui_MainWindow(object):
 
         self.pushButton_Noslicing_vis3D = QPushButton(self.frame_33)
         self.pushButton_Noslicing_vis3D.setObjectName(u"pushButton_Noslicing_vis3D")
-        self.pushButton_Noslicing_vis3D.setIcon(icon12)
+        self.pushButton_Noslicing_vis3D.setIcon(icon11)
         self.pushButton_Noslicing_vis3D.setIconSize(QSize(40, 40))
 
         self.gridLayout_147.addWidget(self.pushButton_Noslicing_vis3D, 2, 3, 1, 1)
@@ -4903,9 +4803,9 @@ class Ui_MainWindow(object):
 "                background-color: rgba(255, 255, 255, 30);\n"
 "                border-radius: 4px;\n"
 "            }")
-        icon16 = QIcon()
-        icon16.addFile(u"Icons/ephys/zoom-out.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_zoomOut.setIcon(icon16)
+        icon15 = QIcon()
+        icon15.addFile(u"Icons/ephys/zoom-out.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_zoomOut.setIcon(icon15)
         self.pushButton_zoomOut.setIconSize(QSize(40, 40))
         self.pushButton_zoomOut.setCheckable(True)
 
@@ -4921,9 +4821,9 @@ class Ui_MainWindow(object):
 "                background-color: rgba(255, 255, 255, 30);\n"
 "                border-radius: 4px;\n"
 "            }")
-        icon17 = QIcon()
-        icon17.addFile(u"Icons/ephys/select_time.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_selectTime.setIcon(icon17)
+        icon16 = QIcon()
+        icon16.addFile(u"Icons/ephys/select_time.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_selectTime.setIcon(icon16)
         self.pushButton_selectTime.setIconSize(QSize(40, 40))
         self.pushButton_selectTime.setCheckable(True)
 
@@ -4940,9 +4840,9 @@ class Ui_MainWindow(object):
 "                background-color: rgba(255, 255, 255, 30);\n"
 "                border-radius: 4px;\n"
 "            }")
-        icon18 = QIcon()
-        icon18.addFile(u"Icons/ephys/select_timeline.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_timeline.setIcon(icon18)
+        icon17 = QIcon()
+        icon17.addFile(u"Icons/ephys/select_timeline.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_timeline.setIcon(icon17)
         self.pushButton_timeline.setIconSize(QSize(40, 40))
         self.pushButton_timeline.setCheckable(True)
 
@@ -4959,9 +4859,9 @@ class Ui_MainWindow(object):
 "                background-color: rgba(255, 255, 255, 30);\n"
 "                border-radius: 4px;\n"
 "            }")
-        icon19 = QIcon()
-        icon19.addFile(u"Icons/Internet/measure.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_measurement.setIcon(icon19)
+        icon18 = QIcon()
+        icon18.addFile(u"Icons/Internet/measure.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_measurement.setIcon(icon18)
         self.pushButton_measurement.setIconSize(QSize(40, 40))
         self.pushButton_measurement.setCheckable(True)
 
@@ -4975,9 +4875,9 @@ class Ui_MainWindow(object):
 "                background-color: rgba(255, 255, 255, 30);\n"
 "                border-radius: 4px;\n"
 "            }")
-        icon20 = QIcon()
-        icon20.addFile(u"Icons/ephys/zoom-in (1).png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_zoomReset.setIcon(icon20)
+        icon19 = QIcon()
+        icon19.addFile(u"Icons/ephys/zoom-in (1).png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_zoomReset.setIcon(icon19)
         self.pushButton_zoomReset.setIconSize(QSize(40, 40))
         self.pushButton_zoomReset.setCheckable(True)
 
@@ -4990,9 +4890,9 @@ class Ui_MainWindow(object):
 "                background-color: rgba(255, 255, 255, 30);\n"
 "                border-radius: 4px;\n"
 "            }")
-        icon21 = QIcon()
-        icon21.addFile(u"Icons/ephys/amplitude_plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButtonAmp_plus.setIcon(icon21)
+        icon20 = QIcon()
+        icon20.addFile(u"Icons/ephys/amplitude_plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButtonAmp_plus.setIcon(icon20)
         self.pushButtonAmp_plus.setIconSize(QSize(40, 40))
         self.pushButtonAmp_plus.setCheckable(True)
 
@@ -5005,9 +4905,9 @@ class Ui_MainWindow(object):
 "                background-color: rgba(255, 255, 255, 30);\n"
 "                border-radius: 4px;\n"
 "            }")
-        icon22 = QIcon()
-        icon22.addFile(u"Icons/ephys/amplitude_minus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButtonAmp_minus.setIcon(icon22)
+        icon21 = QIcon()
+        icon21.addFile(u"Icons/ephys/amplitude_minus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButtonAmp_minus.setIcon(icon21)
         self.pushButtonAmp_minus.setIconSize(QSize(40, 40))
         self.pushButtonAmp_minus.setCheckable(True)
 
@@ -5067,6 +4967,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menu4D_Tools.menuAction())
         self.menuGUI.addAction(self.actionOpen)
         self.menuGUI.addAction(self.actionOpen_ephys_Data)
+        self.menuGUI.addAction(self.actionStart_SAMRI_process)
         self.menuGUI.addSeparator()
         self.menuGUI.addAction(self.actionAddViewImage)
         self.menuGUI.addSeparator()
@@ -5089,7 +4990,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         self.tabWidget_visualisation.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         self.fit_to_zoom_data20.setDefault(False)
         self.tabWidget_time2.setCurrentIndex(0)
         self.fit_to_zoom_data23.setDefault(False)
@@ -5117,9 +5018,8 @@ class Ui_MainWindow(object):
         self.comboBox_coarest.setCurrentIndex(0)
         self.comboBox_finest.setCurrentIndex(0)
         self.comboBox_movingimg.setCurrentIndex(-1)
-        self.stackedWidget_mrid.setCurrentIndex(0)
+        self.stackedWidget_4D.setCurrentIndex(0)
         self.histogram_label.setCurrentIndex(-1)
-        self.stackedWidget_4D.setCurrentIndex(1)
         self.tabWidget_2.setCurrentIndex(0)
         self.resetCamera_ephys.setDefault(False)
         self.stackedWidget_video.setCurrentIndex(1)
@@ -5154,6 +5054,7 @@ class Ui_MainWindow(object):
         self.actionGet_Position_in_HPC.setText(QCoreApplication.translate("MainWindow", u"Get Position in HPC", None))
         self.actionMeasurement.setText(QCoreApplication.translate("MainWindow", u"Measurement", None))
         self.actionVisualize_3D_data.setText(QCoreApplication.translate("MainWindow", u"Visualize 3D data", None))
+        self.actionStart_SAMRI_process.setText(QCoreApplication.translate("MainWindow", u"Start SAMRI process", None))
         self.groupBox_data2.setTitle(QCoreApplication.translate("MainWindow", u"View AXIAL", None))
         self.groupBox_32.setTitle(QCoreApplication.translate("MainWindow", u"Curosr 2", None))
         self.groupBox_time20.setTitle(QCoreApplication.translate("MainWindow", u"Timestamp t=0", None))
@@ -5562,8 +5463,19 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem20.setText(QCoreApplication.translate("MainWindow", u"Label", None));
         self.checkBox_Brush.setText(QCoreApplication.translate("MainWindow", u"Brush ON", None))
         self.groupBox_20.setTitle(QCoreApplication.translate("MainWindow", u"Overall label opacity", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_15), QCoreApplication.translate("MainWindow", u"Popups for 4D Data", None))
         self.groupBox_paintbrush.setTitle(QCoreApplication.translate("MainWindow", u"Paintbrush", None))
+        self.pushButton_anatOK.setText(QCoreApplication.translate("MainWindow", u"NEXT", None))
+        self.plainTextEdit_MRID_2.setPlainText(QCoreApplication.translate("MainWindow", u"Please paint all anatomical structures around the tags with the Paintbrush. Once this is done, please click NEXT", None))
+        self.pushButton_segOK.setText(QCoreApplication.translate("MainWindow", u"DONE", None))
+        self.plainTextEdit_MRID_4.setPlainText(QCoreApplication.translate("MainWindow", u"Please paint all MRID tags with the Paintbrush. Once this is done, please click DONE", None))
         self.checkBox_Brush_MRID.setText(QCoreApplication.translate("MainWindow", u"Brush ON", None))
+        self.groupBox_28.setTitle(QCoreApplication.translate("MainWindow", u"Paintbrush Inspector", None))
+        self.groupBox_29.setTitle(QCoreApplication.translate("MainWindow", u"Brush Style", None))
+        self.paint_square_Post.setText("")
+        self.paint_round_Post.setText("")
+        self.groupBox_31.setTitle(QCoreApplication.translate("MainWindow", u"Label Opacity", None))
+        self.groupBox_30.setTitle(QCoreApplication.translate("MainWindow", u"Brush Size", None))
         self.groupBox_33.setTitle(QCoreApplication.translate("MainWindow", u"Segmentation Labels", None))
         self.groupBox_35.setTitle(QCoreApplication.translate("MainWindow", u"Paint over", None))
         self.groupBox_47.setTitle(QCoreApplication.translate("MainWindow", u"Active Label", None))
@@ -5575,72 +5487,15 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem23.setText(QCoreApplication.translate("MainWindow", u"Label", None));
         self.groupBox_36.setTitle(QCoreApplication.translate("MainWindow", u"Histogram", None))
         self.groupBox_48.setTitle(QCoreApplication.translate("MainWindow", u"Label", None))
-        self.groupBox_28.setTitle(QCoreApplication.translate("MainWindow", u"Paintbrush Inspector", None))
-        self.groupBox_31.setTitle(QCoreApplication.translate("MainWindow", u"Label Opacity", None))
-        self.groupBox_30.setTitle(QCoreApplication.translate("MainWindow", u"Brush Size", None))
-        self.pushButton_anatOK.setText(QCoreApplication.translate("MainWindow", u"NEXT", None))
-        self.plainTextEdit_MRID_2.setPlainText(QCoreApplication.translate("MainWindow", u"Please paint all anatomical structures around the tags with the Paintbrush. Once this is done, please click NEXT", None))
-        self.pushButton_segOK.setText(QCoreApplication.translate("MainWindow", u"DONE", None))
-        self.plainTextEdit_MRID_4.setPlainText(QCoreApplication.translate("MainWindow", u"Please paint all MRID tags with the Paintbrush. Once this is done, please click DONE", None))
-        self.plainTextEdit_MRID_7.setPlainText(QCoreApplication.translate("MainWindow", u"Press NEXT if you selected the correct transformation files", None))
-        self.pushButton_Next.setText(QCoreApplication.translate("MainWindow", u"NEXT", None))
-        self.pushButton_Gaussian.setText(QCoreApplication.translate("MainWindow", u"CONTINUE", None))
-        self.textEdit.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_6), QCoreApplication.translate("MainWindow", u"Popups for 4D Data II", None))
+        self.textEdit_ephys.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "hr { height: 1px; border-width: 0; }\n"
 "li.unchecked::marker { content: \"\\2610\"; }\n"
 "li.checked::marker { content: \"\\2612\"; }\n"
 "</style></head><body style=\" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:9pt;\">Gaussian Centers were found and all necessary files were wrapped. </span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:9pt;\">Press CONTINUE to get the coordinates of the MRID tag centers.</span></p></body></html>", None))
-        self.textEdit_2.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:9pt;\">FINISH</span></p></body></html>", None))
-        self.groupBox_trans1.setTitle(QCoreApplication.translate("MainWindow", u"GroupBox", None))
-        self.pushButton_trans1.setText("")
-        self.textEdit_trans1.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:9pt;\">Please select the correct transformation files for dataview</span></p></body></html>", None))
-        self.groupBox_trans0.setTitle(QCoreApplication.translate("MainWindow", u"GroupBox", None))
-        self.pushButton_trans0.setText("")
-        self.textEdit_trans0.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:9pt;\">Please select the correct transformation files for dataview</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Segoe UI'; font-size:9pt;\"><br /></p></body></html>", None))
-        self.groupBox_trans2.setTitle(QCoreApplication.translate("MainWindow", u"GroupBox", None))
-        self.pushButton_trans2.setText("")
-        self.textEdit_trans2.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:9pt;\">Please select the correct transformation files for dataview</span></p></body></html>", None))
-        self.groupBox_29.setTitle(QCoreApplication.translate("MainWindow", u"Brush Style", None))
-        self.paint_square_Post.setText("")
-        self.paint_round_Post.setText("")
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_15), QCoreApplication.translate("MainWindow", u"Popups for 4D Data", None))
-        self.pushButton_anatRegion.setText(QCoreApplication.translate("MainWindow", u"CHANGE ANAT REGION", None))
-        self.pushButton_selectAll.setText(QCoreApplication.translate("MainWindow", u"Select All", None))
-        self.pushButton_deselectAll.setText(QCoreApplication.translate("MainWindow", u"Deselect All", None))
-        self.pushButton_showChannels.setText(QCoreApplication.translate("MainWindow", u"Show only selected Channels", None))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:20pt; color:#ffffff;\">Atlas 3D Visualisation</span></p></body></html>", None))
 #if QT_CONFIG(tooltip)
         self.resetCamera_ephys.setToolTip(QCoreApplication.translate("MainWindow", u"Reset Camera View", None))
 #endif // QT_CONFIG(tooltip)
@@ -5666,9 +5521,9 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.pushButton_slicez.setText("")
         self.groupBox_6.setTitle(QCoreApplication.translate("MainWindow", u"Change Opacity of Meshes", None))
-        self.groupBox_8.setTitle(QCoreApplication.translate("MainWindow", u"Atlas", None))
+        self.groupBox_8.setTitle(QCoreApplication.translate("MainWindow", u"Regions of Shank", None))
         self.groupBox_9.setTitle(QCoreApplication.translate("MainWindow", u"Background", None))
-        self.groupBox_11.setTitle(QCoreApplication.translate("MainWindow", u"Region of Intrest", None))
+        self.groupBox_11.setTitle(QCoreApplication.translate("MainWindow", u"Region of Selected Electrode", None))
         self.groupBox_anatRegion.setTitle(QCoreApplication.translate("MainWindow", u"Selected Channel ID and Anat Region Label", None))
         self.groupBox_37.setTitle(QCoreApplication.translate("MainWindow", u"Coordinates of selected Channel", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_4), QCoreApplication.translate("MainWindow", u"Anatomy", None))
@@ -5676,17 +5531,13 @@ class Ui_MainWindow(object):
         self.pushButton_videoPlay.setText("")
         self.pushButton_AddVideo.setText(QCoreApplication.translate("MainWindow", u"OPEN VIDEO", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_5), QCoreApplication.translate("MainWindow", u"Video", None))
+        self.pushButton_anatRegion.setText(QCoreApplication.translate("MainWindow", u"CHANGE ANAT REGION", None))
+        self.pushButton_selectAll.setText(QCoreApplication.translate("MainWindow", u"Select All", None))
+        self.pushButton_deselectAll.setText(QCoreApplication.translate("MainWindow", u"Deselect All", None))
+        self.pushButton_showChannels.setText(QCoreApplication.translate("MainWindow", u"Show only selected Channels", None))
         self.groupBox_5.setTitle("")
         self.comboBox_mridTag.setCurrentText("")
         self.pushButton_changeTAG.setText(QCoreApplication.translate("MainWindow", u"CHANGE TAG", None))
-        self.textEdit_ephys.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Segoe UI'; font-size:20pt; color:#ffffff;\">Atlas 3D Visualisation</span></p></body></html>", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_ephys), QCoreApplication.translate("MainWindow", u"ephys", None))
         self.groupBox_ChangeanatRegion.setTitle("")
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Anatomical Region", None))

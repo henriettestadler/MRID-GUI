@@ -16,6 +16,7 @@ import numpy as np
 from mplwidget import MplWidget
 from file_handling.loadimage_into4D import LoadImage4D
 from ephys.visualisation3D import Visualisation3D
+import time
 
 class PopupDialog(QDialog):
     """
@@ -126,6 +127,7 @@ class ButtonsGUI_4D:
             return
         elif msg_box.clickedButton()==btn_no:
             self.add_other_view()
+            return
         else:
             #pop up asking for the view if 4D data used
             image = sITK.ReadImage(file_name)
@@ -387,7 +389,7 @@ class ButtonsGUI_4D:
         """
         Continue MRID-tag workflow by saving data and updating GUI navigation.
         """
-        if self.ui.stackedWidget_4D.currentIndex() == 1:
+        if self.ui.stackedWidget_4D.currentIndex() == 0:
             # create a dock widget
             self.ui.groupBox_progressGUI.setVisible(True)
 
@@ -417,7 +419,7 @@ class ButtonsGUI_4D:
         #save each niigz separate
         self.LoadMRI.mrid_tags.save_as_niigz()
 
-        if self.ui.stackedWidget_4D.currentIndex() == 1:
+        if self.ui.stackedWidget_4D.currentIndex() == 0:
             for idx in range(len(self.LoadMRI.vtk_widgets[0])):
                 heatmap = getattr(self.ui,f"heatmap_data{idx}")
                 heatmap.setVisible(True)
@@ -444,11 +446,15 @@ class ButtonsGUI_4D:
                             tabclass.update_table(os.path.basename(file_name), vol,idx)
                             self.ui.contrast_data.setItemEnabled(idx, False)
                         self.LoadMRI.mrid_tags.heatmap_unsuper = False
+                        print('HIER DEN HEATMAP VERLINKEN', flush=True)
+                        #directly generating supervised heatmap!
+                        roi_indices = np.unique(vol)
+                        self.LoadMRI.mrid_tags.update_heatmap(data_view,idx,roi_indices)
 
-        if self.ui.stackedWidget_4D.currentIndex() == 1:
+        if self.ui.stackedWidget_4D.currentIndex() == 0:
             self.LoadMRI.PaintbrushGUI.brush_4D(True,label=False)
 
-        if self.ui.stackedWidget_4D.currentIndex() == 2:
+        if self.ui.stackedWidget_4D.currentIndex() == 1:
             self.LoadMRI.PaintbrushGUI.brush_4D(False,label=False) #cursor on
             #close all paintbrush tings
             self.dock.close()
@@ -491,7 +497,7 @@ class ButtonsGUI_4D:
                     self.dock = dock
                     if tag_data[0][0] == '' and regions[0][0] == '': #Label.txt was imported
                         self.ui.checkBox_Brush_MRID.setEnabled(True)
-                        self.ui.stackedWidget_4D.setCurrentIndex(1)
+                        self.ui.stackedWidget_4D.setCurrentIndex(0)
                     else:
                         self.LoadMRI.mrid_tags = MRID_tags(self, tag_data,num_regions,regions)
                         self.LoadMRI.mrid_tags.create_labels()
@@ -500,9 +506,8 @@ class ButtonsGUI_4D:
                         #Save file
                         self.ui.pushButton_anatOK.clicked.connect(self.continue_mridtags)
                         self.ui.checkBox_Brush_MRID.setEnabled(True)
-                        self.ui.stackedWidget_4D.setCurrentIndex(1)
+                        self.ui.stackedWidget_4D.setCurrentIndex(0)
                 else:
-                    print('bin ich hier?',flush=True)
                     dock.show()
                     dock.raise_()
 
@@ -512,7 +517,6 @@ class ButtonsGUI_4D:
                     self.LoadMRI.PaintbrushGUI = PaintbrushGUI(self.MW,True,label=True)
 
                 for i in range(len(filename_anat)):
-                    #self.file_name[data_index] = [None,data_view]
                     if filename_anat[i][0] is not None:
                         file_name = filename_anat[i][0]
                         data_view = filename_anat[i][1]
@@ -603,6 +607,7 @@ class ButtonsGUI_4D:
             btn_cancel = msg_box.addButton("Cancel", QMessageBox.ActionRole)
             msg_box.exec()
             if msg_box.clickedButton()==btn_cancel:
+                self.LoadMRI.ElectrodeLoc.groupBox_progressGUI.setVisible(False)
                 return
 
             self.electrode_localisation()
@@ -627,7 +632,10 @@ class ButtonsGUI_4D:
         self.LoadMRI.ElectrodeLoc.progress = self.ui.progressBar
         self.LoadMRI.ElectrodeLoc.progress.setValue(10)
 
+        start = time.time()
         result = self.LoadMRI.ElectrodeLoc.getCoordinates()
+        end = time.time()
+        print(f"Elapsed: {end - start:.4f} seconds",flush=True)
 
         if result is None:
             return
@@ -638,6 +646,7 @@ class ButtonsGUI_4D:
             getattr(self.ui, f"groupBox_time{idx}1").setVisible(False)
             getattr(self.ui, f"groupBox_time{idx}2").setVisible(False)
             getattr(self.ui, f"heatmap_data{idx}").setVisible(False) #heatmap_data0
+            getattr(self.ui, f"groupbox_legend{idx}").setVisible(False)
             getattr(self.ui, f"tabWidget_time{idx}").setCurrentIndex(0)
             getattr(self.ui, f"tabWidget_time{idx}").tabBar().setVisible(False)
             getattr(self.ui, f"gridLayout_data{idx}").addWidget(getattr(self.ui, f"groupBox_time{idx}0"), 0, 0, 1, 3)
@@ -824,11 +833,22 @@ class ButtonsGUI_4D:
             if index != -1:
                 self.LoadMRI.Visualisation3D.comboBox_mrid.setCurrentIndex(index)
             del self.LoadMRI.Visualisation3D.chMap
-            self.LoadMRI.Visualisation3D.delete_volumes(self.totalmrid[index],0, 0) #new_label_idx?
+            #self.LoadMRI.Visualisation3D.delete_volumes(self.totalmrid[index],0, 0) #new_label_idx?
+            self.LoadMRI.Visualisation3D.index = index
+            self.LoadMRI.Visualisation3D.spinbox.blockSignals(True)
+            self.LoadMRI.Visualisation3D.initialize_mridTag(self.totalmrid[index],chMap=self.chMap[index])
+            self.LoadMRI.Visualisation3D.spinbox.blockSignals(False)
+
+            self.LoadMRI.Visualisation3D.manually_pick_point(point=[],idx=self.chMap[index][0])
+            self.LoadMRI.Visualisation3D.plotter.enable_parallel_projection()
         else:
-            self.LoadMRI.Visualisation3D = Visualisation3D(self.LoadMRI.session_path,self.MW,self.totalmrid[index],self.totalmrid,electrode_localisation=True)
+            self.mrid_index = index
+            self.LoadMRI.Visualisation3D = Visualisation3D(self.LoadMRI.session_path,self.MW,electrode_localisation=True)
             self.LoadMRI.Visualisation3D.index = index
             self.LoadMRI.Visualisation3D.initialize_mridTag(self.totalmrid[index],chMap=self.chMap[index])
+
+        self.LoadMRI.ElectrodeLoc.add_point(self.fitted_points[index])
+
 
     def contrast_adjustments(self):
         """
