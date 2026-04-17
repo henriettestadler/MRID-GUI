@@ -213,7 +213,7 @@ class MRID_tags(QObject):
 
             self.fileSaved.emit(save_path)  # emit the signal
             self.file_name[data_index] = file_name
-        print('DEFFFFAULT NAME DEFFFFAULT NAME DEFFFFAULT NAME DEFFFFAULT NAME DEFFFFAULT NAME',default_name,self.LoadMRI.tag_file)
+
         if self.heatmap_unsuper:
             self.LoadMRI.tag_file=True
         else:

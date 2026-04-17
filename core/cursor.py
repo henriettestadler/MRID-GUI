@@ -96,7 +96,7 @@ class Cursor:
             spin_z.setValue(z)
             self.ui[f"scroll_{data_index}"].setValue(lm.slice_indices[data_index][0])
 
-        if hasattr(self.LoadMRI, f"intensity_table{data_index}"):
+        if data_index in self.LoadMRI.intensity_table:
             table_class = self.LoadMRI.intensity_table[data_index]
             table_class.update_intensity_values(data_index)
 

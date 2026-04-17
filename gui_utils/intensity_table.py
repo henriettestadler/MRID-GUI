@@ -202,7 +202,6 @@ class IntensityTable(QObject):
         opacity_spin.setSingleStep(5.0)
         opacity_spin.setDecimals(1)
         opacity_spin.setValue(0.6 * 100)  # assume stored 0.0–1.0 internally
-        print('wie oft bin ich hier',flush=True)
         opacity_spin.setSuffix(" %")
         opacity_spin.setAlignment(Qt.AlignCenter)
         opacity_spin.setEnabled(visibility_enabled)
@@ -316,6 +315,8 @@ class IntensityTable(QObject):
 
                         #anat
                         for idx in range(len(self.MW.LoadMRI.renderers)):
+                            if idx==3:
+                                continue
                             if actor == self.MW.LoadMRI.paintbrush.overlay_actors[vn][idx]:
                                 true_actor = self.MW.LoadMRI.paintbrush.overlay_actors[vn][idx]
                                 if checked:

@@ -58,8 +58,6 @@ def get_relaxation(filename_data, mrid_names, sessionpath, basestructs, slice_or
     segmentation = np.maximum(segmentation, anat)
     heatmap_nii = np.zeros_like(anat)
 
-    print('ich bin hier in mrid_name oder???',mrid_names,flush=True)
-
     for mrid_name in mrid_names:
         ionp_islands = labelsdf["Labels"][labelsdf["Anatomical Regions"].str.contains(mrid_name)]
         heatmaps = np.zeros((len(ionp_islands), segmentation.shape[0], segmentation.shape[1]))

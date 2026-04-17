@@ -446,7 +446,7 @@ class SegmentationEvolution:
         evolved_sitk = sITK.GetImageFromArray(evolved_array)
 
         # Copy metadata
-        org_image = sITK.ReadImage(self.LoadMRI.file_name[0])
+        org_image = sITK.ReadImage(self.LoadMRI.volumes[0].file_path)
 
         evolved_sitk.SetSpacing(org_image.GetSpacing())
         evolved_sitk.SetOrigin(org_image.GetOrigin())
