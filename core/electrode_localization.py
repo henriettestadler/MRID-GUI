@@ -63,6 +63,7 @@ class ElectrodeLoc:
         self.savepath =  os.path.join(LoadMRI.session_path,"analysed")
         self.sessionpath = LoadMRI.session_path
         self.labelsdf = handlers.read_labels(os.path.join(self.sessionpath, "anat", "labels.txt"))
+        self.electrode_actors = []
 
 
     def get_gaussian_centers(self,transformation_files):
@@ -126,7 +127,7 @@ class ElectrodeLoc:
         with open(pklfile_path, 'rb') as f:
             mrid_dict = pickle.load(f)
 
-        totalregionNumbers = []
+        #totalregionNumbers = []
         totalmrid = []
         totaldf = []
         totalbarcode_d = []
@@ -150,7 +151,6 @@ class ElectrodeLoc:
             for mrid in roi_names
         ]
 
-        print('chMap_file',chMap_file,flush=True)
 
         with ProcessPoolExecutor() as executor:
             futures = [executor.submit(process_in_parallel, args) for args in args_list]
@@ -159,7 +159,6 @@ class ElectrodeLoc:
             for future in as_completed(futures):
                 self.progress.setValue(int(20+i/len(roi_names)*50))
                 fitted_points,regionNames,regionNumbers,df,barcode_r,barcode_d,mrid,CA1,dwi1Dsignal,pyrChIdx,chMap,atlasCoordinates_pkl = future.result()
-                totalregionNumbers.extend(regionNumbers)
                 totalfitted_points.append(fitted_points)
                 totaldf.append(df)
                 totalbarcode_r.append(barcode_r)
@@ -173,25 +172,7 @@ class ElectrodeLoc:
                 totalatlasCoordinates_pkl.append(atlasCoordinates_pkl)
                 i+=1
 
-        self.progress.setValue(80)
 
-        totalregionNumbers = list(dict.fromkeys(totalregionNumbers))
-        totalregionNumbers = list(map(int, totalregionNumbers))
-
-        # "/home/neurox/Documents/MRID-GUI/Files/Atlas/WHS_SD_rat_atlas_v4.nii.gz"
-        file_with_regions = self.atlas_path
-        atlas_image = sitk.ReadImage(file_with_regions)
-        volume = sitk.GetArrayFromImage(atlas_image)
-        volume[~np.isin(volume,totalregionNumbers)]=0
-
-        label_image = sitk.GetImageFromArray(volume)
-        label_image.CopyInformation(atlas_image)
-
-        # Suggest a default name (for example, based on the original file name)
-        save_path = os.path.join(self.savepath,'atlas-regions.nii.gz')
-        sitk.WriteImage(label_image, save_path)
-
-        self.add_point(fitted_points)
         self.progress.setValue(100)
 
 
@@ -231,57 +212,60 @@ class ElectrodeLoc:
         """
         Add point of found electrode Gaussian center to 4D MRI slice.
         """
-        for data_index in range(len(self.LoadMRI.vtk_widgets[0])):
-            data_view = list(self.LoadMRI.vtk_widgets[0].keys())[data_index]
-            renderer = self.LoadMRI.renderers[0][data_view]
-            #
-            filename = self.LoadMRI.volumes[data_index].file_path[0:self.LoadMRI.volumes[data_index].file_path.find('.')]
-            filename_4d_warped = ".".join((filename + "-resampled-warped", "nii", "gz"))
-            filename_4d_warped_path = os.path.join(self.savepath, filename_4d_warped)
-            img_4d= sitk.ReadImage(filename_4d_warped_path)
-            vol = sitk.GetArrayFromImage(img_4d)
+        #for data_index in range(len(self.LoadMRI.vtk_widgets[0])):
+        data_index = 0
+        data_view = list(self.LoadMRI.vtk_widgets[0].keys())[data_index]
+        renderer = self.LoadMRI.renderers[0][data_view]
+        for actor in self.electrode_actors:
+            renderer.RemoveActor(actor)
+
+        self.electrode_actors.clear()
+        #
+        filename = self.LoadMRI.volumes[data_index].file_path[0:self.LoadMRI.volumes[data_index].file_path.find('.')]
+        filename_4d_warped = ".".join((filename + "-resampled-warped", "nii", "gz"))
+        filename_4d_warped_path = os.path.join(self.savepath, filename_4d_warped)
+        img_4d= sitk.ReadImage(filename_4d_warped_path)
+        vol = sitk.GetArrayFromImage(img_4d)
+        if data_view=='sagittal':
+            img_slice = np.fliplr(vol[:,:,round(fitted_points[0][0])].T)
+        else:
+            img_slice = vol[int(fitted_points[0][2]),:,:]
+        spacing_4d = img_4d.GetSpacing() #xyz # #
+        spacing = self.LoadMRI.volumes[data_index].spacing
+
+        self.visualize_4Dwarpedslice(img_slice,spacing_4d,data_index,data_view)
+
+        for idx in range(len(fitted_points)):
             if data_view=='sagittal':
-                img_slice = np.fliplr(vol[:,:,round(fitted_points[0][0])].T)
+                x = self.LoadMRI.volumes[data_index].slices[0].shape[0]-1-fitted_points[idx][2]
+                y = fitted_points[idx][1]
+                spacing = np.array(spacing)
+                spacing[2] = spacing[0]
             else:
-                img_slice = vol[int(fitted_points[0][2]),:,:]
-            spacing_4d = img_4d.GetSpacing() #xyz # #
-            spacing = self.LoadMRI.volumes[data_index].spacing
+                x = fitted_points[idx][0]
+                y = fitted_points[idx][1]
 
-            self.visualize_4Dwarpedslice(img_slice,spacing_4d,data_index,data_view)
+            x=(x)*spacing_4d[2]
+            y=(y)*spacing_4d[1]
+            radius = 0.2
 
-            for idx in range(len(fitted_points)):
-                if data_view=='sagittal':
-                    x = self.LoadMRI.volumes[data_index].slices[0].shape[0]-1-fitted_points[idx][2]
-                    y = fitted_points[idx][1]
-                    spacing = np.array(spacing)
-                    spacing[2] = spacing[0]
-                else:
-                    x = fitted_points[idx][0]
-                    y = fitted_points[idx][1]
+            sphere = vtk.vtkSphereSource()
 
-                print(x,y,spacing,flush=True)
-                x=(x)*spacing_4d[2]
-                y=(y)*spacing_4d[1]
-                print(x,y,spacing_4d,flush=True)
-                radius = 0.2
+            sphere.SetCenter(x,y,0.2) #0.2
+            sphere.SetRadius(radius)
 
-                sphere = vtk.vtkSphereSource()
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.SetInputConnection(sphere.GetOutputPort())
 
-                sphere.SetCenter(x,y,0.2) #0.2
-                sphere.SetRadius(radius)
+            actor = vtk.vtkActor()
+            actor.SetMapper(mapper)
+            actor.GetProperty().SetColor(1, 0, 0)  # red
 
-                mapper = vtk.vtkPolyDataMapper()
-                mapper.SetInputConnection(sphere.GetOutputPort())
+            renderer.AddActor(actor)
+            self.electrode_actors.append(actor)
 
-                actor = vtk.vtkActor()
-                actor.SetMapper(mapper)
-                actor.GetProperty().SetColor(1, 0, 0)  # red
+        renderer.GetRenderWindow().Render()
 
-                renderer.AddActor(actor)
-
-            renderer.GetRenderWindow().Render()
-
-                #return actor
 
     def visualize_4Dwarpedslice(self, img_slice,spacing,data_index,data_view):
             """
