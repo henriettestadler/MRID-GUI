@@ -32,7 +32,6 @@ def heatmap_warp(filename, mrid, savepath, sessionpath, fixed_ind, tx):
     warp_4dslice_name = ".".join((filename + "-resampled-warped", "nii", "gz"))
     warp_4dslice_path = os.path.join(sessionpath, "anat", warp_4dslice_name)
     if not os.path.exists(warp_4dslice_path):
-        print("i am here only once")
         warp(vol4d_path, fixed_path, tx, warp_4dslice_path,vol4d=True)
 
     return fixed_path
@@ -62,7 +61,10 @@ def create_composite_transform(transformations, anatpath, verbose=False):
     composite = sitk.CompositeTransform(3)
 
     for i, transform_filename in enumerate(transformations):
-        transform_path = transform_filename #os.path.join(anatpath, transform_filename + ".txt")
+        if transform_filename.endswith(".txt"):
+            transform_path = transform_filename
+        else:
+            transform_path = os.path.join(anatpath, transform_filename + ".txt")
 
         if verbose:
             print("Transform applied in " + str(i) + "th order: ")
