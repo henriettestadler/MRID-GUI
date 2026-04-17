@@ -103,9 +103,6 @@ class LoadImage4D:
         else:
             for i in 0,1,2:
                 self.LoadMRI.update_slices(i,idx,data_view)
-        #directly generating supervised heatmap!
-        roi_indices = np.unique(vol)
-        self.LoadMRI.mrid_tags.update_heatmap(data_view,idx,roi_indices)
 
 
 
