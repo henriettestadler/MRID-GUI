@@ -222,11 +222,11 @@ class LoadMRI(QObject):
                 self.LoadImage3D.only_display_slide(self.LoadImage3D.vol[i][:, y, :], "coronal",i)
                 self.LoadImage3D.only_display_slide(np.fliplr(self.LoadImage3D.vol[i][:, :, x].T), "sagittal",i)
 
-        if hasattr(self,'SegInitialization'):
-            self.SegInitialization.update_bubbles_visible()
-        if hasattr(self, "SegEvolution"):
-            self.SegEvolution.update_evolution_initializtion(128)
 
+        if hasattr(self, "SegEvolution"):
+            self.SegEvolution.update_evolution_initializtion()
+        elif hasattr(self,'SegInitialization'):
+            self.SegInitialization.update_bubbles_visible()
 
         if hasattr(self,'paintbrush'): #label_volume
             img_vtk = self.paintbrush.vtk_label_images[data_view]
