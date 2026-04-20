@@ -108,12 +108,49 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
     rows = []
 
     #with open(os.path.join(savepath, "channel_atlas_coordinates.txt"), 'w') as f:
-
+#
+    #    for idx, coord in enumerate(ch_coord):
+    #        print(idx)
+    #        atlasIdx=((moving_coordinates[:,0] == coord[0]) & (moving_coordinates[:,1] == coord[1]) & (moving_coordinates[:,2] == coord[2]))
+    #        if fixed_coordinates[atlasIdx].any():
+    #            print("Exact coordinate exists")
+    #        else:
+    #            print("no exact atlas coord")
+    #            atlasIdx=((moving_coordinates[:,0]>=coord[0]-1) & (moving_coordinates[:,0]<=coord[0]+1) &
+    #              (moving_coordinates[:,1] >=coord[1]-1) & (moving_coordinates[:,1] <=coord[1]+1) &
+    #              (moving_coordinates[:,2]>= coord[2]-1) & (moving_coordinates[:,2] <= coord[2]+1)
+    #                 )
+#
+    #        atlasCoord=fixed_coordinates[atlasIdx][0]
+    #        x,y,z =atlasCoord.astype(int)
+    #        label=atlas[x,y,z]
+    #        anat_region=atlaslabelsdf["Anatomical Regions"][atlaslabelsdf["Labels"]==label].values[0]
+    #        regionNames.append(anat_region)
+##
+    #        currPixVal = dwi[x,y,z]
+    #        dwi1Dsignal[idx] = currPixVal
+    #        if anat_region == "Cornu ammonis 1":
+    #            pyrLyExists = True
+    #            if currPixVal < minPixVal:
+    #                minPixVal = currPixVal
+    #                pyrCh = idx
+    #                pyrChIdx = idx
+##
+    #        line="CH:"+str(idx)+" in "+anat_region+' Segment: '+str(label) + " atlas coord: " + str(atlasCoord)
+    #        print('line for loop',line,flush=True)
+    #        f.write(line)
+    #        f.write('\n')
+##
+    #    # Writing the pyramidal channel
+    #    line="CH:"+str(pyrCh)+" in pyramidal layer CA1"
+    #    print(line,flush=True)
+    #    f.write(line)
+    #    f.write('\n')
+#
     for idx, coord in enumerate(ch_coord):
         # Query nearest neighbor
         dist, idx_nearest = tree.query(coord)
         atlasCoord = fixed_coordinates[idx_nearest]
-
         x, y, z = atlasCoord.astype(int)
         label = atlas[x, y, z]
         anat_region = label_to_region[label]
@@ -127,7 +164,6 @@ def map_channels_to_atlas(ch_coord, fitted_mrid_points,moving_coordinates, fixed
             "Atlas y": atlasCoord[1],
             "Atlas z": atlasCoord[2],
         })
-
         df = pd.DataFrame(rows)
         excel_path = os.path.join(savepath, "channel_atlas_coordinates.xlsx")
         df.to_excel(excel_path, index=False)
