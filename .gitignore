@@ -9,3 +9,8 @@ __pycache__/
 # Virtual environments
 venv/
 .env/
+
+# SAMRI Infos
+samri/bruker_info.json
+samri_bindata/
+
