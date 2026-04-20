@@ -16,11 +16,11 @@ from nipype.interfaces import fsl
 from nipype.interfaces.fsl.model import Level1Design
 #from nipype.algorithms.modelgen import SpecifyModel
 
-from samri.pipelines.extra_interfaces import SpecifyModel
-from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, physiofile_ts, eventfile_add_habituation, regressor
-from samri.pipelines.utils import bids_dict_to_source, copy_bids_files, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
-from samri.report.roi import ts
-from samri.utilities import N_PROCS
+from samri.samri.pipelines.extra_interfaces import SpecifyModel
+from samri.samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, physiofile_ts, eventfile_add_habituation, regressor
+from samri.samri.pipelines.utils import bids_dict_to_source, copy_bids_files, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
+from samri.samri.report.roi import ts
+from samri.samri.utilities import N_PROCS
 
 N_PROCS=max(N_PROCS-2, 1)
 

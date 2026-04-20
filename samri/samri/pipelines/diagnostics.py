@@ -15,9 +15,9 @@ import nipype.pipeline.engine as pe
 import pandas as pd
 from nipype.interfaces import fsl, nipy, bru2nii
 
-from samri.pipelines.extra_functions import force_dummy_scans, get_tr
-from samri.pipelines.utils import out_path, container
-from samri.utilities import N_PROCS
+from samri.samri.pipelines.extra_functions import force_dummy_scans, get_tr
+from samri.samri.pipelines.utils import out_path, container
+from samri.samri.utilities import N_PROCS
 
 #set all outputs to compressed NIfTI
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')

@@ -7,8 +7,8 @@ from os import path
 from copy import deepcopy
 from joblib import Parallel, delayed
 from nilearn.input_data import NiftiMasker
-from samri.utilities import collapse
-from samri.report.utilities import roi_data
+from samri.samri.utilities import collapse
+from samri.samri.report.utilities import roi_data
 
 try:
 	FileNotFoundError

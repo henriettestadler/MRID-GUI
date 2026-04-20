@@ -5,7 +5,7 @@ from os import path
 
 from nilearn.input_data import NiftiMasker
 from scipy.io import loadmat
-from samri.report.utilities import roi_df, pattern_df
+from samri.samri.report.utilities import roi_df, pattern_df
 from joblib import Parallel, delayed
 
 import statsmodels.formula.api as smf

@@ -7,10 +7,10 @@
 
 def pattern_fc():
 	import pandas as pd
-	from samri.plotting import summary
-	from samri.report import roi
-	from samri.utilities import bids_substitution_iterator
-	from samri.fetch.local import roi_from_atlaslabel
+	from samri.samri.plotting import summary
+	from samri.samri.report import roi
+	from samri.samri.utilities import bids_substitution_iterator
+	from samri.samri.fetch.local import roi_from_atlaslabel
 
 	workflow_name = 'drs_seed'
 	substitutions = bids_substitution_iterator(

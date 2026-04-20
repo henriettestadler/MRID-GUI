@@ -1,9 +1,9 @@
 import nipype.interfaces.ants as ants
 import os
 import re
-from samri.pipelines.utils import TRANSFORM_PHASES
+from samri.samri.pipelines.utils import TRANSFORM_PHASES
 
-from samri.utilities import iter_collapse_by_path
+from samri.samri.utilities import iter_collapse_by_path
 
 def collapse_nifti(in_dir, out_dir,
 	**kwargs):

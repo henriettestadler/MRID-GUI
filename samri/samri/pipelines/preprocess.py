@@ -15,12 +15,12 @@ import nipype.pipeline.engine as pe
 import pandas as pd
 from nipype.interfaces import ants, afni, bru2nii, fsl, nipy, spm
 
-from samri.fetch.templates import fetch_rat_waxholm
-from samri.pipelines.extra_functions import corresponding_physiofile, get_bids_scan, write_bids_events_file, \
+from samri.samri.fetch.templates import fetch_rat_waxholm
+from samri.samri.pipelines.extra_functions import corresponding_physiofile, get_bids_scan, write_bids_events_file, \
     force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
-from samri.pipelines.extra_interfaces import VoxelResize, FSLOrient
-from samri.pipelines.nodes import *
-from samri.pipelines.utils import bids_data_selection, copy_bids_files, fslmaths_invert_values, ss_to_path, \
+from samri.samri.pipelines.extra_interfaces import VoxelResize, FSLOrient
+from samri.samri.pipelines.nodes import *
+from samri.samri.pipelines.utils import bids_data_selection, copy_bids_files, fslmaths_invert_values, ss_to_path, \
     GENERIC_PHASES
 
 DUMMY_SCANS = 10

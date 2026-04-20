@@ -1,5 +1,5 @@
 from os import path, remove
-from samri.pipelines.extra_functions import flip_if_needed, get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, write_bids_physio_file, BIDS_METADATA_EXTRACTION_DICTS
+from samri.samri.pipelines.extra_functions import flip_if_needed, get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, write_bids_physio_file, BIDS_METADATA_EXTRACTION_DICTS
 import os
 
 import argh
@@ -16,9 +16,9 @@ import nipype.pipeline.engine as pe
 import pandas as pd
 #from nipype.interfaces.bru2nii import Bru2
 
-from samri.pipelines.utils import sessions_file, ss_to_path
-from samri.pipelines.extra_interfaces import Bru2
-from samri.utilities import N_PROCS
+from samri.samri.pipelines.utils import sessions_file, ss_to_path
+from samri.samri.pipelines.extra_interfaces import Bru2
+from samri.samri.utilities import N_PROCS
 
 try:
 	    FileNotFoundError
@@ -359,6 +359,7 @@ def bru2bids(measurements_base,
 		if not os.path.exists(workdir):
 			os.makedirs(workdir)
 		s_data_selection.to_csv(path.join(workdir,'s_data_selection.csv'))
+
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
 			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type',
 			]))

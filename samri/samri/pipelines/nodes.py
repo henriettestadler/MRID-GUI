@@ -3,7 +3,7 @@ from os import path
 import nipype.pipeline.engine as pe
 import nipype.interfaces.ants as ants
 from nipype.interfaces import fsl
-from samri.pipelines.utils import GENERIC_PHASES
+from samri.samri.pipelines.utils import GENERIC_PHASES
 
 
 def autorotate(template,
