@@ -1,5 +1,6 @@
 # This Python file uses the following encoding: utf-8
-from core.segmentation_utils import Segmentation, SegmentationInitialization, SegmentationEvolution
+from core.segmentation_utils import Segmentation, SegmentationInitialization
+from core.segmentation.evolution import SegmentationEvolution
 from PySide6.QtGui import QStandardItem
 
 
@@ -51,9 +52,9 @@ class SegmentationGUI:
                 self.ui.ScrollBar_lower.setRange(0,int(self.LoadMRI.volumes[0].slices[0].max())+1)
                 self.ui.doubleSpinBox_upper.setRange(0,int(self.LoadMRI.volumes[0].slices[0].max())+1)
                 self.ui.ScrollBar_upper.setRange(0,int(self.LoadMRI.volumes[0].slices[0].max())+1)
-                self.ui.doubleSpinBox_lower.valueChanged.connect(self.on_spin_changed_lower)
+                self.ui.doubleSpinBox_lower.editingFinished.connect(self.on_spin_changed_lower)
                 self.ui.ScrollBar_lower.valueChanged.connect(self.on_scroll_changed_lower)
-                self.ui.doubleSpinBox_upper.valueChanged.connect(self.on_spin_changed_upper)
+                self.ui.doubleSpinBox_upper.editingFinished.connect(self.on_spin_changed_upper)
                 self.ui.ScrollBar_upper.valueChanged.connect(self.on_scroll_changed_upper)
 
                 #threshold buttons
@@ -128,7 +129,8 @@ class SegmentationGUI:
             self.LoadMRI.intensity_table[0].update_intensity_values(0)
 
     # --- Synchronize UI values for lower/upper threshold bounds ---
-    def on_spin_changed_lower(self,val):
+    def on_spin_changed_lower(self):
+        val = self.ui.doubleSpinBox_lower.value()
         self.LoadMRI.Segmentation.lower = val
         self.ui.ScrollBar_lower.blockSignals(True)
         self.ui.ScrollBar_lower.setValue(self.LoadMRI.Segmentation.lower)
@@ -137,7 +139,8 @@ class SegmentationGUI:
         self.update_threshold_display()
         return
 
-    def on_spin_changed_upper(self,val):
+    def on_spin_changed_upper(self):
+        val = self.ui.doubleSpinBox_upper.value()
         self.LoadMRI.Segmentation.upper = val
         self.ui.ScrollBar_upper.blockSignals(True)
         self.ui.ScrollBar_upper.setValue(self.LoadMRI.Segmentation.upper)
@@ -205,6 +208,7 @@ class SegmentationGUI:
             self.ui.horizontalSlider_Bubradius.valueChanged.connect(lambda val: self.get_bubble_radius('Slider',val=val))
             self.ui.pushButton_addBubbles.clicked.connect(lambda val: self.LoadMRI.SegInitialization.draw_bubble(self.ui.pushButton_Next2))
             #info if row in table is selected
+            print('bin ich hier?',flush=True)
             self.ui.tableView_activeBub.selectionModel().selectionChanged.connect(self.LoadMRI.SegInitialization.row_selected)
             #delete bubble
             self.ui.pushButton_delete.clicked.connect(self.delete_bubble)
@@ -290,10 +294,20 @@ class SegmentationGUI:
         #if self.evolution_first_time:
             # SChange button icons: play, pause
         button = self.ui.toolButton_runEvo
-        self.LoadMRI.SegEvolution = SegmentationEvolution(self.LoadMRI,self.LoadMRI.SegInitialization,self.LoadMRI.Segmentation,button)
-        self.LoadMRI.SegEvolution.initialize_segmentation_itk()
-        self.ui.toolButton_runEvo.clicked.connect(lambda val: self.LoadMRI.SegEvolution.segmentation_itk(iterations=20))
+        spin_iterations = self.ui.doubleSpinBox_Segiter
+        self.LoadMRI.SegEvolution = SegmentationEvolution(self.LoadMRI,self.LoadMRI.SegInitialization,self.LoadMRI.Segmentation,button,spin_iterations)
+        #self.LoadMRI.SegEvolution.initialize_segmentation_itk()
+        #self.ui.toolButton_runEvo.clicked.connect(lambda val: self.LoadMRI.SegEvolution.segmentation_itk(iterations=20))
+        self.LoadMRI.SegEvolution.vtkwidget_3d = self.ui.vtkWidget_data_seg3D
         self.ui.toolButton_forwardEvo.clicked.connect(lambda val: self.LoadMRI.SegEvolution.segmentation_itk(iterations=2))
+        self.ui.lineEdit_vis3D.setVisible(True)
+        self.ui.frame_vis3D.setVisible(True)
+        box = self.ui.page_3D
+        layout = box.layout()
+        layout.setColumnStretch(0, 1)
+        layout.setColumnStretch(1, 1)
+        layout.setColumnStretch(2, 1)
+        layout.setColumnStretch(3, 1)
 
 
         #    self.evolution_first_time = False

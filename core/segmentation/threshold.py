@@ -8,9 +8,11 @@ class ThresholdSegmentation:
         super().__init__()
         # Load original image
         self.LoadMRI = LoadMRI
+
         self.LoadMRI.thres_idx = self.LoadMRI.num_data_max
-        self.LoadMRI.volume[self.LoadMRI.thres_idx] = {}
-        self.LoadMRI.volume[self.LoadMRI.thres_idx][0] = self.LoadMRI.volume[0][0].astype(np.float32)
+        print('self.LoadMRI.thres_idx',self.LoadMRI.thres_idx ,flush=True)
+        self.LoadMRI.volumes[self.LoadMRI.thres_idx] = {}
+        self.LoadMRI.volumes[self.LoadMRI.thres_idx].slices[0] = self.LoadMRI.volumes[0].slices[0].astype(np.float32)
         self.LoadMRI.volumes[self.LoadMRI.thres_idx].file_path = 'Threshold Image'
         self.LoadMRI.actors_non_mainimage[self.LoadMRI.thres_idx] = {}
         self.LoadMRI.num_data_max += 1
@@ -68,11 +70,11 @@ class ThresholdSegmentation:
 
             # Correct spacing per view
             if view_name == "axial":      # z fixed -> (y,x)
-                spacing = (self.LoadMRI.spacing[2], self.LoadMRI.spacing[1], 1)
+                spacing = (self.LoadMRI.volume[0].spacing[2], self.LoadMRI.volume[0].spacing[1], 1)
             elif view_name == "coronal": # y fixed -> (z,x)
-                spacing = (self.LoadMRI.spacing[2], self.LoadMRI.spacing[0], 1)
+                spacing = (self.LoadMRI.volume[0].spacing[2], self.LoadMRI.volume[0].spacing[0], 1)
             elif view_name == "sagittal":# x fixed -> (z,y)
-                spacing = (self.LoadMRI.spacing[0], self.LoadMRI.spacing[1], 1)
+                spacing = (self.LoadMRI.volume[0].spacing[0], self.LoadMRI.volume[0].spacing[1], 1)
 
             mask_vtk.SetSpacing(spacing)
             mask_vtk.GetPointData().SetScalars(vtk_mask_data)

@@ -3,7 +3,7 @@
 # if __name__ == "__main__":
 #     pass
 from vtkmodules.vtkFiltersSources import vtkRegularPolygonSource
-from vtkmodules.vtkRenderingCore import vtkActor,vtkPolyDataMapper,vtkProperty
+from vtkmodules.vtkRenderingCore import vtkActor,vtkPolyDataMapper
 from PySide6.QtGui import QStandardItemModel,QFont,QStandardItem
 #from PySide6.QtWidgets import QHeaderView
 import numpy as np
@@ -36,7 +36,7 @@ class SegmentationInitialization:
             ]
         elif view_name == "sagittal":# x fixed -> (y,z)
             self.center = [
-                (self.LoadMRI.volume[0][0].shape[0]-self.LoadMRI.slice_indices[0])*self.LoadMRI.spacing[0][0],
+                (self.LoadMRI.volume.volumes[0].slices[0].shape[0]-self.LoadMRI.slice_indices[0])*self.LoadMRI.spacing[0][0],
                 self.LoadMRI.slice_indices[1]*self.LoadMRI.spacing[0][1],
                 1.1 #otherwise not visible
             ]
@@ -44,6 +44,7 @@ class SegmentationInitialization:
 
 
     def row_selected(self,selected,deselected):
+        print('bin ich in row selected?',flush=True)
         for ix in selected.indexes():
             self.row_index = ix.row()
             self.selected = True

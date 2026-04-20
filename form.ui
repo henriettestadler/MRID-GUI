@@ -2367,7 +2367,7 @@ background-color: rgb(131, 131, 131);
                   <enum>QFrame::NoFrame</enum>
                  </property>
                  <property name="currentIndex">
-                  <number>0</number>
+                  <number>1</number>
                  </property>
                  <widget class="QWidget" name="page_4Ddata0">
                   <layout class="QGridLayout" name="gridLayout_data0" rowstretch="1,0,0" columnstretch="1,1,1,0" rowminimumheight="1,0,0" columnminimumwidth="1,1,1,0">
@@ -3429,142 +3429,14 @@ background-color: rgb(131, 131, 131);
                    </item>
                   </layout>
                  </widget>
-                 <widget class="QWidget" name="page_14">
-                  <layout class="QGridLayout" name="gridLayout_106" rowstretch="1,0,0" columnstretch="1,1,1">
-                   <item row="1" column="0">
-                    <widget class="QFrame" name="frame_11">
+                 <widget class="QWidget" name="page_3D">
+                  <layout class="QGridLayout" name="gridLayout_106" rowstretch="1,0,0" columnstretch="1,1,1,1">
+                   <item row="2" column="2">
+                    <widget class="QGroupBox" name="groupBox_40">
                      <property name="minimumSize">
                       <size>
-                       <width>0</width>
-                       <height>200</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">border-color: rgb(170, 170, 170);
-background-color: rgb(131, 131, 131);
-</string>
-                     </property>
-                     <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
-                     </property>
-                     <layout class="QGridLayout" name="gridLayout_146">
-                      <property name="leftMargin">
-                       <number>4</number>
-                      </property>
-                      <property name="topMargin">
-                       <number>4</number>
-                      </property>
-                      <property name="rightMargin">
-                       <number>4</number>
-                      </property>
-                      <property name="bottomMargin">
-                       <number>4</number>
-                      </property>
-                      <property name="spacing">
-                       <number>0</number>
-                      </property>
-                      <item row="1" column="0" rowspan="2">
-                       <widget class="QPushButton" name="fit_to_zoom_data3d0">
-                        <property name="styleSheet">
-                         <string notr="true">
-background-color: rgb(0, 153, 255);</string>
-                        </property>
-                        <property name="text">
-                         <string>Fit-to-Zoom</string>
-                        </property>
-                        <property name="autoDefault">
-                         <bool>false</bool>
-                        </property>
-                        <property name="default">
-                         <bool>false</bool>
-                        </property>
-                        <property name="flat">
-                         <bool>false</bool>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="0" column="0" colspan="9">
-                       <widget class="QVTKRenderWindowInteractor" name="vtkWidget_data_coronal">
-                        <property name="styleSheet">
-                         <string notr="true">background-color: rgb(200, 177, 176);</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="0" column="9">
-                       <widget class="QScrollBar" name="Scroll_data3d0">
-                        <property name="pageStep">
-                         <number>10</number>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="2" column="8">
-                       <layout class="QHBoxLayout" name="horizontalLayout_36">
-                        <item>
-                         <widget class="QToolButton" name="go_down_data3d0">
-                          <property name="text">
-                           <string>&lt;</string>
-                          </property>
-                          <property name="icon">
-                           <iconset theme="QIcon::ThemeIcon::GoDown"/>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QToolButton" name="go_up_data3d0">
-                          <property name="text">
-                           <string>&gt;</string>
-                          </property>
-                          <property name="icon">
-                           <iconset theme="QIcon::ThemeIcon::GoUp"/>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QToolButton" name="go_left_data3d0">
-                          <property name="text">
-                           <string>&lt;</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QToolButton" name="go_right_data3d0">
-                          <property name="text">
-                           <string>&gt;</string>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
-                      </item>
-                      <item row="2" column="7">
-                       <layout class="QHBoxLayout" name="horizontalLayout_37">
-                        <item>
-                         <widget class="QToolButton" name="zoom_in_data3d0">
-                          <property name="text">
-                           <string>+</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QToolButton" name="zoom_out_data3d0">
-                          <property name="text">
-                           <string>-</string>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
-                      </item>
-                     </layout>
-                     <zorder>vtkWidget_data_coronal</zorder>
-                     <zorder>Scroll_data3d0</zorder>
-                     <zorder>fit_to_zoom_data3d0</zorder>
-                    </widget>
-                   </item>
-                   <item row="2" column="1">
-                    <widget class="QGroupBox" name="groupBox_52">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>0</height>
+                       <width>400</width>
+                       <height>100</height>
                       </size>
                      </property>
                      <property name="maximumSize">
@@ -3574,111 +3446,61 @@ background-color: rgb(0, 153, 255);</string>
                       </size>
                      </property>
                      <property name="title">
-                      <string>Contrast Adjustments</string>
+                      <string>Intensity under cursor</string>
                      </property>
-                     <layout class="QGridLayout" name="gridLayout_162" columnstretch="1,0,0,1,0">
-                      <item row="4" column="0" colspan="2">
-                       <widget class="QSlider" name="changeContrast_data3d">
-                        <property name="styleSheet">
-                         <string notr="true"/>
-                        </property>
-                        <property name="maximum">
-                         <number>99</number>
-                        </property>
-                        <property name="singleStep">
-                         <number>1</number>
-                        </property>
-                        <property name="pageStep">
-                         <number>10</number>
-                        </property>
-                        <property name="value">
-                         <number>0</number>
-                        </property>
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="0" column="0" colspan="2">
-                       <widget class="QPushButton" name="pushButton_reset_data3d">
-                        <property name="text">
-                         <string>Reset</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="1" column="3">
-                       <widget class="QLabel" name="label_35">
-                        <property name="font">
-                         <font>
-                          <pointsize>10</pointsize>
-                          <bold>false</bold>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>Brightness / Level</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="1" column="1">
-                       <widget class="QSpinBox" name="display_window_data3d">
-                        <property name="enabled">
-                         <bool>true</bool>
-                        </property>
-                        <property name="readOnly">
-                         <bool>true</bool>
-                        </property>
-                        <property name="buttonSymbols">
-                         <enum>QAbstractSpinBox::NoButtons</enum>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="0" column="3" colspan="2">
-                       <widget class="QPushButton" name="pushButton_auto_data3d">
-                        <property name="text">
-                         <string>Auto</string>
-                        </property>
-                       </widget>
-                      </item>
+                     <layout class="QGridLayout" name="gridLayout_156" rowstretch="0,0">
+                      <property name="rightMargin">
+                       <number>9</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>9</number>
+                      </property>
                       <item row="1" column="0">
-                       <widget class="QLabel" name="label_36">
-                        <property name="font">
-                         <font>
-                          <pointsize>10</pointsize>
-                          <bold>false</bold>
-                         </font>
+                       <widget class="QTableWidget" name="tableintensity_data3d">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
                         </property>
-                        <property name="text">
-                         <string>Contrast / Window</string>
+                        <property name="maximumSize">
+                         <size>
+                          <width>700</width>
+                          <height>1677</height>
+                         </size>
                         </property>
-                       </widget>
-                      </item>
-                      <item row="4" column="3" colspan="2">
-                       <widget class="QSlider" name="changeBrightness_data3d">
-                        <property name="maximum">
-                         <number>99</number>
+                        <property name="contextMenuPolicy">
+                         <enum>Qt::NoContextMenu</enum>
                         </property>
-                        <property name="singleStep">
-                         <number>1</number>
+                        <property name="sizeAdjustPolicy">
+                         <enum>QAbstractScrollArea::AdjustToContents</enum>
                         </property>
-                        <property name="pageStep">
-                         <number>10</number>
+                        <property name="selectionBehavior">
+                         <enum>QAbstractItemView::SelectItems</enum>
                         </property>
-                        <property name="value">
-                         <number>0</number>
-                        </property>
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="1" column="4">
-                       <widget class="QSpinBox" name="display_level_data3d">
-                        <property name="readOnly">
-                         <bool>true</bool>
-                        </property>
-                        <property name="buttonSymbols">
-                         <enum>QAbstractSpinBox::NoButtons</enum>
-                        </property>
+                        <attribute name="horizontalHeaderDefaultSectionSize">
+                         <number>67</number>
+                        </attribute>
+                        <column>
+                         <property name="text">
+                          <string/>
+                         </property>
+                        </column>
+                        <column>
+                         <property name="text">
+                          <string>Layer</string>
+                         </property>
+                        </column>
+                        <column>
+                         <property name="text">
+                          <string>Intensity</string>
+                         </property>
+                        </column>
+                        <column>
+                         <property name="text">
+                          <string>Opacity</string>
+                         </property>
+                        </column>
                        </widget>
                       </item>
                      </layout>
@@ -3810,6 +3632,320 @@ background-color: rgb(0, 153, 255);</string>
                      <zorder>vtkWidget_data_sagittal</zorder>
                      <zorder>Scroll_data3d1</zorder>
                      <zorder>fit_to_zoom_data3d1</zorder>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QTextEdit" name="textEdit_8">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                     <property name="readOnly">
+                      <bool>true</bool>
+                     </property>
+                     <property name="html">
+                      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;SAGITTAL&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QGroupBox" name="groupBox_52">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>300</height>
+                      </size>
+                     </property>
+                     <property name="title">
+                      <string>Contrast Adjustments</string>
+                     </property>
+                     <layout class="QGridLayout" name="gridLayout_162" columnstretch="1,0,0,1,0">
+                      <item row="4" column="0" colspan="2">
+                       <widget class="QSlider" name="changeContrast_data3d">
+                        <property name="styleSheet">
+                         <string notr="true"/>
+                        </property>
+                        <property name="maximum">
+                         <number>99</number>
+                        </property>
+                        <property name="singleStep">
+                         <number>1</number>
+                        </property>
+                        <property name="pageStep">
+                         <number>10</number>
+                        </property>
+                        <property name="value">
+                         <number>0</number>
+                        </property>
+                        <property name="orientation">
+                         <enum>Qt::Horizontal</enum>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="0" colspan="2">
+                       <widget class="QPushButton" name="pushButton_reset_data3d">
+                        <property name="text">
+                         <string>Reset</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="3">
+                       <widget class="QLabel" name="label_35">
+                        <property name="font">
+                         <font>
+                          <pointsize>10</pointsize>
+                          <bold>false</bold>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Brightness / Level</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="1">
+                       <widget class="QSpinBox" name="display_window_data3d">
+                        <property name="enabled">
+                         <bool>true</bool>
+                        </property>
+                        <property name="readOnly">
+                         <bool>true</bool>
+                        </property>
+                        <property name="buttonSymbols">
+                         <enum>QAbstractSpinBox::NoButtons</enum>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="3" colspan="2">
+                       <widget class="QPushButton" name="pushButton_auto_data3d">
+                        <property name="text">
+                         <string>Auto</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="0">
+                       <widget class="QLabel" name="label_36">
+                        <property name="font">
+                         <font>
+                          <pointsize>10</pointsize>
+                          <bold>false</bold>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Contrast / Window</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="4" column="3" colspan="2">
+                       <widget class="QSlider" name="changeBrightness_data3d">
+                        <property name="maximum">
+                         <number>99</number>
+                        </property>
+                        <property name="singleStep">
+                         <number>1</number>
+                        </property>
+                        <property name="pageStep">
+                         <number>10</number>
+                        </property>
+                        <property name="value">
+                         <number>0</number>
+                        </property>
+                        <property name="orientation">
+                         <enum>Qt::Horizontal</enum>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="4">
+                       <widget class="QSpinBox" name="display_level_data3d">
+                        <property name="readOnly">
+                         <bool>true</bool>
+                        </property>
+                        <property name="buttonSymbols">
+                         <enum>QAbstractSpinBox::NoButtons</enum>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <widget class="QTextEdit" name="textEdit_7">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                     <property name="layoutDirection">
+                      <enum>Qt::LeftToRight</enum>
+                     </property>
+                     <property name="readOnly">
+                      <bool>true</bool>
+                     </property>
+                     <property name="html">
+                      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;CORONAL&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QFrame" name="frame_11">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>200</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">border-color: rgb(170, 170, 170);
+background-color: rgb(131, 131, 131);
+</string>
+                     </property>
+                     <property name="frameShape">
+                      <enum>QFrame::NoFrame</enum>
+                     </property>
+                     <layout class="QGridLayout" name="gridLayout_146">
+                      <property name="leftMargin">
+                       <number>4</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>4</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>4</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>4</number>
+                      </property>
+                      <property name="spacing">
+                       <number>0</number>
+                      </property>
+                      <item row="1" column="0" rowspan="2">
+                       <widget class="QPushButton" name="fit_to_zoom_data3d0">
+                        <property name="styleSheet">
+                         <string notr="true">
+background-color: rgb(0, 153, 255);</string>
+                        </property>
+                        <property name="text">
+                         <string>Fit-to-Zoom</string>
+                        </property>
+                        <property name="autoDefault">
+                         <bool>false</bool>
+                        </property>
+                        <property name="default">
+                         <bool>false</bool>
+                        </property>
+                        <property name="flat">
+                         <bool>false</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="0" colspan="9">
+                       <widget class="QVTKRenderWindowInteractor" name="vtkWidget_data_coronal">
+                        <property name="styleSheet">
+                         <string notr="true">background-color: rgb(200, 177, 176);</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="9">
+                       <widget class="QScrollBar" name="Scroll_data3d0">
+                        <property name="pageStep">
+                         <number>10</number>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="8">
+                       <layout class="QHBoxLayout" name="horizontalLayout_36">
+                        <item>
+                         <widget class="QToolButton" name="go_down_data3d0">
+                          <property name="text">
+                           <string>&lt;</string>
+                          </property>
+                          <property name="icon">
+                           <iconset theme="QIcon::ThemeIcon::GoDown"/>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QToolButton" name="go_up_data3d0">
+                          <property name="text">
+                           <string>&gt;</string>
+                          </property>
+                          <property name="icon">
+                           <iconset theme="QIcon::ThemeIcon::GoUp"/>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QToolButton" name="go_left_data3d0">
+                          <property name="text">
+                           <string>&lt;</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QToolButton" name="go_right_data3d0">
+                          <property name="text">
+                           <string>&gt;</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item row="2" column="7">
+                       <layout class="QHBoxLayout" name="horizontalLayout_37">
+                        <item>
+                         <widget class="QToolButton" name="zoom_in_data3d0">
+                          <property name="text">
+                           <string>+</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QToolButton" name="zoom_out_data3d0">
+                          <property name="text">
+                           <string>-</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                     </layout>
+                     <zorder>vtkWidget_data_coronal</zorder>
+                     <zorder>Scroll_data3d0</zorder>
+                     <zorder>fit_to_zoom_data3d0</zorder>
                     </widget>
                    </item>
                    <item row="2" column="0">
@@ -4006,142 +4142,6 @@ background-color: rgb(0, 153, 255);</string>
                      <zorder>fit_to_zoom_data3d2</zorder>
                     </widget>
                    </item>
-                   <item row="2" column="2">
-                    <widget class="QGroupBox" name="groupBox_40">
-                     <property name="minimumSize">
-                      <size>
-                       <width>400</width>
-                       <height>100</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>16777215</width>
-                       <height>300</height>
-                      </size>
-                     </property>
-                     <property name="title">
-                      <string>Intensity under cursor</string>
-                     </property>
-                     <layout class="QGridLayout" name="gridLayout_156" rowstretch="0,0">
-                      <property name="rightMargin">
-                       <number>9</number>
-                      </property>
-                      <property name="bottomMargin">
-                       <number>9</number>
-                      </property>
-                      <item row="1" column="0">
-                       <widget class="QTableWidget" name="tableintensity_data3d">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="maximumSize">
-                         <size>
-                          <width>700</width>
-                          <height>1677</height>
-                         </size>
-                        </property>
-                        <property name="contextMenuPolicy">
-                         <enum>Qt::NoContextMenu</enum>
-                        </property>
-                        <property name="sizeAdjustPolicy">
-                         <enum>QAbstractScrollArea::AdjustToContents</enum>
-                        </property>
-                        <property name="selectionBehavior">
-                         <enum>QAbstractItemView::SelectItems</enum>
-                        </property>
-                        <attribute name="horizontalHeaderDefaultSectionSize">
-                         <number>67</number>
-                        </attribute>
-                        <column>
-                         <property name="text">
-                          <string/>
-                         </property>
-                        </column>
-                        <column>
-                         <property name="text">
-                          <string>Layer</string>
-                         </property>
-                        </column>
-                        <column>
-                         <property name="text">
-                          <string>Intensity</string>
-                         </property>
-                        </column>
-                        <column>
-                         <property name="text">
-                          <string>Opacity</string>
-                         </property>
-                        </column>
-                       </widget>
-                      </item>
-                     </layout>
-                    </widget>
-                   </item>
-                   <item row="0" column="0">
-                    <widget class="QTextEdit" name="textEdit_7">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>16777215</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                     <property name="layoutDirection">
-                      <enum>Qt::LeftToRight</enum>
-                     </property>
-                     <property name="readOnly">
-                      <bool>true</bool>
-                     </property>
-                     <property name="html">
-                      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0; }
-li.unchecked::marker { content: &quot;\2610&quot;; }
-li.checked::marker { content: &quot;\2612&quot;; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;CORONAL&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="1">
-                    <widget class="QTextEdit" name="textEdit_8">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>16777215</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                     <property name="readOnly">
-                      <bool>true</bool>
-                     </property>
-                     <property name="html">
-                      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0; }
-li.unchecked::marker { content: &quot;\2610&quot;; }
-li.checked::marker { content: &quot;\2612&quot;; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;SAGITTAL&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                    </widget>
-                   </item>
                    <item row="0" column="2">
                     <widget class="QTextEdit" name="textEdit_9">
                      <property name="minimumSize">
@@ -4168,6 +4168,41 @@ li.unchecked::marker { content: &quot;\2610&quot;; }
 li.checked::marker { content: &quot;\2612&quot;; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;AXIAL&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="3">
+                    <widget class="QFrame" name="frame_vis3D">
+                     <property name="frameShape">
+                      <enum>QFrame::StyledPanel</enum>
+                     </property>
+                     <property name="frameShadow">
+                      <enum>QFrame::Raised</enum>
+                     </property>
+                     <layout class="QGridLayout" name="gridLayout_81">
+                      <item row="0" column="0">
+                       <widget class="QVTKRenderWindowInteractor" name="vtkWidget_data_seg3D">
+                        <property name="styleSheet">
+                         <string notr="true">background-color: rgb(200, 177, 176);</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item row="0" column="3">
+                    <widget class="QLineEdit" name="lineEdit_vis3D">
+                     <property name="font">
+                      <font>
+                       <pointsize>16</pointsize>
+                       <bold>false</bold>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>3D Visualisation</string>
+                     </property>
+                     <property name="readOnly">
+                      <bool>true</bool>
                      </property>
                     </widget>
                    </item>
@@ -4630,7 +4665,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                   </size>
                  </property>
                  <property name="currentIndex">
-                  <number>2</number>
+                  <number>0</number>
                  </property>
                  <widget class="QWidget" name="page_13">
                   <layout class="QGridLayout" name="gridLayout_152">
@@ -4669,10 +4704,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
                       <bool>true</bool>
                      </property>
                      <property name="text">
-                      <string>Threshold OFF</string>
+                      <string>Threshold ON</string>
                      </property>
                      <property name="checked">
-                      <bool>false</bool>
+                      <bool>true</bool>
                      </property>
                     </widget>
                    </item>
@@ -4975,10 +5010,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
                          <set>QAbstractItemView::NoEditTriggers</set>
                         </property>
                         <property name="selectionMode">
-                         <enum>QAbstractItemView::NoSelection</enum>
+                         <enum>QAbstractItemView::SingleSelection</enum>
                         </property>
                         <property name="selectionBehavior">
-                         <enum>QAbstractItemView::SelectItems</enum>
+                         <enum>QAbstractItemView::SelectRows</enum>
                         </property>
                         <attribute name="horizontalHeaderCascadingSectionResizes">
                          <bool>false</bool>
@@ -5050,6 +5085,9 @@ li.checked::marker { content: &quot;\2612&quot;; }
                      <layout class="QGridLayout" name="gridLayout_163">
                       <item row="0" column="2">
                        <widget class="QToolButton" name="toolButton_forwardEvo">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
                         <property name="text">
                          <string>...</string>
                         </property>
@@ -5070,7 +5108,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                          <string>...</string>
                         </property>
                         <property name="icon">
-                         <iconset theme="QIcon::ThemeIcon::MediaPlaybackStart"/>
+                         <iconset theme="QIcon::ThemeIcon::MediaPlaybackPause"/>
                         </property>
                         <property name="iconSize">
                          <size>
@@ -5085,6 +5123,9 @@ li.checked::marker { content: &quot;\2612&quot;; }
                       </item>
                       <item row="0" column="0">
                        <widget class="QToolButton" name="toolButton_backwardEvo">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
                         <property name="text">
                          <string>...</string>
                         </property>
@@ -5150,7 +5191,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                      </property>
                      <layout class="QGridLayout" name="gridLayout_164">
                       <item row="0" column="0">
-                       <widget class="QDoubleSpinBox" name="doubleSpinBox_Bubradius_6">
+                       <widget class="QDoubleSpinBox" name="doubleSpinBox_Segiter">
                         <property name="maximumSize">
                          <size>
                           <width>16777215</width>
@@ -5160,11 +5201,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
                         <property name="frame">
                          <bool>true</bool>
                         </property>
+                        <property name="readOnly">
+                         <bool>true</bool>
+                        </property>
                         <property name="buttonSymbols">
-                         <enum>QAbstractSpinBox::UpDownArrows</enum>
+                         <enum>QAbstractSpinBox::NoButtons</enum>
                         </property>
                         <property name="maximum">
-                         <double>105.000000000000000</double>
+                         <double>12000.000000000000000</double>
                         </property>
                         <property name="singleStep">
                          <double>0.100000000000000</double>

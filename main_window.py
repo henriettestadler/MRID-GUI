@@ -22,6 +22,7 @@ from PySide6.QtCore import Qt, QCoreApplication,QResource
 import qdarkstyle
 from utils.zoom import Zoom
 from core.mri_volume import MRIVolume
+from samri.samri_main import InitSAMRI
 
 
 class MainWindow(QMainWindow):
@@ -47,6 +48,12 @@ class MainWindow(QMainWindow):
         self.ui.tabWidget_visualisation.tabBar().setVisible(False)
 
         #only show one row of views and center the three visible widgets
+        box = self.ui.page_3D
+        layout = box.layout()
+        layout.setColumnStretch(0, 1)
+        layout.setColumnStretch(1, 1)
+        layout.setColumnStretch(2, 1)
+        layout.setColumnStretch(3, 0)
         self.ui.groupBox_data2.setVisible(False)
         self.ui.groupBox_data1.setVisible(False)
         self.ui.heatmap_data0.setVisible(False)
@@ -58,6 +65,8 @@ class MainWindow(QMainWindow):
         self.ui.contrast_data.setItemEnabled(2, False)
         self.ui.groupBox_progressGUI.setVisible(False)
         self.ui.dockWidget_ephys.setVisible(False)
+        self.ui.lineEdit_vis3D.setVisible(False)
+        self.ui.frame_vis3D.setVisible(False)
 
         #resize to inital size
         self.resize(1600, 900)
@@ -68,6 +77,7 @@ class MainWindow(QMainWindow):
         self.ui.actionOpen.triggered.connect(self.open_user_dialog)
         self.ui.actionOpen_ephys_Data.triggered.connect(self.open_ephys_data)
         self.ui.actionQuit.triggered.connect(self.quit)
+        self.ui.actionStart_SAMRI_process.triggered.connect(self.samri)
 
         # Re-render if tab changed
         self.setCursor(QtCore.Qt.CursorShape.ArrowCursor)
@@ -253,6 +263,7 @@ class MainWindow(QMainWindow):
         self.ui.vtkWidget_data_sagittal.GetRenderWindow().Render()
         self.ui.vtkWidget_data_coronal.GetRenderWindow().Render()
         self.ui.vtkWidget_data_axial.GetRenderWindow().Render()
+        self.ui.vtkWidget_data_seg3D.GetRenderWindow().Render()
         self.ui.vtkWidget_data00.GetRenderWindow().Render()
         self.ui.vtkWidget_data01.GetRenderWindow().Render()
         self.ui.vtkWidget_data02.GetRenderWindow().Render()
@@ -269,7 +280,6 @@ class MainWindow(QMainWindow):
         self.ui.vtkWidget_data13.GetRenderWindow().Render()
         self.ui.vtkWidget_legend2.GetRenderWindow().Render()
         #barcode sachen
-
         self.ui.vtkWidget_ephys.GetRenderWindow().Render()
 
 
@@ -429,6 +439,11 @@ class MainWindow(QMainWindow):
                     tabclass = self.LoadMRI.intensity_table[idx]
                     tabclass.update_table(os.path.basename(file_name), vol,idx)
                     self.ui.contrast_data.setItemEnabled(idx, False)
+
+    def samri(self):
+        #Pop up
+        self.samri = InitSAMRI(self)
+
 
 
     def restart_gui(self, file_name, data_view='coronal'):

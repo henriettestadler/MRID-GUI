@@ -285,11 +285,6 @@ class ButtonsGUI_3D:
             checkbox.setText("OFF")
             self.LoadMRI.cursor.start_cursor(True,0,data_view)
 
-    #def initialize_segmentation(self):
-    #    """Initialize segmentation GUI."""
-    #    SegmentationGUI(self.MW)
-
-
     def initialize_resampling(self):
         """
         Initialize resampling controls.
@@ -478,6 +473,7 @@ class ButtonsGUI_3D:
             dock.show()
             dock.raise_()
 
+        self.LoadMRI.SegmentationGUI.on_threshold_changed(checked=True)
 
 
 
