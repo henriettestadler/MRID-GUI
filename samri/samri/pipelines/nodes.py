@@ -337,17 +337,6 @@ def highres_real_size_node():
 
     return highres_biascorrect
 
-def real_size_s_biascorrect_node():
-    s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
-    s_biascorrect.inputs.dimension = 3
-    s_biascorrect.inputs.bspline_fitting_distance = 10
-    s_biascorrect.inputs.bspline_order = 4
-    s_biascorrect.inputs.shrink_factor = 2
-    s_biascorrect.inputs.n_iterations = [150, 100, 50, 30]
-    s_biascorrect.inputs.convergence_threshold = 1e-16
-
-    return s_biascorrect
-
 
 def real_size_nodes():
     s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
